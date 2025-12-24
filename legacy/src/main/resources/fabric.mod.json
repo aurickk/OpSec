@@ -1,0 +1,38 @@
+{
+	"schemaVersion": 1,
+	"id": "incognito",
+	"version": "${version}",
+	"name": "Incognito",
+	"description": "Advanced client brand spoofing, tracking exploit protections, and other privacy focused features.",
+	"authors": [
+		"Aurick"
+	],
+	"contact": {
+		"homepage": "https://modrinth.com/mod/incognito",
+		"sources": "https://github.com/aurickk/Incognito",
+		"issues": "https://github.com/aurickk/Incognito/issues"
+	},
+	"license": "MIT",
+	"icon": "assets/incognito/icon.png",
+	"environment": "client",
+	"entrypoints": {
+		"client": [
+			"incognito.mod.IncognitoClient"
+		],
+		"modmenu": [
+			"incognito.mod.config.IncognitoModMenuIntegration"
+		]
+	},
+	"mixins": [
+		{
+			"config": "incognito.client.mixins.json",
+			"environment": "client"
+		}
+	],
+	"depends": {
+		"fabricloader": ">=0.16.0",
+		"minecraft": ">=1.21.1 <=1.21.8",
+		"java": ">=21",
+		"fabric-api": "*"
+	}
+}

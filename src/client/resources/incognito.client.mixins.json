@@ -1,0 +1,36 @@
+{
+	"required": true,
+	"package": "incognito.mod.mixin.client",
+	"refmap": "client-incognito.refmap.json",
+	"compatibilityLevel": "JAVA_21",
+	"client": [
+		"ClientBrandRetrieverMixin",
+		"ClientConnectionMixin",
+		"ClientPacketListenerMixin",
+		"ClientCommonPacketListenerImplMixin",
+		"SignEditScreenMixin",
+		"AnvilScreenMixin",
+		"AnvilMenuMixin",
+		"ConnectScreenMixin",
+		"MultiPlayerGameModeMixin",
+		"DownloadQueueMixin",
+		"ChannelRegistrationMixin",
+		"FabricPlayNetworkingMixin",
+		"FabricConfigNetworkingMixin",
+		"JoinMultiplayerScreenMixin",
+		"MinecraftMixin",
+		"YggdrasilUserApiServiceMixin",
+		"ChatListenerMixin",
+		"GuiMessageTagMixin",
+		"ToastManagerMixin",
+		"ChatOptionsScreenMixin",
+		"ServerboundChatPacketMixin"
+	],
+	"injectors": {
+		"defaultRequire": 1
+	},
+	"overwrites": {
+		"conformVisibility": true
+	},
+	"verbose": false
+}

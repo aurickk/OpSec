@@ -255,7 +255,7 @@ public abstract class JoinMultiplayerScreenMixin extends Screen {
             } else if (incognito$button.isHovered()) {
                 graphics.fill(incognito$button.getX(), incognito$button.getY(), 
                     incognito$button.getX() + incognito$button.getWidth(), 
-                    incognito$button.getY() + incognito$button.getHeight(), 0x30AA00FF);
+                    incognito$button.getY() + incognito$button.getHeight(), 0x30FFFFFF);
             }
         }
     }

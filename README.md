@@ -70,11 +70,9 @@ If settings are changed while connected to a server it is recommended to reconne
 
 ### Understanding Alerts
 
-When Incognito detects a tracking attempt, you'll see alerts like:
-
-- **Translation Exploit Detected**: Server is probing your keybinds (see [Translation Exploit Protection](#translation-exploit-protection))
-- **Resource Pack Fingerprinting Detected**: Suspicious resource pack URL detected (see [Block Local URLs](#block-local-urls))
-- **Local URL Scan Detected**: Resource pack attempted to scan local network (see [Block Local URLs](#block-local-urls))
+- **Translation Exploit Detected**: Server is probing your keybind
+- **Resource Pack Fingerprinting Detected**: Suspicious resource pack URL detected
+- **Local URL Scan Detected**: Resource pack attempted to scan local network 
 
 **Alert Types:**
 - **Chat Messages**: Detailed information about what was detected/spoofed

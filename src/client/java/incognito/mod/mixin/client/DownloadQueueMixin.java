@@ -1,12 +1,14 @@
 package incognito.mod.mixin.client;
 
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
+ import com.llamalad7.mixinextras.sugar.Local;
 import incognito.mod.Incognito;
 import incognito.mod.config.IncognitoConfig;
 import net.minecraft.client.Minecraft;
 import net.minecraft.server.packs.DownloadQueue;
+import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Unique;
+import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 
 import java.nio.file.Path;
@@ -14,73 +16,43 @@ import java.util.UUID;
 
 /**
  * Isolates resource pack cache per-account to prevent cross-account fingerprinting.
+ * 
+ * <p>This prevents servers from tracking users across accounts by storing downloaded
+ * resource packs in account-specific subdirectories instead of a shared cache.</p>
+ * 
+ * <p>Adapted from <a href="https://github.com/CCBlueX/LiquidBounce">LiquidBounce</a></p>
+ * Copyright (c) 2015 - 2025 CCBlueX
+ * 
+ * @author Izuna
+ * @see <a href="https://github.com/CCBlueX/LiquidBounce/blob/nextgen/src/main/java/net/ccbluex/liquidbounce/injection/mixins/minecraft/util/MixinDownloadQueue.java">MixinDownloadQueue.java</a>
  */
 @Mixin(DownloadQueue.class)
 public class DownloadQueueMixin {
-    @Unique
-    private static volatile boolean incognito$loggedOnce = false;
-    
-    @Unique
-    private static volatile UUID incognito$lastLoggedAccountId = null;
+    @Shadow
+    @Final
+    private Path cacheDir;
 
     @ModifyExpressionValue(
-        method = "*",
-        at = @At(value = "INVOKE", target = "Ljava/nio/file/Path;resolve(Ljava/lang/String;)Ljava/nio/file/Path;"),
-        require = 0
+        method = "method_55485",
+        at = @At(value = "INVOKE", target = "Ljava/nio/file/Path;resolve(Ljava/lang/String;)Ljava/nio/file/Path;")
     )
-    private Path incognito$isolatePackPath(Path original) {
+    private Path incognito$isolatePackPath(Path original, @Local(argsOnly = true) UUID packId) {
         if (!IncognitoConfig.getInstance().shouldIsolatePackCache()) {
             return original;
         }
 
-        Minecraft mc = Minecraft.getInstance();
-        if (mc == null) {
-            return original;
-        }
-        
-        var user = mc.getUser();
-        if (user == null) {
+        // Check if path has already been modified by another mod (e.g., LiquidBounce, Meteor)
+        if (!original.getParent().equals(cacheDir)) {
             return original;
         }
 
-        UUID accountId = user.getProfileId();
+        UUID accountId = Minecraft.getInstance().getUser().getProfileId();
         if (accountId == null) {
-            if (!incognito$loggedOnce) {
-                Incognito.LOGGER.warn("[Incognito] Failed to isolate resource pack cache - account UUID is null");
-                incognito$loggedOnce = true;
-            }
+            Incognito.LOGGER.warn("[Incognito] Failed to isolate resource pack cache - account UUID is null");
             return original;
         }
 
-        Path parent = original.getParent();
-        String packIdStr = original.getFileName().toString();
-        
-        if (parent != null && isUuidLike(packIdStr)) {
-            Path isolatedPath = parent.resolve(accountId.toString()).resolve(packIdStr);
-            
-            if (incognito$lastLoggedAccountId == null || !incognito$lastLoggedAccountId.equals(accountId)) {
-                incognito$lastLoggedAccountId = accountId;
-                Incognito.LOGGER.info("[Incognito] Resource pack cache isolated per-account: {}",
-                    parent.resolve(accountId.toString()));
-            }
-            
-            return isolatedPath;
-        }
-
-        return original;
-    }
-
-    @Unique
-    private static boolean isUuidLike(String str) {
-        if (str == null || str.isEmpty()) {
-            return false;
-        }
-        try {
-            UUID.fromString(str);
-            return true;
-        } catch (IllegalArgumentException e) {
-            return str.length() == 32 && str.matches("[0-9a-fA-F]+");
-        }
+        return cacheDir.resolve(accountId.toString()).resolve(packId.toString());
     }
 }
 

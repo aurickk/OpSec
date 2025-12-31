@@ -15,8 +15,6 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import java.util.UUID;
-
 /**
  * Mixin to intercept resource pack requests.
  * 
@@ -30,11 +28,6 @@ import java.util.UUID;
  * PORT SCAN DETECTION:
  * Detection always occurs for local URL probes, regardless of protection settings.
  * This ensures full visibility into scanning attempts even when protection is off.
- * 
- * FAKE PACK ACCEPT:
- * When enabled, we send ACCEPTED/DOWNLOADED/SUCCESSFULLY_LOADED without actually downloading
- * the pack. This prevents resource pack fingerprinting while allowing connection to servers
- * that require packs.
  */
 @Mixin(ClientCommonPacketListenerImpl.class)
 public abstract class ClientCommonPacketListenerImplMixin {
@@ -87,8 +80,6 @@ public abstract class ClientCommonPacketListenerImplMixin {
     @Inject(method = "handleResourcePackPush", at = @At("HEAD"), cancellable = true)
     private void onResourcePackPush(ClientboundResourcePackPushPacket packet, CallbackInfo ci) {
         String url = packet.url();
-        UUID packId = packet.id();
-        
         boolean isLocalUrlProbe = ServerAddressTracker.shouldBlockLocalUrl(url);
         boolean protectionEnabled = IncognitoConfig.getInstance().shouldBlockLocalPackUrls();
         

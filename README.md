@@ -171,9 +171,9 @@ When the server uses a sign exploit with fallback value on Meteor Client:
 ```
 What a Vanilla response would actaully be:
 ```
-'key.meteor-client.open-gui' 'Right Shift'→'⟦FALLBACK⟧'
+'key.meteor-client.open-gui' '⟦FALLBACK⟧'→'⟦FALLBACK⟧'
 ```
-Incognito's bandaid fix for Meteor is to blacklist the `AbstractSignEditScreenMixin` Mixin to disable Meteor's broken translation protection. Allowing incognito's protection to take over, which already handles fallbacks correctly to match the Vanilla response.
+Incognito's bandaid fix for Meteor is to blacklist the `AbstractSignEditScreenMixin` Mixin to disable Meteor's broken translation protection. Allowing incognito's protection to take over, which already handle fallbacks correctly to match the Vanilla response.
 
 ---
 

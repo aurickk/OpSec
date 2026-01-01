@@ -46,7 +46,7 @@ public abstract class JoinMultiplayerScreenMixin extends Screen {
         this.addRenderableWidget(this.incognito$settingsButton);
     }
     
-    @Inject(method = "repositionElements", at = @At("TAIL"))
+    @Inject(method = "repositionElements", at = @At("TAIL"), require = 0)
     private void incognito$onRepositionElements(CallbackInfo ci) {
         incognito$updateButtonPosition();
     }

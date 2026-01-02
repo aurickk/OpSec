@@ -127,7 +127,7 @@ Incognito detects resource pack URLs pointing to local/private IP addresses and 
 
 ### Translation Exploit Protection
 
-Servers can send specially crafted text (in books, signs, , anvils, etc) containing translation keys like `key.attack` or `key.hide_icons` to probe which keys you have bound or mod UI elements your client can resolve. This can reveal the client's installed mods.
+Servers can send translatable text in signs and anvils containing keys like `key.attack` or `key.hide_icons` to probe which keys you have bound or mod UI elements your client can resolve. This can reveal the client's installed mods.
 
 https://wurst.wiki/sign_translation_vulnerability
 

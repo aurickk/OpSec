@@ -1,0 +1,39 @@
+{
+  "opsec.config.title": "OpSec Settings",
+  
+  "opsec.tab.identity": "Identity",
+  "opsec.tab.protection": "Protection",
+  "opsec.tab.whitelist": "Whitelist",
+  "opsec.tab.misc": "Miscellaneous",
+  
+  "opsec.option.spoofBrand": "Spoof Brand",
+  "opsec.option.brandType": "Brand Type",
+  "opsec.option.spoofChannels": "Spoof Channels",
+  
+  "opsec.option.whitelistEnabled": "Enable Whitelist",
+  "opsec.whitelist.search": "Search",
+  
+  "opsec.option.isolatePackCache": "Isolate Pack Cache",
+  "opsec.option.blockLocalPackUrls": "Block Local URLs",
+  "opsec.option.clearCache": "Clear Cached Resource Packs",
+  "opsec.option.blockTranslationExploit": "Translation Protection",
+  "opsec.option.translationExploitMode": "Protection Mode",
+  "opsec.option.signingMode": "Disable Chat Signing",
+  "opsec.option.disableTelemetry": "Disable Telemetry",
+  
+  "opsec.option.showAlerts": "Chat Alerts",
+  "opsec.option.showToasts": "Toast Popups",
+  "opsec.option.logDetections": "Log Events",
+  "opsec.option.hideInsecureIndicators": "Hide 'Not Secure'",
+  "opsec.option.hideModifiedIndicators": "Hide 'Modified'",
+  "opsec.option.hideSystemMsgIndicators": "Hide System Bar",
+  "opsec.option.hideWarningToast": "Hide Warning Toast",
+  
+  "opsec.brand.vanilla": "Vanilla",
+  "opsec.brand.fabric": "Fabric",
+  "opsec.brand.forge": "Forge",
+  
+  "opsec.translationMode.spoof": "Spoof",
+  "opsec.translationMode.block": "Block"
+}
+

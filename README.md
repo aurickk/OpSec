@@ -2,7 +2,7 @@
 <img src="https://github.com/user-attachments/assets/152bd1b3-75d6-4855-ba0e-b26924233363" alt="goofy fedora hat icon" width="15%"/>
 </p>
 
-<h1 align="center">Incognito</h1>
+<h1 align="center">OpSec</h1>
 
 <p align="center">A client-side Minecraft mod that provides protection against client fingerprinting, tracking exploits, and other privacy focused features.</p>
 
@@ -13,29 +13,31 @@
 
 - **[Brand Spoofing](#brand-spoofing)** - Change client brand name to Vanilla, Fabric, or Forge
 - **[Channel Spoofing](#channel-spoofing)** - Hide or fake mod channels to prevent mod detection
+- **[Mod Whitelist](#mod-whitelist)** - Exempt specific mods from channel spoofing and translation protection
 - **[Isolate Pack Cache](#isolate-pack-cache)** - Isolate resource packs per-account to prevent tracking
 - **[Block Local URLs](#block-local-urls)** - Automatically fail local requests from server resource packs 
 - **[Translation Exploit Protection](#translation-exploit-protection)** - Protect against keybind probing
+- **[Meteor Fix](#meteor-fix)** - Disable Meteor Client's broken translation protection
 - **[Chat Signing Control](#chat-signing-control)** - Configure chat message signing behavior
 - **[Telemetry Blocking](#telemetry-blocking)** - Disable data collection sent to Mojang
 
 ## Requirements
 
-- **Minecraft** 1.21.1 – 1.21.10
-- **Fabric Loader** 0.15.0+
+- **Minecraft** 1.21.1 – 1.21.11+
+- **Fabric Loader** 0.16.0+
 - **Fabric API** (matching your Minecraft version)
 
 ### Installation
 
 1. Install [Fabric Loader](https://fabricmc.net/use/) for your Minecraft version
 2. Download the latest [Fabric API](https://modrinth.com/mod/fabric-api) for your Minecraft version
-3. Download the latest `incognito-[minecraft_version]-[version].jar` from the [Releases](https://github.com/aurickk/Incognito/releases/) page
+3. Download the latest `opsec-[minecraft_version]-[version].jar` from the [Releases](https://github.com/aurickk/OPSEC/releases/) page
 4. Place both mods in your `.minecraft/mods` folder
 5. Launch Minecraft
 
 ## Configurations
 
-The settings menu is accessible via the `Incognito` button in the multiplayer server selection menu footer or [Mod Menu](https://modrinth.com/mod/modmenu).
+The settings menu is accessible via the `OpSec` button in the multiplayer server selection menu footer or [Mod Menu](https://modrinth.com/mod/modmenu).
 
 If settings are changed while connected to a server it is recommended to reconnect to the server to ensure changes are applied.
 
@@ -55,10 +57,18 @@ If settings are changed while connected to a server it is recommended to reconne
 | **Block Local Pack URLs** | Toggle | Enable/disable [local URL blocking](#block-local-urls) |
 | **Clear Cache** | Button | Delete all cached server resource packs |
 | **Spoof Translation Keys** | Toggle | Enable/disable [translation exploit protection](#translation-exploit-protection) |
+| **Meteor Fix** | Toggle | Disable Meteor Client's broken translation protection (only shown when Meteor is installed) |
 | **Signing Mode** | Dropdown | Configure [chat signing](#chat-signing-control) behavior:<br/>• **OFF**: Strip signatures (maximum privacy)<br/>• **ON**: Default Minecraft behavior<br/>• **AUTO**: Only sign when required (recommended) |
 | **Disable Telemetry** | Toggle | Enable/disable [telemetry blocking](#telemetry-blocking) |
 
-#### Misc Tab
+#### Whitelist Tab
+
+| Setting | Type | Description |
+|---------|------|-------------|
+| **Enable Whitelist** | Toggle | Enable the [mod whitelist](#mod-whitelist) feature |
+| **Installed Mods** | List | Toggle individual mods ON/OFF to exempt them from protection |
+
+#### Miscellaneous Tab
 
 | Setting | Type | Description |
 |---------|------|-------------|
@@ -78,7 +88,7 @@ If settings are changed while connected to a server it is recommended to reconne
 
 Servers can detect your client brand (Vanilla, Fabric, Forge, etc.) to fingerprint you or restrict modded clients.
 
-Incognito intercepts the client brand packet sent to servers and replaces it with your chosen brand. You can appear as:
+OpSec intercepts the client brand packet sent to servers and replaces it with your chosen brand. You can appear as:
 - **Vanilla**
 - **Fabric** 
 - **Forge** 
@@ -92,13 +102,27 @@ Incognito intercepts the client brand packet sent to servers and replaces it wit
 
 Servers can query your registered network channels to detect which mods you have installed.
 
-When enabled, Incognito spoof mod channels that are registered with the server based on your selected brand:
+When enabled, OpSec spoofs mod channels that are registered with the server based on your selected brand:
 - **Vanilla mode**: Blocks ALL mod channels (pure vanilla client)
 - **Fabric mode**: Only allows Fabric API channels, blocks other mods
 - **Forge mode**: Only allows Forge channels, blocks other mods
 
 > [!WARNING]
-> May break mods that require server-side components (such as [VoiceChat](https://modrinth.com/plugin/simple-voice-chat)), as their communication channels will be blocked.
+> May break server-dependent mod(s) if not whitelisted. Use the [Mod Whitelist](#mod-whitelist) to exempt specific mods like [VoiceChat](https://modrinth.com/plugin/simple-voice-chat).
+
+---
+
+### Mod Whitelist
+
+Some mods require server communication to function properly (e.g., VoiceChat, Xaero's Minimap waypoint sharing). The whitelist allows you to exempt specific mods from channel spoofing and translation exploit protection.
+
+When enabled:
+- **Brand is forced to Fabric** to maintain compatibility
+- Whitelisted mods can register their channels and translation keys normally
+- Non-whitelisted mods remain hidden from the server
+
+> [!NOTE]
+> Only mods that register network channels or translation keys are shown in the whitelist. Library mods and internal Fabric API modules are automatically filtered out.
 
 ---
 
@@ -109,7 +133,7 @@ Server-required resource packs could be used fingerprint client instance across 
 
 https://alaggydev.github.io/posts/cytooxien/
 
-Instead of storing all resource packs in a shared cache (`~/.minecraft/downloads/`), Incognito creates separate cache directories for each account UUID.
+Instead of storing all resource packs in a shared cache (`~/.minecraft/downloads/`), OpSec creates separate cache directories for each account UUID.
 
 ---
 
@@ -121,7 +145,7 @@ Malicious servers can send resource pack URLs to probe your local network device
 
 https://alaggydev.github.io/posts/cytooxien/
 
-Incognito detects resource pack URLs pointing to local/private IP addresses and redirects them to an invalid address (`http://0.0.0.0:0/incognito-blocked`), tricking the server into thinking that requests failed naturally.
+OpSec detects resource pack URLs pointing to local/private IP addresses and redirects them to an invalid address (`http://0.0.0.0:0/opsec-blocked`), tricking the server into thinking that requests failed naturally.
 
 ---
 
@@ -131,7 +155,7 @@ Servers can send translatable text in signs and anvils containing keys like `key
 
 https://wurst.wiki/sign_translation_vulnerability
 
-Incognito intercepts translation keys and blocks Minecraft from resolving it while also returning Vanilla default key bind values to appear like a default Vanilla client.
+OpSec intercepts translation keys and blocks Minecraft from resolving it while also returning Vanilla default key bind values to appear like a default Vanilla client.
 
 Spoofing mod keybinds (Returns raw translation keys/fallback instead of keybind values):
 ```
@@ -173,7 +197,7 @@ What a Vanilla response would actaully be:
 ```
 'key.meteor-client.open-gui' '⟦FALLBACK⟧'→'⟦FALLBACK⟧'
 ```
-Incognito's bandaid fix for Meteor is to blacklist the `AbstractSignEditScreenMixin` Mixin to disable Meteor's broken translation protection. Allowing incognito's protection to take over, which already handle fallbacks correctly to match the Vanilla response.
+OpSec's bandaid fix for Meteor is to blacklist the `AbstractSignEditScreenMixin` Mixin to disable Meteor's broken translation protection. Allowing OpSec's protection to take over, which already handle fallbacks correctly to match the Vanilla response.
 
 ---
 
@@ -200,7 +224,7 @@ Minecraft collects and sends telemetry data to Mojang, including:
 - Client configuration
 - Usage statistics
 
-Incognito blocks telemetry sending to Mojang when telemetry blocking is enabled. Does not effect gameplay.
+OpSec blocks telemetry sending to Mojang when telemetry blocking is enabled. Does not effect gameplay.
 
 ## Building from Source
 
@@ -213,11 +237,11 @@ Incognito blocks telemetry sending to Mojang when telemetry blocking is enabled.
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/aurickk/Incognito.git
-   cd Incognito
+   git clone https://github.com/aurickk/OPSEC.git
+   cd OPSEC
    ```
 
-2. **Build the mod**
+2. **Build all versions**
    ```bash
    # Windows
    .\gradlew.bat build
@@ -226,7 +250,21 @@ Incognito blocks telemetry sending to Mojang when telemetry blocking is enabled.
    ./gradlew build
    ```
 
-Output JARs are in `legacy/build/libs/` (1.21.1 - 1.21.8) and `modern/build/libs/` (1.21.9 - 1.21.10).
+3. **Build a specific version**
+   ```bash
+   # Build for a specific version
+   ./gradlew chiseledBuild -Pchisel=1.21.4
+   ./gradlew chiseledBuild -Pchisel=1.21.11
+   ```
+
+Output JARs are located in `versions/<minecraft_version>/build/libs/`:
+| Build Version | Supports |
+|---------------|----------|
+| 1.21.4 | 1.21.1 – 1.21.5 |
+| 1.21.6 | 1.21.6 – 1.21.8 |
+| 1.21.9 | 1.21.9 – 1.21.10 |
+| 1.21.11 | 1.21.11+ |
+
 
 ## References
 
@@ -234,4 +272,5 @@ Output JARs are in `legacy/build/libs/` (1.21.1 - 1.21.8) and `modern/build/libs
 - [LiquidBounce](https://github.com/CCBlueX/LiquidBounce/blob/nextgen/src/main/java/net/ccbluex/liquidbounce/injection/mixins/minecraft/util/MixinDownloadQueue.java) - Cached server resource pack isolation
 - [No Chat Reports](https://modrinth.com/mod/no-chat-reports) - Chat signing control and telemetry blocking
 - [No Prying Eyes](https://github.com/Daxanius/NoPryingEyes?tab=readme-ov-file) - Secure chat enforcement detection
-- [MixinBlacklist](https://github.com/ThePotatoArchivist/MixinBlacklist) - Blacklisting Meteor Client's ModDetectionPreventer Mixin
+- [MixinSquared](https://github.com/Bawnorton/MixinSquared) - Mixin cancellation for Meteor Fix
+- [Stonecutter](https://stonecutter.kikugie.dev/) - Multi-version build system

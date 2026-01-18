@@ -2,7 +2,7 @@
 	"schemaVersion": 1,
 	"id": "opsec",
 	"version": "${version}",
-	"name": "OPSEC",
+	"name": "OpSec",
 	"description": "Advanced client brand spoofing, tracking exploit protections, and other privacy focused features.",
 	"authors": [
 		"Aurick"

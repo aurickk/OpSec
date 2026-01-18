@@ -1,0 +1,45 @@
+# Gradle
+.gradle/
+build/
+!gradle/wrapper/gradle-wrapper.jar
+
+# IDE
+.idea/
+*.iml
+*.ipr
+*.iws
+.vscode/
+*.launch
+.settings/
+.metadata
+.classpath
+.project
+bin/
+
+# Fabric Loom
+run/
+remappedSrc/
+
+# Stonecutter
+versions/*/build/
+versions/*/.gradle/
+
+# Legacy directories (no longer used)
+legacy/
+modern/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Python cache
+__pycache__/
+*.py[cod]
+
+# Other projects in workspace
+AntiSpoof/
+Pay-Everyone/

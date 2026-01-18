@@ -1,13 +1,8 @@
 <p align="center">
-<img src="https://github.com/user-attachments/assets/152bd1b3-75d6-4855-ba0e-b26924233363" alt="goofy fedora hat icon" width="15%"/>
+<img src="https://github.com/user-attachments/assets/085ae33d-eee9-4624-b7e2-d65ef565342d" alt="duper trooper mogging my whole family" width="15%"/>
 </p>
 
-<h1 align="center">OpSec</h1>
-
 <p align="center">A client-side Minecraft mod that provides protection against client fingerprinting, tracking exploits, and other privacy focused features.</p>
-
-> [!WARNING]
-> This mod is still at an experimental phase. Use at your own risk.
 
 ## What it does
 
@@ -23,7 +18,7 @@
 
 ## Requirements
 
-- **Minecraft** 1.21.1 – 1.21.11+
+- **Minecraft** 1.21.1 – 1.21.11
 - **Fabric Loader** 0.16.0+
 - **Fabric API** (matching your Minecraft version)
 
@@ -39,42 +34,45 @@
 
 The settings menu is accessible via the `OpSec` button in the multiplayer server selection menu footer or [Mod Menu](https://modrinth.com/mod/modmenu).
 
+<img width="376" height="141" alt="opsec button" src="https://github.com/user-attachments/assets/01b68390-0610-42d4-bced-30b86d3d76e8" />
+
+
 If settings are changed while connected to a server it is recommended to reconnect to the server to ensure changes are applied.
 
 #### Identity Tab
 
-| Setting | Type | Description |
-|---------|------|-------------|
-| **Spoof Brand** | Toggle | Enable/disable [brand spoofing](#brand-spoofing) |
-| **Brand Type** | Dropdown | Select which brand to appear as (Vanilla/Fabric/Forge) |
-| **Spoof Channels** | Toggle | Enable/disable [channel spoofing](#channel-spoofing) |
+| Setting | Description |
+|---------|-------------|
+| **Spoof Brand** | Enable/disable [brand spoofing](#brand-spoofing) |
+| **Brand Type** | Select which brand to appear as (Vanilla/Fabric/Forge) |
+| **Spoof Channels** | Enable/disable [channel spoofing](#channel-spoofing) |
 
 #### Protection Tab
 
-| Setting | Type | Description |
-|---------|------|-------------|
-| **Isolate Pack Cache** | Toggle | Enable/disable [cache isolation](#isolate-pack-cache) |
-| **Block Local Pack URLs** | Toggle | Enable/disable [local URL blocking](#block-local-urls) |
-| **Clear Cache** | Button | Delete all cached server resource packs |
-| **Spoof Translation Keys** | Toggle | Enable/disable [translation exploit protection](#translation-exploit-protection) |
-| **Meteor Fix** | Toggle | Disable Meteor Client's broken translation protection (only shown when Meteor is installed) |
-| **Signing Mode** | Dropdown | Configure [chat signing](#chat-signing-control) behavior:<br/>• **OFF**: Strip signatures (maximum privacy)<br/>• **ON**: Default Minecraft behavior<br/>• **AUTO**: Only sign when required (recommended) |
-| **Disable Telemetry** | Toggle | Enable/disable [telemetry blocking](#telemetry-blocking) |
+| Setting | Description |
+|---------|-------------|
+| **Isolate Pack Cache** | Enable/disable [cache isolation](#isolate-pack-cache) |
+| **Block Local Pack URLs** | Enable/disable [local URL blocking](#block-local-urls) |
+| **Clear Cache** | Delete all cached server resource packs |
+| **Spoof Translation Keys** | Enable/disable [translation exploit protection](#translation-exploit-protection) |
+| **Meteor Fix** | Disable Meteor Client's broken translation protection (only shown when Meteor is installed) |
+| **Signing Mode** | Configure [chat signing](#chat-signing-control) behavior:<br/>• **OFF**: Strip signatures (maximum privacy)<br/>• **ON**: Default Minecraft behavior<br/>• **AUTO**: Only sign when required (recommended) |
+| **Disable Telemetry** | Enable/disable [telemetry blocking](#telemetry-blocking) |
 
 #### Whitelist Tab
 
-| Setting | Type | Description |
-|---------|------|-------------|
-| **Enable Whitelist** | Toggle | Enable the [mod whitelist](#mod-whitelist) feature |
-| **Installed Mods** | List | Toggle individual mods ON/OFF to exempt them from protection |
+| Setting | Description |
+|---------|-------------|
+| **Enable Whitelist** | Enable the [mod whitelist](#mod-whitelist) feature |
+| **Installed Mods** | Toggle individual mods ON/OFF to exempt them from protection |
 
 #### Miscellaneous Tab
 
-| Setting | Type | Description |
-|---------|------|-------------|
-| **Show Alerts** | Toggle | Display chat messages when tracking is detected |
-| **Show Toasts** | Toggle | Display popup notifications for important events |
-| **Log Detections** | Toggle | Log all detection events to game log for transparency |
+| Setting | Description |
+|---------|-------------|
+| **Show Alerts** | Display chat messages when tracking is detected |
+| **Show Toasts** | Display popup notifications for important events |
+| **Log Detections** | Log all detection events to game log for transparency |
 
 ### Understanding Alerts
 
@@ -104,8 +102,8 @@ Servers can query your registered network channels to detect which mods you have
 
 When enabled, OpSec spoofs mod channels that are registered with the server based on your selected brand:
 - **Vanilla mode**: Blocks ALL mod channels (pure vanilla client)
-- **Fabric mode**: Only allows Fabric API channels, blocks other mods
-- **Forge mode**: Only allows Forge channels, blocks other mods
+- **Fabric mode**: Only allows Fabric API channels and whitelisted mods, blocks other mods
+- **Forge mode**: Imitate Forge channels, blocks all mod channels
 
 > [!WARNING]
 > May break server-dependent mod(s) if not whitelisted. Use the [Mod Whitelist](#mod-whitelist) to exempt specific mods like [VoiceChat](https://modrinth.com/plugin/simple-voice-chat).
@@ -122,7 +120,7 @@ When enabled:
 - Non-whitelisted mods remain hidden from the server
 
 > [!NOTE]
-> Only mods that register network channels or translation keys are shown in the whitelist. Library mods and internal Fabric API modules are automatically filtered out.
+> Only mods that register network channels or translation keys are shown in the whitelist.
 
 ---
 
@@ -263,7 +261,7 @@ Output JARs are located in `versions/<minecraft_version>/build/libs/`:
 | 1.21.4 | 1.21.1 – 1.21.5 |
 | 1.21.6 | 1.21.6 – 1.21.8 |
 | 1.21.9 | 1.21.9 – 1.21.10 |
-| 1.21.11 | 1.21.11+ |
+| 1.21.11 | 1.21.11 |
 
 
 ## References

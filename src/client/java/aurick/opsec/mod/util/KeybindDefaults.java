@@ -2,7 +2,7 @@ package aurick.opsec.mod.util;
 
 import com.mojang.blaze3d.platform.InputConstants;
 import aurick.opsec.mod.Opsec;
-import aurick.opsec.mod.tracking.ModTracker;
+import aurick.opsec.mod.tracking.ModRegistry;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 
@@ -47,7 +47,7 @@ public final class KeybindDefaults {
                 
                 // Vanilla keybind = exists in vanilla translation keys whitelist
                 // This whitelist is populated from the minecraft/vanilla language pack
-                if (ModTracker.isVanillaTranslationKey(keyName)) {
+                if (ModRegistry.isVanillaTranslationKey(keyName)) {
                     InputConstants.Key defaultKey = mapping.getDefaultKey();
                     String defaultValue = getDisplayName(defaultKey);
                     

@@ -261,7 +261,7 @@ public class PrivacyLogger {
     }
     
     public enum ExploitSource {
-        SIGN("Sign"), ANVIL("Anvil"), BOOK("Book"), UNKNOWN("Unknown source");
+        SIGN("Sign"), ANVIL("Anvil"), UNKNOWN("Unknown source");
         
         private final String displayName;
         ExploitSource(String displayName) { this.displayName = displayName; }

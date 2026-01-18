@@ -19,7 +19,6 @@ import net.minecraft.resources.ResourceLocation;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
-import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.file.Files;
 import java.nio.file.Path;

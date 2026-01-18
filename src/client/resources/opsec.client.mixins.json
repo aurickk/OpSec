@@ -25,8 +25,7 @@
 		"KeybindContentsMixin",
 		"TranslatableContentsMixin",
 		"SignEditScreenMixin",
-		"AnvilScreenMixin",
-		"BookEditScreenMixin"
+		"AnvilScreenMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1

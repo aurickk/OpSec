@@ -3,7 +3,7 @@ package aurick.opsec.mod.mixin.client;
 import aurick.opsec.mod.detection.TrackPackDetector;
 import aurick.opsec.mod.protection.ResourcePackGuard;
 import aurick.opsec.mod.protection.TranslationProtectionHandler;
-import aurick.opsec.mod.tracking.ModTracker;
+import aurick.opsec.mod.tracking.ModRegistry;
 import net.minecraft.client.gui.screens.ConnectScreen;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -21,6 +21,6 @@ public class ConnectScreenMixin {
         TrackPackDetector.reset();
         ResourcePackGuard.onServerJoin();
         TranslationProtectionHandler.clearCache();
-        ModTracker.clearServerPackKeys();  // Clear server pack whitelist for new server
+        ModRegistry.clearServerPackKeys();  // Clear server pack whitelist for new server
     }
 }

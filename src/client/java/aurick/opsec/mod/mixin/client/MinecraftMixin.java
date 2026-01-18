@@ -7,7 +7,6 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.AbstractSignEditScreen;
 import net.minecraft.client.gui.screens.inventory.AnvilScreen;
-import net.minecraft.client.gui.screens.inventory.BookEditScreen;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
@@ -56,8 +55,7 @@ public class MinecraftMixin {
     @Unique
     private boolean opsec$isExploitableScreen(Screen screen) {
         return screen instanceof AbstractSignEditScreen 
-            || screen instanceof AnvilScreen 
-            || screen instanceof BookEditScreen;
+            || screen instanceof AnvilScreen;
     }
     
     /**

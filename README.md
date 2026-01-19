@@ -10,7 +10,7 @@
 - **[Channel Spoofing](#channel-spoofing)** - Hide or fake mod channels to prevent mod detection
 - **[Isolate Pack Cache](#isolate-pack-cache)** - Isolate resource packs per-account to prevent tracking
 - **[Block Local URLs](#block-local-urls)** - Automatically fail local requests from server resource packs 
-- **[Translation Exploit Protection](#translation-exploit-protection)** - Protect against keybind probing
+- **[Translation Exploit Protection](#translation-exploit-protection)** - Protect against key resolution mod detection
 - **[Meteor Fix](#meteor-fix)** - Disable Meteor Client's broken translation protection
 - **[Mod Whitelist](#mod-whitelist)** - Exempt specific mods from channel spoofing and translation protection
 - **[Chat Signing Control](#chat-signing-control)** - Configure chat message signing behavior
@@ -111,7 +111,7 @@ OpSec intercepts the client brand packet sent to servers and replaces it with yo
 ### Isolate Pack Cache
 Based on [LiquidBounce](https://github.com/CCBlueX/LiquidBounce/blob/nextgen/src/main/java/net/ccbluex/liquidbounce/injection/mixins/minecraft/util/MixinDownloadQueue.java).
 
-Server-required resource packs could be used fingerprint client instance across accounts.
+Server-required resource packs could be used to fingerprint client instance across accounts.
 
 https://alaggydev.github.io/posts/cytooxien/
 

@@ -26,7 +26,7 @@
 
 1. Install [Fabric Loader](https://fabricmc.net/use/) for your Minecraft version
 2. Download the latest [Fabric API](https://modrinth.com/mod/fabric-api) for your Minecraft version
-3. Download the latest `opsec-[minecraft_version]-[version].jar` from the [Releases](https://github.com/aurickk/OPSEC/releases/) page
+3. Download the latest `opsec-[minecraft_version]-[version].jar` from the [Releases](https://github.com/aurickk/OpSec/releases/) page
 4. Place both mods in your `.minecraft/mods` folder
 5. Launch Minecraft
 
@@ -74,6 +74,17 @@ If settings are changed while connected to a server it is recommended to reconne
 | **Show Alerts** | Display chat messages when tracking is detected |
 | **Show Toasts** | Display popup notifications for important events |
 | **Log Detections** | Log all detection events to game log for transparency |
+
+### Debug Commands
+
+Use `/opsec` in-game to access debug information:
+
+| Command | Description |
+|---------|-------------|
+| `/opsec` | Show available commands |
+| `/opsec info` | Show overview of all tracked mods |
+| `/opsec info <mod>` | Show details for a specific mod (translation keys, keybinds, channels) |
+| `/opsec channels` | Show all tracked network channels with whitelist status |
 
 ### Understanding Alerts
 
@@ -154,7 +165,15 @@ Servers can send translatable text in signs and anvils containing keys like `key
 
 https://wurst.wiki/sign_translation_vulnerability
 
-OpSec intercepts translation keys and blocks Minecraft from resolving it while also returning Vanilla default key bind values to appear like a default Vanilla client.
+OpSec intercepts translation keys and blocks Minecraft from resolving them based on your selected brand mode:
+
+#### Mode-Specific Behavior
+
+- **Vanilla mode**: Blocks all mod keys, returns default keybind values for vanilla keys
+- **Fabric mode**: Allows Fabric API keys and whitelisted mod keys, blocks everything else
+- **Forge mode**: Returns fabricated Forge/FML translation values (e.g., `fml.menu.mods` → `"Mods"`), blocks other mod keys
+
+#### Examples
 
 Spoofing mod keybinds (Returns raw translation keys/fallback instead of keybind values):
 ```
@@ -167,6 +186,12 @@ Spoofing vanilla keybinds (Returns default keybinds):
 [key.hotbar.6] 'Q'→'6'
 [key.hotbar.7] 'E'→'7'
 [key.hotbar.8] 'R'→'8'
+```
+
+Forge mode fabrication (Returns fake Forge values):
+```
+[fml.menu.mods] 'fml.menu.mods'→'Mods'
+[forge.configgui.forgeCloudsEnabled] 'forge.configgui.forgeCloudsEnabled'→'Use Forge cloud renderer'
 ```
 
 ---
@@ -244,8 +269,8 @@ OpSec blocks telemetry sending to Mojang when telemetry blocking is enabled. Doe
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/aurickk/OPSEC.git
-   cd OPSEC
+   git clone https://github.com/aurickk/OpSec.git
+   cd OpSec
    ```
 
 2. **Build all versions**

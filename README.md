@@ -283,8 +283,8 @@ OpSec blocks telemetry sending to Mojang when telemetry blocking is enabled. Doe
 3. **Build a specific version**
    ```bash
    # Build for a specific version
-   ./gradlew chiseledBuild -Pchisel=1.21.4
-   ./gradlew chiseledBuild -Pchisel=1.21.11
+   ./gradlew :1.21.4:build
+   ./gradlew :1.21.11:build
    ```
 
 Output JARs are located in `versions/<minecraft_version>/build/libs/`:

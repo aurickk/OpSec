@@ -9,8 +9,8 @@
 	],
 	"contact": {
 		"homepage": "https://modrinth.com/mod/opsec",
-		"sources": "https://github.com/aurickk/OPSEC",
-		"issues": "https://github.com/aurickk/OPSEC/issues"
+		"sources": "https://github.com/aurickk/OpSec",
+		"issues": "https://github.com/aurickk/OpSec/issues"
 	},
 	"license": "MIT",
 	"icon": "assets/opsec/icon.png",

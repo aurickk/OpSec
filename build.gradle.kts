@@ -16,8 +16,12 @@ base {
 }
 
 // Use "+" separator instead of default "-" for version
-tasks.withType<AbstractArchiveTask>().configureEach {
-    archiveFileName.set("${base.archivesName.get()}+${project.version}.${archiveExtension.get()}")
+tasks.named<Jar>("jar") {
+    archiveFileName.set("${base.archivesName.get()}+${project.version}.jar")
+}
+
+tasks.named("remapJar") {
+    (this as org.gradle.jvm.tasks.Jar).archiveFileName.set("${base.archivesName.get()}+${project.version}.jar")
 }
 
 loom {

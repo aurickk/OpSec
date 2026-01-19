@@ -15,6 +15,11 @@ base {
     archivesName.set("opsec-$version_suffix")
 }
 
+// Use "+" separator instead of default "-" for version
+tasks.withType<AbstractArchiveTask>().configureEach {
+    archiveFileName.set("${base.archivesName.get()}+${project.version}.${archiveExtension.get()}")
+}
+
 loom {
     splitEnvironmentSourceSets()
     

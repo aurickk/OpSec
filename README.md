@@ -8,11 +8,11 @@
 
 - **[Brand Spoofing](#brand-spoofing)** - Change client brand name to Vanilla, Fabric, or Forge
 - **[Channel Spoofing](#channel-spoofing)** - Hide or fake mod channels to prevent mod detection
-- **[Mod Whitelist](#mod-whitelist)** - Exempt specific mods from channel spoofing and translation protection
 - **[Isolate Pack Cache](#isolate-pack-cache)** - Isolate resource packs per-account to prevent tracking
 - **[Block Local URLs](#block-local-urls)** - Automatically fail local requests from server resource packs 
-- **[Translation Exploit Protection](#translation-exploit-protection)** - Protect against keybind probing
+- **[Translation Exploit Protection](#translation-exploit-protection)** - Protect against key resolution mod detection
 - **[Meteor Fix](#meteor-fix)** - Disable Meteor Client's broken translation protection
+- **[Mod Whitelist](#mod-whitelist)** - Exempt specific mods from channel spoofing and translation protection
 - **[Chat Signing Control](#chat-signing-control)** - Configure chat message signing behavior
 - **[Telemetry Blocking](#telemetry-blocking)** - Disable data collection sent to Mojang
 
@@ -26,7 +26,7 @@
 
 1. Install [Fabric Loader](https://fabricmc.net/use/) for your Minecraft version
 2. Download the latest [Fabric API](https://modrinth.com/mod/fabric-api) for your Minecraft version
-3. Download the latest `opsec-[minecraft_version]-[version].jar` from the [Releases](https://github.com/aurickk/OpSec/releases/) page
+3. Download the latest `opsec-[minecraft_version]+[version].jar` from the [Releases](https://github.com/aurickk/OpSec/releases/) page
 4. Place both mods in your `.minecraft/mods` folder
 5. Launch Minecraft
 
@@ -36,7 +36,7 @@ The settings menu is accessible via the `OpSec` button in the multiplayer server
 
 <img width="376" height="141" alt="opsec button" src="https://github.com/user-attachments/assets/01b68390-0610-42d4-bced-30b86d3d76e8" />
 
-<img width="1437" height="920" alt="image" src="https://github.com/user-attachments/assets/fa3e75ff-44d3-4d18-858e-08f26b645530" />
+<img width="852" height="477" alt="opsec setting menu" src="https://github.com/user-attachments/assets/130a9ffb-a316-44c1-a4d5-0c55a51967d2" />
 
 If settings are changed while connected to a server it is recommended to reconnect to the server to ensure changes are applied.
 
@@ -108,38 +108,10 @@ OpSec intercepts the client brand packet sent to servers and replaces it with yo
 
 ---
 
-### Channel Spoofing
-
-Servers can query your registered network channels to detect which mods you have installed.
-
-When enabled, OpSec spoofs mod channels that are registered with the server based on your selected brand:
-- **Vanilla mode**: Blocks ALL mod channels (pure vanilla client)
-- **Fabric mode**: Only allows Fabric API channels and whitelisted mods, blocks other mods
-- **Forge mode**: Imitate Forge channels, blocks all mod channels
-
-> [!WARNING]
-> May break server-dependent mod(s) if not whitelisted. Use the [Mod Whitelist](#mod-whitelist) to exempt specific mods like [VoiceChat](https://modrinth.com/plugin/simple-voice-chat).
-
----
-
-### Mod Whitelist
-
-Some mods require server communication to function properly (e.g., VoiceChat, Xaero's Minimap waypoint sharing). The whitelist allows you to exempt specific mods from channel spoofing and translation exploit protection.
-
-When enabled:
-- **Brand is forced to Fabric** to maintain compatibility
-- Whitelisted mods can register their channels and translation keys normally
-- Non-whitelisted mods remain hidden from the server
-
-> [!NOTE]
-> Only mods that register network channels or translation keys are shown in the whitelist.
-
----
-
 ### Isolate Pack Cache
 Based on [LiquidBounce](https://github.com/CCBlueX/LiquidBounce/blob/nextgen/src/main/java/net/ccbluex/liquidbounce/injection/mixins/minecraft/util/MixinDownloadQueue.java).
 
-Server-required resource packs could be used fingerprint client instance across accounts.
+Server-required resource packs could be used to fingerprint client instance across accounts.
 
 https://alaggydev.github.io/posts/cytooxien/
 
@@ -220,9 +192,6 @@ When the server uses a sign exploit with fallback value on Meteor Client:
 
 <img width="847" height="107" alt="image" src="https://github.com/user-attachments/assets/e157ae3f-6beb-4823-aca0-9c61573264e2" />
 
-
-
-
 What a Vanilla response would actaully be:
 ```
 'key.meteor-client.open-gui' '⟦FALLBACK⟧'→'⟦FALLBACK⟧'
@@ -230,6 +199,35 @@ What a Vanilla response would actaully be:
 OpSec's bandaid fix for Meteor is to blacklist the `AbstractSignEditScreenMixin` Mixin to disable Meteor's broken translation protection. Allowing OpSec's protection to take over, which already handle fallbacks correctly to match the Vanilla response.
 
 <img width="901" height="107" alt="image" src="https://github.com/user-attachments/assets/506b9c73-6747-40f8-9a56-52c0353034b4" />
+
+---
+### Channel Spoofing
+
+Servers can query your registered network channels to detect which mods you have installed.
+
+When enabled, OpSec spoofs mod channels that are registered with the server based on your selected brand:
+- **Vanilla mode**: Blocks ALL mod channels (pure vanilla client)
+- **Fabric mode**: Only allows Fabric API channels and whitelisted mods, blocks other mods
+- **Forge mode**: Imitate Forge channels, blocks all mod channels
+
+> [!WARNING]
+> May break server-dependent mod(s) if not whitelisted. Use the [Mod Whitelist](#mod-whitelist) to exempt specific mods like [VoiceChat](https://modrinth.com/plugin/simple-voice-chat) or disable channel spoofing.
+
+---
+
+### Mod Whitelist
+
+Some mods require server communication to function properly (e.g., VoiceChat, Xaero's Minimap waypoint sharing). The whitelist allows you to exempt specific mods from channel spoofing and translation exploit protection.
+
+<img width="853" height="478" alt="whitelist settings menu" src="https://github.com/user-attachments/assets/6ae423de-dd98-47c1-a617-f6df747c9293" />
+
+When enabled:
+- **Brand is forced to Fabric** to since you are revealing Fabric mods
+- Whitelisted mods can register their channels and translation keys normally
+- Non-whitelisted mods remain hidden from the server
+
+> [!NOTE]
+> Only mods that register network channels or translation keys are shown in the whitelist.
 
 ---
 
@@ -285,8 +283,8 @@ OpSec blocks telemetry sending to Mojang when telemetry blocking is enabled. Doe
 3. **Build a specific version**
    ```bash
    # Build for a specific version
-   ./gradlew chiseledBuild -Pchisel=1.21.4
-   ./gradlew chiseledBuild -Pchisel=1.21.11
+   ./gradlew :1.21.4:build
+   ./gradlew :1.21.11:build
    ```
 
 Output JARs are located in `versions/<minecraft_version>/build/libs/`:
@@ -306,3 +304,5 @@ Output JARs are located in `versions/<minecraft_version>/build/libs/`:
 - [No Prying Eyes](https://github.com/Daxanius/NoPryingEyes?tab=readme-ov-file) - Secure chat enforcement detection
 - [MixinSquared](https://github.com/Bawnorton/MixinSquared) - Mixin cancellation for Meteor Fix
 - [Stonecutter](https://stonecutter.kikugie.dev/) - Multi-version build system
+- [Forge](https://github.com/MinecraftForge/MinecraftForge) - Forge translation and keybind keys
+- [Fabric API](https://github.com/FabricMC/fabric-api) - Fabric translation and keybind keys

@@ -46,6 +46,10 @@ public class ModRegistry {
     /** All known keybinds for fast lookup */
     private static final Set<String> allKnownKeybinds = ConcurrentHashMap.newKeySet();
     
+    /** Recently logged keys for deduplication (cleared periodically) */
+    private static final Map<String, Long> recentlyLoggedKeys = new ConcurrentHashMap<>();
+    private static final long LOG_DEDUP_MS = 1000; // 1 second deduplication window
+    
     private static volatile boolean initialized = false;
     
     private ModRegistry() {}
@@ -211,6 +215,30 @@ public class ModRegistry {
     // ==================== CENTRALIZED WHITELIST CHECK ====================
     
     /**
+     * Check if a key should be logged (deduplication).
+     * Returns true if the key hasn't been logged recently.
+     */
+    private static boolean shouldLogKey(String key) {
+        if (key == null) return false;
+        
+        long now = System.currentTimeMillis();
+        Long lastLogged = recentlyLoggedKeys.get(key);
+        
+        if (lastLogged != null && (now - lastLogged) < LOG_DEDUP_MS) {
+            return false; // Already logged recently
+        }
+        
+        recentlyLoggedKeys.put(key, now);
+        
+        // Periodically clean up old entries (every 100 entries)
+        if (recentlyLoggedKeys.size() > 100) {
+            recentlyLoggedKeys.entrySet().removeIf(e -> (now - e.getValue()) > LOG_DEDUP_MS);
+        }
+        
+        return true;
+    }
+    
+    /**
      * Centralized whitelist check for both translation keys and keybind keys.
      * Servers can abuse either mechanism, so we use the same logic for both.
      * 
@@ -226,13 +254,17 @@ public class ModRegistry {
         
         // Fabric loader keys always allowed in Fabric mode
         if (settings.isFabricMode() && isFabricKey(key)) {
-            Opsec.LOGGER.info("[Whitelist] ALLOWED {} '{}' - Fabric key in Fabric mode", source, key);
+            if (shouldLogKey(key)) {
+                Opsec.LOGGER.info("[Whitelist] ALLOWED {} '{}' - Fabric key in Fabric mode", source, key);
+            }
             return true;
         }
         
         // Forge loader keys always allowed in Forge mode
         if (settings.isForgeMode() && isForgeKey(key)) {
-            Opsec.LOGGER.info("[Whitelist] ALLOWED {} '{}' - Forge key in Forge mode", source, key);
+            if (shouldLogKey(key)) {
+                Opsec.LOGGER.info("[Whitelist] ALLOWED {} '{}' - Forge key in Forge mode", source, key);
+            }
             return true;
         }
         
@@ -246,18 +278,24 @@ public class ModRegistry {
         // Check keybind tracking first (for actual keybinds)
         String modId = getModForKeybind(key);
         if (modId != null && settings.isModWhitelisted(modId)) {
-            Opsec.LOGGER.info("[Whitelist] ALLOWED {} '{}' via keybind tracking (mod: {})", source, key, modId);
+            if (shouldLogKey(key)) {
+                Opsec.LOGGER.info("[Whitelist] ALLOWED {} '{}' via keybind tracking (mod: {})", source, key, modId);
+            }
             return true;
         }
         
         // Check translation tracking (for translation keys or keybinds with translation-style names)
         modId = getModForTranslationKey(key);
         if (modId != null && settings.isModWhitelisted(modId)) {
-            Opsec.LOGGER.info("[Whitelist] ALLOWED {} '{}' via translation tracking (mod: {})", source, key, modId);
+            if (shouldLogKey(key)) {
+                Opsec.LOGGER.info("[Whitelist] ALLOWED {} '{}' via translation tracking (mod: {})", source, key, modId);
+            }
             return true;
         }
         
-        Opsec.LOGGER.info("[Whitelist] BLOCKED {} '{}' - modId: '{}', not whitelisted", source, key, modId);
+        if (shouldLogKey(key)) {
+            Opsec.LOGGER.info("[Whitelist] BLOCKED {} '{}' - modId: '{}', not whitelisted", source, key, modId);
+        }
         return false;
     }
     

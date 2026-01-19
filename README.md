@@ -36,6 +36,7 @@ The settings menu is accessible via the `OpSec` button in the multiplayer server
 
 <img width="376" height="141" alt="opsec button" src="https://github.com/user-attachments/assets/01b68390-0610-42d4-bced-30b86d3d76e8" />
 
+<img width="1437" height="920" alt="image" src="https://github.com/user-attachments/assets/fa3e75ff-44d3-4d18-858e-08f26b645530" />
 
 If settings are changed while connected to a server it is recommended to reconnect to the server to ensure changes are applied.
 
@@ -191,11 +192,19 @@ When the server uses a sign exploit with fallback value on Meteor Client:
 ```
 'key.meteor-client.open-gui' 'Right Shift'→'key.meteor-client.open-gui'
 ```
+
+<img width="847" height="107" alt="image" src="https://github.com/user-attachments/assets/e157ae3f-6beb-4823-aca0-9c61573264e2" />
+
+
+
+
 What a Vanilla response would actaully be:
 ```
 'key.meteor-client.open-gui' '⟦FALLBACK⟧'→'⟦FALLBACK⟧'
 ```
 OpSec's bandaid fix for Meteor is to blacklist the `AbstractSignEditScreenMixin` Mixin to disable Meteor's broken translation protection. Allowing OpSec's protection to take over, which already handle fallbacks correctly to match the Vanilla response.
+
+<img width="901" height="107" alt="image" src="https://github.com/user-attachments/assets/506b9c73-6747-40f8-9a56-52c0353034b4" />
 
 ---
 

@@ -9,24 +9,32 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 /**
  * Sets exploit context at the very start of sign screen construction.
- * Uses static injection to run BEFORE super() and any content processing.
  * 
- * This ensures keybind/translation resolution that happens during
- * screen initialization is already protected.
+ * IMPORTANT: We target AbstractSignEditScreen because that's where
+ * the messages[] array is populated by calling component.getString().
+ * Setting context HERE ensures LanguageMixin blocks translation resolution
+ * before the component is converted to a string.
  */
-@Mixin(targets = {
-    "net.minecraft.client.gui.screens.inventory.SignEditScreen",
-    "net.minecraft.client.gui.screens.inventory.HangingSignEditScreen"
-})
+@Mixin(targets = "net.minecraft.client.gui.screens.inventory.AbstractSignEditScreen")
 public class SignEditScreenMixin {
     
     /**
-     * Enter SIGN context at constructor HEAD (before super()).
-     * Must be static for injection before super() invocation.
+     * Enter SIGN context at AbstractSignEditScreen constructor HEAD.
+     * This runs BEFORE messages[] is populated, so when getString() is called
+     * on TranslatableContents, LanguageMixin will block resolution.
      */
     @Inject(method = "<init>", at = @At("HEAD"), require = 0)
     private static void opsec$enterSignContext(CallbackInfo ci) {
+        aurick.opsec.mod.Opsec.LOGGER.info("[SignEditScreen] Setting SIGN context in AbstractSignEditScreen constructor");
         ExploitContext.enterContext(PrivacyLogger.ExploitSource.SIGN);
+    }
+    
+    /**
+     * Exit context when screen closes.
+     */
+    @Inject(method = "onClose", at = @At("HEAD"), require = 0)
+    private void opsec$exitSignContext(CallbackInfo ci) {
+        ExploitContext.exitContext();
     }
 }
 

@@ -23,6 +23,7 @@
 		"KeyBindingRegistryImplMixin",
 		"OptionsMixin",
 		"KeybindContentsMixin",
+		"LanguageMixin",
 		"TranslatableContentsMixin",
 		"SignEditScreenMixin",
 		"AnvilScreenMixin"

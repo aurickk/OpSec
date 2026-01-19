@@ -188,5 +188,150 @@ public class ModIdResolver {
             className.startsWith("net.fabricmc.api.")
         );
     }
+    
+    /**
+     * Infer mod ID from a translation key based on common naming patterns.
+     * Most mods prefix their translation keys with their mod ID or a variant.
+     * 
+     * @param key The translation key
+     * @return Inferred mod ID or null if cannot be determined
+     */
+    public static String inferModIdFromTranslationKey(String key) {
+        if (key == null || key.isEmpty()) return null;
+        
+        // Skip vanilla prefixes
+        if (isVanillaKeyPrefix(key)) return null;
+        
+        // Common pattern: mod_id.something or modId.something
+        int dotIndex = key.indexOf('.');
+        if (dotIndex > 0 && dotIndex < key.length() - 1) {
+            String prefix = key.substring(0, dotIndex);
+            
+            // Skip common vanilla/framework prefixes
+            if (isFrameworkPrefix(prefix)) return null;
+            
+            // Convert camelCase to mod-id format
+            String modId = normalizeToModId(prefix);
+            
+            // Verify this is a known mod
+            if (net.fabricmc.loader.api.FabricLoader.getInstance().getModContainer(modId).isPresent()) {
+                return modId;
+            }
+            
+            // Try with underscores instead of hyphens
+            String altModId = modId.replace("-", "_");
+            if (net.fabricmc.loader.api.FabricLoader.getInstance().getModContainer(altModId).isPresent()) {
+                return altModId;
+            }
+        }
+        
+        // Pattern: gui.modname_something or key.modname.something
+        if (key.startsWith("gui.") || key.startsWith("key.") || key.startsWith("text.") || 
+            key.startsWith("option.") || key.startsWith("tag.") || key.startsWith("cloth_config.")) {
+            return inferFromSecondaryPrefix(key);
+        }
+        
+        return null;
+    }
+    
+    /**
+     * Check if key starts with a vanilla prefix.
+     */
+    private static boolean isVanillaKeyPrefix(String key) {
+        return key.startsWith("block.minecraft.") ||
+               key.startsWith("item.minecraft.") ||
+               key.startsWith("entity.minecraft.") ||
+               key.startsWith("biome.minecraft.") ||
+               key.startsWith("effect.minecraft.") ||
+               key.startsWith("enchantment.minecraft.") ||
+               key.startsWith("key.keyboard.") ||
+               key.startsWith("key.mouse.") ||
+               key.startsWith("argument.") ||
+               key.startsWith("commands.") ||
+               key.startsWith("death.") ||
+               key.startsWith("chat.") ||
+               key.startsWith("narrator.") ||
+               key.startsWith("accessibility.");
+    }
+    
+    /**
+     * Check if prefix is a framework/common prefix.
+     */
+    private static boolean isFrameworkPrefix(String prefix) {
+        return prefix.equals("gui") || prefix.equals("key") || prefix.equals("text") ||
+               prefix.equals("option") || prefix.equals("tag") || prefix.equals("block") ||
+               prefix.equals("item") || prefix.equals("entity") || prefix.equals("biome") ||
+               prefix.equals("effect") || prefix.equals("enchantment") || prefix.equals("death") ||
+               prefix.equals("argument") || prefix.equals("commands") || prefix.equals("chat") ||
+               prefix.equals("narrator") || prefix.equals("accessibility") || prefix.equals("container") ||
+               prefix.equals("filled_map") || prefix.equals("merchant") || prefix.equals("record") ||
+               prefix.equals("stat") || prefix.equals("subtitles") || prefix.equals("title") ||
+               prefix.equals("translation") || prefix.equals("tutorial");
+    }
+    
+    /**
+     * Infer mod ID from secondary prefix in keys like gui.modname_something.
+     */
+    private static String inferFromSecondaryPrefix(String key) {
+        String[] parts = key.split("\\.");
+        if (parts.length >= 2) {
+            String secondPart = parts[1];
+            
+            // Handle underscore pattern: gui.xaero_something -> xaerominimap or similar
+            int underscoreIdx = secondPart.indexOf('_');
+            if (underscoreIdx > 0) {
+                String modPrefix = secondPart.substring(0, underscoreIdx);
+                return findModByPrefix(modPrefix);
+            }
+            
+            // Try the second part directly
+            return findModByPrefix(secondPart);
+        }
+        return null;
+    }
+    
+    /**
+     * Find a mod by prefix matching.
+     */
+    private static String findModByPrefix(String prefix) {
+        if (prefix == null || prefix.isEmpty()) return null;
+        
+        String normalizedPrefix = prefix.toLowerCase();
+        
+        // Check for exact match first
+        if (net.fabricmc.loader.api.FabricLoader.getInstance().getModContainer(normalizedPrefix).isPresent()) {
+            return normalizedPrefix;
+        }
+        
+        // Search through all mods for prefix match
+        for (var container : net.fabricmc.loader.api.FabricLoader.getInstance().getAllMods()) {
+            String modId = container.getMetadata().getId();
+            if (modId.startsWith(normalizedPrefix) || modId.contains(normalizedPrefix)) {
+                return modId;
+            }
+        }
+        
+        return null;
+    }
+    
+    /**
+     * Normalize a camelCase or mixed string to mod-id format.
+     */
+    private static String normalizeToModId(String input) {
+        if (input == null || input.isEmpty()) return input;
+        
+        // Convert to lowercase and handle camelCase
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < input.length(); i++) {
+            char c = input.charAt(i);
+            if (Character.isUpperCase(c)) {
+                if (i > 0) sb.append('-');
+                sb.append(Character.toLowerCase(c));
+            } else {
+                sb.append(c);
+            }
+        }
+        return sb.toString().replace("_", "-");
+    }
 }
 

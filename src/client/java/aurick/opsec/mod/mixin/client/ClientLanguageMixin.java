@@ -103,6 +103,14 @@ public class ClientLanguageMixin {
         // Works with both old ModNioResourcePack and new ModResourcePack implementations
         // Must check this before PathPackResources since mod packs may extend it
         String modId = opsec$getModIdFromPack(pack);
+        
+        // Skip Fabric API modules - they handle resources for other mods
+        // and their channels are already whitelisted when whitelist is enabled
+        if (modId != null && opsec$isFabricApiModule(modId)) {
+            original.call(stream, output);
+            return;
+        }
+        
         if (modId != null) {
             Set<String> modKeys = new HashSet<>();
             original.call(stream, (BiConsumer<String, String>) (key, value) -> {
@@ -160,6 +168,18 @@ public class ClientLanguageMixin {
         Opsec.LOGGER.debug("[OpSec] Unknown pack type: {} - passing through without tracking", 
             pack.getClass().getName());
         original.call(stream, output);
+    }
+    
+    /**
+     * Check if a mod ID is a Fabric API module that handles resources for other mods.
+     */
+    @Unique
+    private static boolean opsec$isFabricApiModule(String modId) {
+        if (modId == null) return false;
+        return modId.startsWith("fabric-") || 
+               modId.equals("fabricloader") ||
+               modId.equals("fabric") ||
+               modId.startsWith("fabric_");
     }
     
     /**

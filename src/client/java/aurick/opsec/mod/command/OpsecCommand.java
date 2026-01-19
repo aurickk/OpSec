@@ -9,8 +9,6 @@ import com.mojang.brigadier.suggestion.SuggestionsBuilder;
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandManager;
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallback;
 import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource;
-import net.fabricmc.fabric.api.client.networking.v1.ClientConfigurationNetworking;
-import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.minecraft.ChatFormatting;
 import net.minecraft.commands.CommandBuildContext;
 import net.minecraft.commands.SharedSuggestionProvider;
@@ -24,7 +22,7 @@ import net.minecraft.resources.ResourceLocation;
 //?}
 
 import java.util.ArrayList;
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
@@ -49,16 +47,8 @@ public class OpsecCommand {
                         .suggests(OpsecCommand::suggestModNames)
                         .executes(ctx -> showModInfo(ctx, StringArgumentType.getString(ctx, "modName"))))
                     .executes(ctx -> showOverview(ctx)))
-                .then(ClientCommandManager.literal("stats")
-                    .executes(OpsecCommand::showStats))
                 .then(ClientCommandManager.literal("channels")
                     .executes(OpsecCommand::showAllChannels))
-                .then(ClientCommandManager.literal("scan")
-                    .executes(OpsecCommand::scanChannels))
-                .then(ClientCommandManager.literal("fabric")
-                    .executes(OpsecCommand::showFabricChannels))
-                .then(ClientCommandManager.literal("help")
-                    .executes(OpsecCommand::showHelp))
         );
     }
     
@@ -68,22 +58,10 @@ public class OpsecCommand {
     private static int showHelp(CommandContext<FabricClientCommandSource> ctx) {
         FabricClientCommandSource source = ctx.getSource();
         
-        source.sendFeedback(header("OPSEC Debug Commands"));
+        source.sendFeedback(header("OpSec Commands"));
         source.sendFeedback(Component.empty());
         source.sendFeedback(info("/opsec info [mod]  - Show tracked mods or details for a specific mod"));
         source.sendFeedback(info("/opsec channels    - Show all tracked network channels"));
-        source.sendFeedback(info("/opsec scan        - Manually scan Fabric API for channels"));
-        source.sendFeedback(info("/opsec fabric      - Show default Fabric channels (what clean Fabric sends)"));
-        source.sendFeedback(info("/opsec stats       - Show registry statistics"));
-        source.sendFeedback(info("/opsec help        - Show this help message"));
-        source.sendFeedback(Component.empty());
-        source.sendFeedback(dim("Channel tracking works by intercepting:"));
-        source.sendFeedback(dim("  - minecraft:register packets (most reliable)"));
-        source.sendFeedback(dim("  - Fabric API registerGlobalReceiver calls"));
-        source.sendFeedback(dim("  - PayloadTypeRegistry registrations"));
-        source.sendFeedback(Component.empty());
-        source.sendFeedback(warning("Note: Some mods (like Simple Voice Chat) use"));
-        source.sendFeedback(warning("external protocols (UDP) instead of Minecraft channels."));
         
         return 1;
     }
@@ -95,15 +73,12 @@ public class OpsecCommand {
             CommandContext<FabricClientCommandSource> context, 
             SuggestionsBuilder builder) {
         
-        List<String> modNames = new ArrayList<>();
+        Set<String> modNames = new LinkedHashSet<>();
         
         for (ModRegistry.ModInfo info : ModRegistry.getAllMods()) {
             if (info.hasTrackableContent()) {
-                // Add both mod ID and display name for flexibility
+                // Only add mod ID (unique identifier)
                 modNames.add(info.getModId());
-                if (!info.getDisplayName().equals(info.getModId())) {
-                    modNames.add(info.getDisplayName());
-                }
             }
         }
         
@@ -224,22 +199,6 @@ public class OpsecCommand {
         return 1;
     }
     
-    /**
-     * Show registry statistics.
-     */
-    private static int showStats(CommandContext<FabricClientCommandSource> ctx) {
-        FabricClientCommandSource source = ctx.getSource();
-        
-        source.sendFeedback(header("OPSEC Registry Statistics"));
-        source.sendFeedback(info("Tracked mods: " + ModRegistry.getAllMods().size()));
-        source.sendFeedback(info("Vanilla keys: " + ModRegistry.getVanillaKeyCount()));
-        source.sendFeedback(info("Server pack keys: " + ModRegistry.getServerPackKeyCount()));
-        source.sendFeedback(info("Total keys: " + ModRegistry.getTranslationKeyCount()));
-        source.sendFeedback(info("Total keybinds: " + ModRegistry.getKeybindCount()));
-        source.sendFeedback(info("Registry initialized: " + ModRegistry.isInitialized()));
-        
-        return 1;
-    }
     
     /**
      * Show all tracked channels.
@@ -287,220 +246,6 @@ public class OpsecCommand {
         return 1;
     }
     
-    /**
-     * Manually scan for channels from Fabric API.
-     */
-    private static int scanChannels(CommandContext<FabricClientCommandSource> ctx) {
-        FabricClientCommandSource source = ctx.getSource();
-        
-        source.sendFeedback(header("Scanning Fabric Channels..."));
-        
-        //? if >=1.21.11 {
-        /*Set<Identifier> allChannels = new HashSet<>();*/
-        //?} else {
-        Set<ResourceLocation> allChannels = new HashSet<>();
-        //?}
-        int newChannels = 0;
-        
-        // Scan play channels
-        try {
-            //? if >=1.21.11 {
-            /*Set<Identifier> playChannels = ClientPlayNetworking.getGlobalReceivers();*/
-            //?} else {
-            Set<ResourceLocation> playChannels = ClientPlayNetworking.getGlobalReceivers();
-            //?}
-            source.sendFeedback(info("Play channels found: " + playChannels.size()));
-            allChannels.addAll(playChannels);
-        } catch (Exception e) {
-            source.sendFeedback(warning("Could not scan play channels: " + e.getMessage()));
-        }
-        
-        // Scan config channels
-        try {
-            //? if >=1.21.11 {
-            /*Set<Identifier> configChannels = ClientConfigurationNetworking.getGlobalReceivers();*/
-            //?} else {
-            Set<ResourceLocation> configChannels = ClientConfigurationNetworking.getGlobalReceivers();
-            //?}
-            source.sendFeedback(info("Config channels found: " + configChannels.size()));
-            allChannels.addAll(configChannels);
-        } catch (Exception e) {
-            source.sendFeedback(warning("Could not scan config channels: " + e.getMessage()));
-        }
-        
-        // Track all found channels
-        //? if >=1.21.11 {
-        /*for (Identifier channel : allChannels) {*/
-        //?} else {
-        for (ResourceLocation channel : allChannels) {
-        //?}
-            String namespace = channel.getNamespace();
-            
-            // Skip core channels
-            if ("minecraft".equals(namespace) || "fabric".equals(namespace) || 
-                namespace.startsWith("fabric-") || "c".equals(namespace)) {
-                continue;
-            }
-            
-            ModRegistry.ModInfo info = ModRegistry.getModInfo(namespace);
-            if (info == null || !info.getChannels().contains(channel)) {
-                ModRegistry.recordChannel(namespace, channel);
-                newChannels++;
-            }
-        }
-        
-        source.sendFeedback(Component.empty());
-        source.sendFeedback(success("Scan complete!"));
-        source.sendFeedback(info("Total channels found: " + allChannels.size()));
-        source.sendFeedback(info("New channels tracked: " + newChannels));
-        source.sendFeedback(Component.empty());
-        
-        // Show all scanned channels
-        source.sendFeedback(subheader("All Fabric API Channels:"));
-        //? if >=1.21.11 {
-        /*for (Identifier channel : allChannels) {*/
-        //?} else {
-        for (ResourceLocation channel : allChannels) {
-        //?}
-            boolean whitelisted = ModRegistry.isWhitelistedChannel(channel);
-            if (whitelisted) {
-                source.sendFeedback(Component.literal("  ✓ " + channel.toString())
-                    .withStyle(ChatFormatting.GREEN));
-            } else {
-                source.sendFeedback(Component.literal("  ✗ " + channel.toString())
-                    .withStyle(ChatFormatting.RED));
-            }
-        }
-        
-        return 1;
-    }
-    
-    /**
-     * Show default Fabric channels that a clean Fabric client would register.
-     */
-    private static int showFabricChannels(CommandContext<FabricClientCommandSource> ctx) {
-        FabricClientCommandSource source = ctx.getSource();
-        
-        source.sendFeedback(header("Default Fabric Channels"));
-        source.sendFeedback(info("These are the channels a stock Fabric client sends:"));
-        source.sendFeedback(Component.empty());
-        
-        //? if >=1.21.11 {
-        /*Set<Identifier> allChannels = new HashSet<>();*/
-        //?} else {
-        Set<ResourceLocation> allChannels = new HashSet<>();
-        //?}
-        
-        // Get all currently registered channels from Fabric API
-        try {
-            allChannels.addAll(ClientPlayNetworking.getGlobalReceivers());
-        } catch (Exception e) {
-            // Ignore
-        }
-        try {
-            allChannels.addAll(ClientConfigurationNetworking.getGlobalReceivers());
-        } catch (Exception e) {
-            // Ignore
-        }
-        
-        // Filter to only show fabric/minecraft/c channels (core channels)
-        //? if >=1.21.11 {
-        /*List<Identifier> fabricChannels = new ArrayList<>();
-        List<Identifier> minecraftChannels = new ArrayList<>();
-        List<Identifier> commonChannels = new ArrayList<>();
-        
-        for (Identifier channel : allChannels) {*/
-        //?} else {
-        List<ResourceLocation> fabricChannels = new ArrayList<>();
-        List<ResourceLocation> minecraftChannels = new ArrayList<>();
-        List<ResourceLocation> commonChannels = new ArrayList<>();
-        
-        //? if >=1.21.11 {
-        /*for (Identifier channel : allChannels) {*/
-        //?} else {
-        for (ResourceLocation channel : allChannels) {
-        //?}
-        //?}
-            String ns = channel.getNamespace();
-            if ("minecraft".equals(ns)) {
-                minecraftChannels.add(channel);
-            } else if ("fabric".equals(ns) || ns.startsWith("fabric-")) {
-                fabricChannels.add(channel);
-            } else if ("c".equals(ns)) {
-                commonChannels.add(channel);
-            }
-        }
-        
-        // Sort each list
-        fabricChannels.sort((a, b) -> a.toString().compareTo(b.toString()));
-        minecraftChannels.sort((a, b) -> a.toString().compareTo(b.toString()));
-        commonChannels.sort((a, b) -> a.toString().compareTo(b.toString()));
-        
-        // Display Minecraft channels
-        if (!minecraftChannels.isEmpty()) {
-            source.sendFeedback(subheader("minecraft:* channels (" + minecraftChannels.size() + "):"));
-            //? if >=1.21.11 {
-            /*for (Identifier channel : minecraftChannels) {*/
-            //?} else {
-            for (ResourceLocation channel : minecraftChannels) {
-            //?}
-                source.sendFeedback(listItem(channel.toString()));
-            }
-            source.sendFeedback(Component.empty());
-        }
-        
-        // Display Fabric channels
-        if (!fabricChannels.isEmpty()) {
-            source.sendFeedback(subheader("fabric:* / fabric-*:* channels (" + fabricChannels.size() + "):"));
-            //? if >=1.21.11 {
-            /*for (Identifier channel : fabricChannels) {*/
-            //?} else {
-            for (ResourceLocation channel : fabricChannels) {
-            //?}
-                source.sendFeedback(listItem(channel.toString()));
-            }
-            source.sendFeedback(Component.empty());
-        }
-        
-        // Display Common channels
-        if (!commonChannels.isEmpty()) {
-            source.sendFeedback(subheader("c:* channels (" + commonChannels.size() + "):"));
-            //? if >=1.21.11 {
-            /*for (Identifier channel : commonChannels) {*/
-            //?} else {
-            for (ResourceLocation channel : commonChannels) {
-            //?}
-                source.sendFeedback(listItem(channel.toString()));
-            }
-            source.sendFeedback(Component.empty());
-        }
-        
-        int totalCore = fabricChannels.size() + minecraftChannels.size() + commonChannels.size();
-        source.sendFeedback(success("Total core channels: " + totalCore));
-        source.sendFeedback(dim("These channels are always allowed when spoofing as 'fabric'"));
-        
-        // Also show what would be blocked
-        int modChannelCount = 0;
-        //? if >=1.21.11 {
-        /*for (Identifier channel : allChannels) {*/
-        //?} else {
-        for (ResourceLocation channel : allChannels) {
-        //?}
-            String ns = channel.getNamespace();
-            if (!"minecraft".equals(ns) && !"fabric".equals(ns) && 
-                !ns.startsWith("fabric-") && !"c".equals(ns)) {
-                modChannelCount++;
-            }
-        }
-        
-        if (modChannelCount > 0) {
-            source.sendFeedback(Component.empty());
-            source.sendFeedback(warning("Mod channels that would be hidden: " + modChannelCount));
-            source.sendFeedback(dim("Use /opsec channels to see all channels"));
-        }
-        
-        return 1;
-    }
     
     /**
      * Find a mod by ID or display name.

@@ -166,7 +166,7 @@ public class OpsecConfigScreen extends Screen {
                     }));
             
             if (settings.isSpoofChannels()) {
-                widgets.add(createSectionHeader("§e⚠ May break server-dependent mod(s) if not whitelisted"));
+                widgets.add(createSectionHeader("§e⚠ May break mods if not whitelisted"));
             }
         }
         
@@ -283,9 +283,6 @@ public class OpsecConfigScreen extends Screen {
                 }));
         
         if (settings.isWhitelistEnabled()) {
-            // Info text about forced Fabric brand
-            widgets.add(createSectionHeader("§7Exempt mod(s) from channel spoofing and translation exploit protection"));
-            
             // Mod list header
             widgets.add(createSectionHeader("§f§lInstalled Mods"));
             

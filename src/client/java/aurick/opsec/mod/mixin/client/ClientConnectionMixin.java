@@ -115,6 +115,16 @@ public class ClientConnectionMixin {
             ResourceLocation payloadId = payload.type().id();
             //?}
             
+            // ALWAYS track channels from minecraft:register packets for whitelist support
+            // This runs regardless of spoofing settings so /opsec channels is accurate
+            if (payload instanceof RegistrationPayload registrationPayload) {
+                String namespace = payloadId.getNamespace();
+                String path = payloadId.getPath();
+                if (MINECRAFT.equals(namespace) && REGISTER.equals(path)) {
+                    opsec$trackChannelsFromPayload(registrationPayload.channels());
+                }
+            }
+            
             OpsecConfig config = OpsecConfig.getInstance();
             if (!config.shouldSpoofBrand() || !config.shouldSpoofChannels()) {
                 ctx.write(msg, promise);
@@ -138,9 +148,6 @@ public class ClientConnectionMixin {
                 
                 if (MINECRAFT.equals(namespace) && (REGISTER.equals(path) || UNREGISTER.equals(path))) {
                     if (payload instanceof RegistrationPayload registrationPayload) {
-                        // Track ALL channels before filtering
-                        opsec$trackChannelsFromPayload(registrationPayload.channels());
-                        
                         // Use ModRegistry.isWhitelistedChannel which handles:
                         // - minecraft:* channels
                         // - fabric:* and fabric-*:* channels
@@ -319,6 +326,23 @@ public class ClientConnectionMixin {
             return;
         }
         
+        CustomPacketPayload payload = customPayloadPacket.payload();
+        //? if >=1.21.11 {
+        /*Identifier payloadId = payload.type().id();*/
+        //?} else {
+        ResourceLocation payloadId = payload.type().id();
+        //?}
+        
+        // ALWAYS track channels from minecraft:register packets for whitelist support
+        // This runs regardless of spoofing settings so /opsec channels is accurate
+        if (payload instanceof RegistrationPayload registrationPayload) {
+            String namespace = payloadId.getNamespace();
+            String path = payloadId.getPath();
+            if (MINECRAFT.equals(namespace) && REGISTER.equals(path)) {
+                opsec$trackChannelsFromPayload(registrationPayload.channels());
+            }
+        }
+        
         OpsecConfig config = OpsecConfig.getInstance();
         if (!config.shouldSpoofBrand()) {
             return;
@@ -327,13 +351,6 @@ public class ClientConnectionMixin {
         if (!config.shouldSpoofChannels()) {
             return;
         }
-        
-        CustomPacketPayload payload = customPayloadPacket.payload();
-        //? if >=1.21.11 {
-        /*Identifier payloadId = payload.type().id();*/
-        //?} else {
-        ResourceLocation payloadId = payload.type().id();
-        //?}
         
         if (payload instanceof BrandPayload) {
             return;

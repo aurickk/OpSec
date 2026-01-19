@@ -3,7 +3,9 @@ package aurick.opsec.mod.mixin.client;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import aurick.opsec.mod.config.OpsecConfig;
+import aurick.opsec.mod.config.SpoofSettings;
 import aurick.opsec.mod.detection.ExploitContext;
+import aurick.opsec.mod.protection.ForgeTranslations;
 import aurick.opsec.mod.protection.TranslationProtectionHandler;
 import aurick.opsec.mod.tracking.ModRegistry;
 import aurick.opsec.mod.util.KeybindDefaults;
@@ -64,12 +66,29 @@ public class KeybindContentsMixin {
             return original.call(supplier);
         }
         
-        // Whitelisted mod keybind - allow when whitelist is enabled
+        OpsecConfig config = OpsecConfig.getInstance();
+        SpoofSettings settings = config.getSettings();
+        
+        // FORGE MODE: Fabricate known Forge keys sent through keybind mechanism
+        if (settings.isForgeMode() && ForgeTranslations.isForgeKey(name)) {
+            String fabricatedValue = ForgeTranslations.getTranslation(name);
+            if (fabricatedValue != null) {
+                TranslationProtectionHandler.notifyExploitDetected();
+                // Log: 'rawKey' → 'fabricatedValue'
+                TranslationProtectionHandler.sendDetail(name, name, fabricatedValue);
+                TranslationProtectionHandler.logDetection(name, name, fabricatedValue);
+                return Component.literal(fabricatedValue);
+            }
+        }
+        
+        // Whitelisted mod keybind - allow but still show header alert
         if (ModRegistry.isWhitelistedKeybind(name)) {
+            // Still alert (server is probing) but allow resolution since whitelisted
+            TranslationProtectionHandler.notifyExploitDetected();
             return original.call(supplier);
         }
         
-        // In exploitable context - always notify detection (header alert)
+        // In exploitable context - notify detection (header alert)
         TranslationProtectionHandler.notifyExploitDetected();
         
         // Get original value

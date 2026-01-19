@@ -39,7 +39,3 @@ logs/
 # Python cache
 __pycache__/
 *.py[cod]
-
-# Other projects in workspace
-AntiSpoof/
-Pay-Everyone/

@@ -1,141 +1,183 @@
 package aurick.opsec.mod.mixin.client;
 
-import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
-import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import aurick.opsec.mod.config.OpsecConfig;
+import aurick.opsec.mod.config.SpoofSettings;
 import aurick.opsec.mod.detection.ExploitContext;
+import aurick.opsec.mod.protection.ForgeTranslations;
 import aurick.opsec.mod.protection.TranslationProtectionHandler;
 import aurick.opsec.mod.tracking.ModRegistry;
+import net.minecraft.client.resources.language.ClientLanguage;
 import net.minecraft.locale.Language;
+import net.minecraft.network.chat.FormattedText;
 import net.minecraft.network.chat.contents.TranslatableContents;
+import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
+
+import java.lang.reflect.Field;
+import java.util.Map;
+import java.util.Optional;
 
 /**
- * Intercepts translation key resolution with context-aware protection.
+ * Intercepts TranslatableContents to block mod translation resolution.
  * 
- * Uses ThreadLocal context detection to only protect in exploitable contexts:
- * - Normal mod UI: Allow normal resolution (so mod menus work)
- * - Sign/Anvil/Book screens: Block mod translation keys
- * 
- * Whitelist priority:
- * 1. Vanilla keys - Always allowed
- * 2. Server resource pack keys - Session whitelisted (prevents anti-spoof detection)
- * 3. Mod/Unknown keys - Blocked (return raw key)
- * 
- * This prevents servers from detecting installed mods via translation key probing.
+ * Behavior by mode:
+ * - VANILLA: Block all non-vanilla, non-resourcepack keys
+ * - FABRIC: Block non-vanilla, non-resourcepack, non-whitelisted keys
+ * - FORGE: Block non-vanilla, non-resourcepack keys; fabricate known Forge values
  */
 @Mixin(TranslatableContents.class)
-public class TranslatableContentsMixin {
+public abstract class TranslatableContentsMixin {
+    
+    @Shadow @Final private String key;
+    @Shadow @Final private String fallback;
+    
+    // Track the language instance when this was last decomposed
+    @Shadow private Language decomposedWith;
+    
+    // Cached reflection field for getting real translations
+    @Unique
+    private static Field storageField;
     
     /**
-     * Intercept translation key resolution (single parameter version).
-     * Detection and alerts work even when protection is disabled.
+     * Force re-decomposition when in exploit context.
+     * By clearing decomposedWith, we force decompose() to run again,
+     * where LanguageMixin will block the resolution.
      */
-    @WrapOperation(
-        method = "decompose",
-        at = @At(value = "INVOKE", target = "Lnet/minecraft/locale/Language;getOrDefault(Ljava/lang/String;)Ljava/lang/String;"),
+    @Inject(
+        method = "visit(Lnet/minecraft/network/chat/FormattedText$ContentConsumer;)Ljava/util/Optional;",
+        at = @At("HEAD"),
         require = 0
     )
-    private String opsec$interceptTranslation(Language instance, String key, Operation<String> original) {
-        // Vanilla translation key - always allow (no exploit risk)
-        if (ModRegistry.isVanillaTranslationKey(key)) {
-            return original.call(instance, key);
+    private <T> void opsec$forceRedecompose(FormattedText.ContentConsumer<T> consumer, CallbackInfoReturnable<Optional<T>> cir) {
+        // Only when in exploitable context
+        if (!ExploitContext.isInExploitableContext()) return;
+        
+        // Always allow vanilla keys
+        if (ModRegistry.isVanillaTranslationKey(key)) return;
+        
+        // Always allow server resource pack keys
+        if (ModRegistry.isServerPackTranslationKey(key)) return;
+        
+        OpsecConfig config = OpsecConfig.getInstance();
+        SpoofSettings settings = config.getSettings();
+        
+        // VANILLA MODE: Block all mod keys
+        if (settings.isVanillaMode()) {
+            this.decomposedWith = null;
+            TranslationProtectionHandler.notifyExploitDetected();
+            opsec$logDetection();
+            return;
         }
         
-        // Server resource pack key - allow (prevents anti-spoof detection)
-        if (ModRegistry.isServerPackTranslationKey(key)) {
-            return original.call(instance, key);
+        // FABRIC MODE: Allow Fabric keys and whitelisted mod keys
+        if (settings.isFabricMode()) {
+            if (ModRegistry.isWhitelistedTranslationKey(key)) {
+                // Still alert (server is probing) but no details since nothing changed
+                TranslationProtectionHandler.notifyExploitDetected();
+                return;
+            }
+            this.decomposedWith = null;
+            TranslationProtectionHandler.notifyExploitDetected();
+            opsec$logDetection();
+            return;
         }
         
-        // Whitelisted mod key - allow when whitelist is enabled
+        // FORGE MODE: Fabricate known Forge keys, block others
+        if (settings.isForgeMode()) {
+            // For Forge keys: clear cache so LanguageMixin can fabricate the value
+            // Without clearing, the cached (real) value would be used
+            if (ForgeTranslations.isForgeKey(key)) {
+                this.decomposedWith = null; // Force re-resolve to get fabricated value
+                TranslationProtectionHandler.notifyExploitDetected();
+                opsec$logForgeFabrication();
+                return;
+            }
+            // Block non-Forge mod keys
+            this.decomposedWith = null;
+            TranslationProtectionHandler.notifyExploitDetected();
+            opsec$logDetection();
+            return;
+        }
+        
+        // Fallback: Use whitelist behavior
         if (ModRegistry.isWhitelistedTranslationKey(key)) {
-            return original.call(instance, key);
+            // Still alert (server is probing) but no details since nothing changed
+            TranslationProtectionHandler.notifyExploitDetected();
+            return;
         }
-        
-        // Not in exploitable context - allow normal resolution
-        if (!ExploitContext.isInExploitableContext()) {
-            return original.call(instance, key);
-        }
-        
-        // In exploitable context - always notify detection (header alert)
+        this.decomposedWith = null;
         TranslationProtectionHandler.notifyExploitDetected();
+        opsec$logDetection();
+    }
+    
+    @Unique
+    private void opsec$logDetection() {
+        String naturalFallback = fallback != null ? fallback : key;
         
-        // Get original value
-        String originalValue = original.call(instance, key);
+        // Get the REAL translation value by accessing storage directly (bypass our mixin)
+        String originalValue = opsec$getRealTranslation(key, naturalFallback);
         
-        // If protection is disabled, allow normal resolution but still log detection
-        if (!OpsecConfig.getInstance().isTranslationProtectionEnabled()) {
-            TranslationProtectionHandler.logDetection(key, originalValue, originalValue);
-            return originalValue;
+        if (!originalValue.equals(naturalFallback)) {
+            TranslationProtectionHandler.sendDetail(key, originalValue, naturalFallback);
         }
+        TranslationProtectionHandler.logDetection(key, originalValue, naturalFallback);
+    }
+    
+    @Unique
+    private void opsec$logForgeFabrication() {
+        String naturalFallback = fallback != null ? fallback : key;
+        String fabricatedValue = ForgeTranslations.getTranslation(key);
         
-        // Protection enabled - block mod translation
-        // Only send detail if value would have changed
-        if (!originalValue.equals(key)) {
-            TranslationProtectionHandler.sendDetail(key, originalValue, key);
+        if (fabricatedValue != null) {
+            // Show: 'original' → 'fabricated forge value'
+            TranslationProtectionHandler.sendDetail(key, naturalFallback, fabricatedValue);
+            TranslationProtectionHandler.logDetection(key, naturalFallback, fabricatedValue);
         }
-        
-        // Always log detection (even if value unchanged)
-        TranslationProtectionHandler.logDetection(key, originalValue, key);
-        
-        return key;  // Return raw key, don't reveal mod translation
     }
     
     /**
-     * Intercept translation key resolution (two parameter version with fallback).
-     * Detection and alerts work even when protection is disabled.
+     * Get the real translation value by directly accessing ClientLanguage's storage map.
+     * This bypasses our LanguageMixin interception.
      */
-    @WrapOperation(
-        method = "decompose",
-        at = @At(value = "INVOKE", target = "Lnet/minecraft/locale/Language;getOrDefault(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;"),
-        require = 0
-    )
-    private String opsec$interceptTranslationWithFallback(
-            Language instance, String key, String fallback, Operation<String> original) {
-        // Vanilla translation key - always allow (no exploit risk)
-        if (ModRegistry.isVanillaTranslationKey(key)) {
-            return original.call(instance, key, fallback);
+    @Unique
+    @SuppressWarnings("unchecked")
+    private String opsec$getRealTranslation(String translationKey, String defaultValue) {
+        try {
+            Language lang = Language.getInstance();
+            if (lang instanceof ClientLanguage clientLang) {
+                // Find the storage field - it may have different names in dev vs runtime
+                if (storageField == null) {
+                    // Search for a Map<String, String> field
+                    for (Field field : ClientLanguage.class.getDeclaredFields()) {
+                        if (Map.class.isAssignableFrom(field.getType())) {
+                            field.setAccessible(true);
+                            Object value = field.get(clientLang);
+                            if (value instanceof Map<?, ?> map && !map.isEmpty()) {
+                                // Check if it's String -> String
+                                Map.Entry<?, ?> entry = map.entrySet().iterator().next();
+                                if (entry.getKey() instanceof String && entry.getValue() instanceof String) {
+                                    storageField = field;
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                }
+                
+                if (storageField != null) {
+                    Map<String, String> storage = (Map<String, String>) storageField.get(clientLang);
+                    String value = storage.get(translationKey);
+                    return value != null ? value : defaultValue;
+                }
+            }
+        } catch (Exception e) {
+            // Fallback if reflection fails
         }
-        
-        // Server resource pack key - allow (prevents anti-spoof detection)
-        if (ModRegistry.isServerPackTranslationKey(key)) {
-            return original.call(instance, key, fallback);
-        }
-        
-        // Whitelisted mod key - allow when whitelist is enabled
-        if (ModRegistry.isWhitelistedTranslationKey(key)) {
-            return original.call(instance, key, fallback);
-        }
-        
-        // Not in exploitable context - allow normal resolution
-        if (!ExploitContext.isInExploitableContext()) {
-            return original.call(instance, key, fallback);
-        }
-        
-        // In exploitable context - always notify detection (header alert)
-        TranslationProtectionHandler.notifyExploitDetected();
-        
-        // Get original value
-        String originalValue = original.call(instance, key, fallback);
-        
-        // If protection is disabled, allow normal resolution but still log detection
-        if (!OpsecConfig.getInstance().isTranslationProtectionEnabled()) {
-            TranslationProtectionHandler.logDetection(key, originalValue, originalValue);
-            return originalValue;
-        }
-        
-        // Protection enabled - block mod translation
-        String spoofedValue = fallback != null ? fallback : key;
-        
-        // Only send detail if value would have changed
-        if (!originalValue.equals(spoofedValue)) {
-            TranslationProtectionHandler.sendDetail(key, originalValue, spoofedValue);
-        }
-        
-        // Always log detection (even if value unchanged)
-        TranslationProtectionHandler.logDetection(key, originalValue, spoofedValue);
-        
-        return spoofedValue;  // Return fallback or raw key
+        return defaultValue;
     }
 }

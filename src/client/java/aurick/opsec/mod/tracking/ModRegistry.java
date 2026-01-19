@@ -195,49 +195,128 @@ public class ModRegistry {
         if (key == null) return null;
         
         for (ModInfo info : registry.values()) {
+            // Skip fabric-resource-loader-v0 - it incorrectly captures all mod keys
+            if ("fabric-resource-loader-v0".equals(info.modId)) {
+                continue;
+            }
+            
             if (info.translationKeys.contains(key)) {
                 return info.modId;
             }
         }
+        
         return null;
     }
     
+    // ==================== CENTRALIZED WHITELIST CHECK ====================
+    
     /**
-     * Check if a translation key is from a whitelisted mod.
-     * Also allows Fabric-related translation keys when brand is Fabric.
+     * Centralized whitelist check for both translation keys and keybind keys.
+     * Servers can abuse either mechanism, so we use the same logic for both.
+     * 
+     * @param key The translation key or keybind key to check
+     * @param source "translation" or "keybind" for logging purposes
+     * @return true if the key should be allowed
      */
-    public static boolean isWhitelistedTranslationKey(String key) {
+    public static boolean isWhitelistedKey(String key, String source) {
         if (key == null) return false;
         
         OpsecConfig config = OpsecConfig.getInstance();
         SpoofSettings settings = config.getSettings();
         
-        // When in Fabric mode, allow Fabric-related translation keys by default
-        if (settings.isFabricMode() && isFabricTranslationKey(key)) {
+        // Fabric loader keys always allowed in Fabric mode
+        if (settings.isFabricMode() && isFabricKey(key)) {
+            Opsec.LOGGER.info("[Whitelist] ALLOWED {} '{}' - Fabric key in Fabric mode", source, key);
             return true;
         }
         
-        // Check explicit whitelist
+        // Forge loader keys always allowed in Forge mode
+        if (settings.isForgeMode() && isForgeKey(key)) {
+            Opsec.LOGGER.info("[Whitelist] ALLOWED {} '{}' - Forge key in Forge mode", source, key);
+            return true;
+        }
+        
+        // Whitelist must be enabled for mod-specific checks
         if (!settings.isWhitelistEnabled()) {
+            Opsec.LOGGER.debug("[Whitelist] {} '{}' - whitelist NOT enabled", source, key);
             return false;
         }
         
-        String modId = getModForTranslationKey(key);
-        return modId != null && settings.isModWhitelisted(modId);
+        // Try to find the mod that owns this key
+        // Check keybind tracking first (for actual keybinds)
+        String modId = getModForKeybind(key);
+        if (modId != null && settings.isModWhitelisted(modId)) {
+            Opsec.LOGGER.info("[Whitelist] ALLOWED {} '{}' via keybind tracking (mod: {})", source, key, modId);
+            return true;
+        }
+        
+        // Check translation tracking (for translation keys or keybinds with translation-style names)
+        modId = getModForTranslationKey(key);
+        if (modId != null && settings.isModWhitelisted(modId)) {
+            Opsec.LOGGER.info("[Whitelist] ALLOWED {} '{}' via translation tracking (mod: {})", source, key, modId);
+            return true;
+        }
+        
+        Opsec.LOGGER.info("[Whitelist] BLOCKED {} '{}' - modId: '{}', not whitelisted", source, key, modId);
+        return false;
     }
     
     /**
-     * Check if a translation key is from Fabric or Fabric API.
+     * Check if a translation key is from a whitelisted mod.
+     * Delegates to centralized whitelist check.
      */
-    private static boolean isFabricTranslationKey(String key) {
+    public static boolean isWhitelistedTranslationKey(String key) {
+        return isWhitelistedKey(key, "translation");
+    }
+    
+    /**
+     * Check if a keybind is from a whitelisted mod.
+     * Delegates to centralized whitelist check.
+     */
+    public static boolean isWhitelistedKeybind(String keybindName) {
+        return isWhitelistedKey(keybindName, "keybind");
+    }
+    
+    /**
+     * Check if a key is from Fabric or Fabric API.
+     * Unified check for both translation keys and keybinds.
+     */
+    private static boolean isFabricKey(String key) {
         if (key == null) return false;
         
-        // Fabric API and related keys
-        return key.startsWith("fabric.") || 
-               key.startsWith("fabric-") ||
-               key.startsWith("key.fabric") ||
-               key.startsWith("category.fabric");
+        return key.startsWith("fabric.") ||           // fabric.gui.creativeTabPage
+               key.startsWith("fabric-") ||           // fabric-registry-sync-v0.*, fabric-data-attachment-api-v1.*
+               key.startsWith("fabricloader.") ||     // Fabric Loader keys
+               key.startsWith("key.fabric") ||        // Fabric keybinds
+               key.startsWith("category.fabric") ||   // Fabric keybind categories
+               key.startsWith("pack.source.fabric") || // pack.source.fabricmod
+               key.startsWith("pack.source.builtin") || // pack.source.builtinMod
+               key.startsWith("pack.name.fabric") ||  // pack.name.fabricMod
+               key.startsWith("pack.description.mod") || // pack.description.modResources
+               key.startsWith("commands.datapack.fabric") || // commands.datapack.fabric.internal
+               key.startsWith("tag.");                // Convention tags (tag.block.c.*, tag.item.c.*, etc.)
     }
+    
+    /**
+     * Check if a key is from Forge, FML, or NeoForge.
+     * Unified check for both translation keys and keybinds.
+     */
+    private static boolean isForgeKey(String key) {
+        if (key == null) return false;
+        
+        return key.startsWith("forge.") || 
+               key.startsWith("forgemod.") ||
+               key.startsWith("fml.") ||
+               key.startsWith("neoforge.") ||
+               key.startsWith("key.forge") ||
+               key.startsWith("key.neoforge") ||
+               key.startsWith("category.forge") ||
+               key.startsWith("category.neoforge") ||
+               key.startsWith("pack.source.forge") ||  // pack.source.forgemod
+               key.equals("pack.source.forgemod") ||
+               key.equals("pack.source.mod");  // Generic mod source used by Forge
+    }
+    
     
     /**
      * Clear translation key caches. Called on language reload.
@@ -312,20 +391,6 @@ public class ModRegistry {
         return null;
     }
     
-    /**
-     * Check if a keybind is from a whitelisted mod.
-     */
-    public static boolean isWhitelistedKeybind(String keybindName) {
-        if (keybindName == null) return false;
-        
-        OpsecConfig config = OpsecConfig.getInstance();
-        if (!config.getSettings().isWhitelistEnabled()) {
-            return false;
-        }
-        
-        String modId = getModForKeybind(keybindName);
-        return modId != null && config.getSettings().isModWhitelisted(modId);
-    }
     
     // ==================== CHANNEL TRACKING ====================
     

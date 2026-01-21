@@ -31,6 +31,10 @@ import java.util.Set;
 public class OpsecClient implements ClientModInitializer {
 	@Override
 	public void onInitializeClient() {
+		// Log mod initialization
+		Opsec.LOGGER.info("{} v{} - Privacy protection for Minecraft", Opsec.MOD_NAME, Opsec.getVersion());
+		Opsec.LOGGER.info("Protecting against: TrackPack, Sign Translation Exploit, Client Fingerprinting");
+		
 		OpsecConfig.getInstance();
 		OpsecCommand.register();
 		

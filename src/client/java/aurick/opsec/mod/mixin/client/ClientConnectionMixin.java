@@ -20,12 +20,7 @@ import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 /*import net.minecraft.resources.Identifier;
 */
 //?} else {
-//? if >=1.21.11 {
-/*import net.minecraft.resources.Identifier;
-*/
-//?} else {
 import net.minecraft.resources.ResourceLocation;
-//?}
 //?}
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -44,6 +39,7 @@ import static aurick.opsec.mod.config.OpsecConstants.Channels.*;
 /**
  * Intercepts and filters outgoing custom payloads for brand spoofing and channel filtering.
  * Also tracks server address for LAN detection.
+ * Uses require=0 on several injections for multi-version support (Connection method signatures vary across 1.21.x).
  */
 @Mixin(Connection.class)
 public class ClientConnectionMixin {
@@ -288,9 +284,7 @@ public class ClientConnectionMixin {
         handleOutgoingPacket(packet, ci, (Connection)(Object)this);
     }
     
-    /**
-     * Version-compatible sendPacket method injection for Fabric API 1.21.5+
-     */
+    /** Version-compatible sendPacket injection for 1.21.5+ */
     @Inject(
         method = "sendPacket(Lnet/minecraft/network/protocol/Packet;Lnet/minecraft/network/PacketSendListener;)V",
         at = @At("HEAD"),

@@ -10,6 +10,7 @@
 		"ClientCommonPacketListenerImplMixin",
 		"ConnectScreenMixin",
 		"DownloadQueueMixin",
+		"DownloadedPackSourceAccessor",
 		"ChannelRegistrationMixin",
 		"FabricPlayNetworkingMixin",
 		"FabricConfigNetworkingMixin",

@@ -217,7 +217,7 @@ public class OpsecConfigScreen extends Screen {
         widgets.add(Button.builder(Component.translatable("opsec.option.clearCache"), button -> {
                 ResourcePackGuard.clearAllCaches();
             }).size(210, 20)
-          .tooltip(Tooltip.create(Component.literal("Deletes all cached server resource packs")))
+          .tooltip(Tooltip.create(Component.literal("Deletes all cached server resource packs\nAlso resets download queue state")))
           .build());
         
         // Translation Exploit Protection Section

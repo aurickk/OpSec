@@ -52,7 +52,9 @@ public class DownloadQueueMixin {
             return original;
         }
 
-        return cacheDir.resolve(accountId.toString()).resolve(packId.toString());
+        Path isolatedPath = cacheDir.resolve(accountId.toString()).resolve(packId.toString());
+        Opsec.LOGGER.debug("[OpSec] Isolating resource pack cache for account {} -> {}", accountId, isolatedPath);
+        return isolatedPath;
     }
 }
 

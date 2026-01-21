@@ -69,8 +69,10 @@ public class TranslationProtectionHandler {
             // Alert without source (source is in logs)
             if (OpsecConfig.getInstance().shouldShowAlerts()) {
                 PrivacyLogger.alert(PrivacyLogger.AlertType.DANGER, "Translation exploit detected!");
-                PrivacyLogger.toast(PrivacyLogger.AlertType.DANGER, "Translation Exploit Detected");
             }
+            
+            // Toast notification (separate from chat alerts)
+            PrivacyLogger.toast(PrivacyLogger.AlertType.DANGER, "Translation Exploit Detected");
             
             // Log with source
             if (OpsecConfig.getInstance().isLogDetections()) {

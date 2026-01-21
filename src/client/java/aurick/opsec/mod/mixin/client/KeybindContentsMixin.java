@@ -104,8 +104,14 @@ public class KeybindContentsMixin {
         // Protection enabled - determine spoofed value
         String spoofedValue;
         if (KeybindDefaults.hasDefault(name)) {
-            // Vanilla keybind - return cached default
-            spoofedValue = KeybindDefaults.getDefault(name);
+            // Vanilla keybind - check if we should fake defaults
+            if (settings.isFakeDefaultKeybinds()) {
+                spoofedValue = KeybindDefaults.getDefault(name);
+            } else {
+                // Fake defaults disabled - allow real value but still log detection
+                TranslationProtectionHandler.logDetection(name, originalValue, originalValue);
+                return originalResult;
+            }
         } else {
             // Mod keybind or unknown - return raw key name
             spoofedValue = name;

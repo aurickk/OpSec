@@ -37,6 +37,7 @@ public class SpoofSettings {
     
     // Translation exploit protection
     private boolean translationProtection = true;
+    private boolean fakeDefaultKeybinds = true;  // Spoof vanilla keybinds to default values
     private boolean meteorFix = true;  // Block Meteor's broken translation protection
     
     // Alerts
@@ -87,6 +88,9 @@ public class SpoofSettings {
     
     public boolean isTranslationProtectionEnabled() { return translationProtection; }
     public void setTranslationProtection(boolean enabled) { this.translationProtection = enabled; }
+    
+    public boolean isFakeDefaultKeybinds() { return fakeDefaultKeybinds; }
+    public void setFakeDefaultKeybinds(boolean enabled) { this.fakeDefaultKeybinds = enabled; }
     
     public boolean isMeteorFix() { return meteorFix; }
     public void setMeteorFix(boolean enabled) { this.meteorFix = enabled; }
@@ -184,6 +188,7 @@ public class SpoofSettings {
         json.addProperty("isolatePackCache", isolatePackCache);
         json.addProperty("blockLocalPackUrls", blockLocalPackUrls);
         json.addProperty("translationProtection", translationProtection);
+        json.addProperty("fakeDefaultKeybinds", fakeDefaultKeybinds);
         json.addProperty("meteorFix", meteorFix);
         json.addProperty("showAlerts", showAlerts);
         json.addProperty("showToasts", showToasts);
@@ -216,6 +221,7 @@ public class SpoofSettings {
         if (json.has("translationProtection")) s.translationProtection = json.get("translationProtection").getAsBoolean();
         // Legacy support
         if (json.has("blockTranslationExploit")) s.translationProtection = json.get("blockTranslationExploit").getAsBoolean();
+        if (json.has("fakeDefaultKeybinds")) s.fakeDefaultKeybinds = json.get("fakeDefaultKeybinds").getAsBoolean();
         if (json.has("meteorFix")) s.meteorFix = json.get("meteorFix").getAsBoolean();
         if (json.has("showAlerts")) s.showAlerts = json.get("showAlerts").getAsBoolean();
         if (json.has("showToasts")) s.showToasts = json.get("showToasts").getAsBoolean();
@@ -258,6 +264,7 @@ public class SpoofSettings {
         this.isolatePackCache = other.isolatePackCache;
         this.blockLocalPackUrls = other.blockLocalPackUrls;
         this.translationProtection = other.translationProtection;
+        this.fakeDefaultKeybinds = other.fakeDefaultKeybinds;
         this.meteorFix = other.meteorFix;
         this.showAlerts = other.showAlerts;
         this.showToasts = other.showToasts;

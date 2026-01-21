@@ -36,8 +36,8 @@ import java.util.function.Function;
 public class OpsecConfigScreen extends Screen {
     private static final Function<Boolean, Component> COLORED_BOOL_TO_TEXT = b -> 
         Boolean.TRUE.equals(b) 
-            ? Component.literal("§aON") 
-            : Component.literal("§cOFF");
+            ? Component.literal("\u00A7aON") 
+            : Component.literal("\u00A7cOFF");
     
     // Helper method to create CycleButton builder with values in correct order
     // API changed in 1.21.11 - builder() now requires a default value parameter and doesn't have withInitialValue()
@@ -134,7 +134,7 @@ public class OpsecConfigScreen extends Screen {
         List<AbstractWidget> widgets = new ArrayList<>();
         
         // Client Brand Section
-        widgets.add(createSectionHeader("§f§lClient Brand"));
+        widgets.add(createSectionHeader("\u00A7f\u00A7lClient Brand"));
         
         widgets.add(cycleBuilder(COLORED_BOOL_TO_TEXT, List.of(Boolean.TRUE, Boolean.FALSE), settings.isSpoofBrand())
                 .withTooltip(v -> Tooltip.create(Component.literal("Replace your client brand with a spoofed value")))
@@ -148,7 +148,7 @@ public class OpsecConfigScreen extends Screen {
         if (settings.isSpoofBrand()) {
             // When whitelist is enabled, show greyed-out forced Fabric indicator
             if (settings.isWhitelistEnabled()) {
-                widgets.add(createSectionHeader("§7Brand: Fabric (forced by whitelist)"));
+                widgets.add(createSectionHeader("\u00A77Brand: Fabric (forced by whitelist)"));
             } else {
                 widgets.add(cycleBuilder(BrandType::getDisplayName, List.of(BrandType.values()), BrandType.fromString(settings.getCustomBrand()))
                         .withTooltip(v -> Tooltip.create(Component.literal("Select the brand to appear as")))
@@ -166,7 +166,7 @@ public class OpsecConfigScreen extends Screen {
                     }));
             
             if (settings.isSpoofChannels()) {
-                widgets.add(createSectionHeader("§e⚠ May break mods if not whitelisted"));
+                widgets.add(createSectionHeader("\u00A7e\u26A0 May break mods if not whitelisted"));
             }
         }
         
@@ -177,7 +177,7 @@ public class OpsecConfigScreen extends Screen {
         List<AbstractWidget> widgets = new ArrayList<>();
         
         // Resource Pack Protection Section
-        widgets.add(createSectionHeader("§f§lResource Pack Protection"));
+        widgets.add(createSectionHeader("\u00A7f\u00A7lResource Pack Protection"));
         
         widgets.add(cycleBuilder(COLORED_BOOL_TO_TEXT, List.of(Boolean.TRUE, Boolean.FALSE), settings.isIsolatePackCache())
                 .withTooltip(v -> Tooltip.create(Component.literal("Store packs per-account to prevent fingerprinting")))
@@ -196,7 +196,7 @@ public class OpsecConfigScreen extends Screen {
           .build());
         
         // Translation Exploit Protection Section
-        widgets.add(createSectionHeader("§f§lTranslation Exploit Protection"));
+        widgets.add(createSectionHeader("\u00A7f\u00A7lTranslation Exploit Protection"));
         
         widgets.add(cycleBuilder(COLORED_BOOL_TO_TEXT, List.of(Boolean.TRUE, Boolean.FALSE), settings.isTranslationProtectionEnabled())
             .withTooltip(v -> Tooltip.create(Component.literal("Mask translation key values to appear as default vanilla client")))
@@ -207,8 +207,17 @@ public class OpsecConfigScreen extends Screen {
                         refreshScreen();
                 }));
         
-        // Only show Meteor Fix when translation protection is enabled
+        // Only show sub-options when translation protection is enabled
         if (settings.isTranslationProtectionEnabled()) {
+            widgets.add(cycleBuilder(COLORED_BOOL_TO_TEXT, List.of(Boolean.TRUE, Boolean.FALSE), settings.isFakeDefaultKeybinds())
+                .withTooltip(v -> Tooltip.create(Component.literal(
+                    "Spoof vanilla keybinds to default values when enabled")))
+                    .create(0, 0, 210, 20, Component.literal("Fake Default Keybinds"),
+                        (button, value) -> { 
+                            settings.setFakeDefaultKeybinds(value); 
+                            config.save();
+                    }));
+            
             widgets.add(cycleBuilder(COLORED_BOOL_TO_TEXT, List.of(Boolean.TRUE, Boolean.FALSE), settings.isMeteorFix())
                 .withTooltip(v -> Tooltip.create(Component.literal(
                     "Blacklist a Meteor Client mixin to allow OpSec's proper protection handling")))
@@ -221,12 +230,12 @@ public class OpsecConfigScreen extends Screen {
             
             // Show warning only when setting differs from what was applied at startup
             if (MeteorMixinCanceller.needsRestart(settings.isMeteorFix())) {
-                widgets.add(createSectionHeader("§e⚠ Requires game restart to take effect"));
+                widgets.add(createSectionHeader("\u00A7e\u26A0 Requires game restart to take effect"));
             }
         }
         
         // Privacy & Security Section
-        widgets.add(createSectionHeader("§f§lPrivacy & Security"));
+        widgets.add(createSectionHeader("\u00A7f\u00A7lPrivacy & Security"));
         
         widgets.add(cycleBuilder(SigningModeDisplay::getDisplayName, List.of(SpoofSettings.SigningMode.values()), settings.getSigningMode())
                 .withTooltip(v -> Tooltip.create(SigningModeDisplay.getTooltip(v)))
@@ -245,7 +254,7 @@ public class OpsecConfigScreen extends Screen {
         List<AbstractWidget> widgets = new ArrayList<>();
         
         // Alerts & Logging Section
-        widgets.add(createSectionHeader("§f§lAlerts & Logging"));
+        widgets.add(createSectionHeader("\u00A7f\u00A7lAlerts & Logging"));
         
         widgets.add(cycleBuilder(COLORED_BOOL_TO_TEXT, List.of(Boolean.TRUE, Boolean.FALSE), settings.isShowAlerts())
                 .withTooltip(v -> Tooltip.create(Component.literal("Show chat messages when tracking detected")))
@@ -269,7 +278,7 @@ public class OpsecConfigScreen extends Screen {
         List<AbstractWidget> widgets = new ArrayList<>();
         
         // Section header
-        widgets.add(createSectionHeader("§f§lMod Whitelist"));
+        widgets.add(createSectionHeader("\u00A7f\u00A7lMod Whitelist"));
         
         // Master enable/disable toggle
         widgets.add(cycleBuilder(COLORED_BOOL_TO_TEXT, List.of(Boolean.TRUE, Boolean.FALSE), settings.isWhitelistEnabled())
@@ -284,7 +293,7 @@ public class OpsecConfigScreen extends Screen {
         
         if (settings.isWhitelistEnabled()) {
             // Mod list header
-            widgets.add(createSectionHeader("§f§lInstalled Mods"));
+            widgets.add(createSectionHeader("\u00A7f\u00A7lInstalled Mods"));
             
             // Create mod entries
             for (ModContainer mod : getWhitelistableMods()) {
@@ -654,9 +663,9 @@ public class OpsecConfigScreen extends Screen {
     private static class SigningModeDisplay {
         public static Component getDisplayName(SpoofSettings.SigningMode mode) {
             return switch (mode) {
-                case SIGN -> Component.literal("§cON"); // Red - signing enabled
-                case OFF -> Component.literal("§eOFF"); // Yellow - signing disabled 
-                case ON_DEMAND -> Component.literal("§aAUTO"); // Green - recommended
+                case SIGN -> Component.literal("\u00A7cON"); // Red - signing enabled
+                case OFF -> Component.literal("\u00A7eOFF"); // Yellow - signing disabled 
+                case ON_DEMAND -> Component.literal("\u00A7aAUTO"); // Green - recommended
             };
         }
         

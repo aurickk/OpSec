@@ -1,6 +1,8 @@
 package aurick.opsec.mod.config;
 
 import aurick.opsec.mod.Opsec;
+import aurick.opsec.mod.accounts.AccountManager;
+import aurick.opsec.mod.accounts.SessionAccount;
 import aurick.opsec.mod.mixin.MeteorMixinCanceller;
 import aurick.opsec.mod.protection.ResourcePackGuard;
 import aurick.opsec.mod.tracking.ModRegistry;
@@ -23,11 +25,21 @@ import net.minecraft.client.gui.components.tabs.TabNavigationBar;
 import net.minecraft.client.gui.layouts.HeaderAndFooterLayout;
 import net.minecraft.client.gui.layouts.LinearLayout;
 import net.minecraft.client.gui.narration.NarratableEntry;
+import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.client.gui.navigation.ScreenRectangle;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
 
+import org.lwjgl.PointerBuffer;
+import org.lwjgl.system.MemoryStack;
+import org.lwjgl.util.tinyfd.TinyFileDialogs;
+
+import java.io.File;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -54,6 +66,10 @@ public class OpsecConfigScreen extends Screen {
     
     private final Screen parent;
     private final OpsecConfig config;
+    
+    public Screen getParent() {
+        return parent;
+    }
     
     private TabNavigationBar tabWidget;
     private final TabManager tabManager = new TabManager(this::addRenderableWidget, this::removeWidget);
@@ -97,7 +113,8 @@ public class OpsecConfigScreen extends Screen {
             createIdentityTab(settings),
             createProtectionTab(settings),
             createWhitelistTab(settings),
-            createMiscTab(settings)
+            createMiscTab(settings),
+            createAccountsTab()
         );
         
         this.tabWidget = TabNavigationBar.builder(this.tabManager, this.width)
@@ -107,12 +124,21 @@ public class OpsecConfigScreen extends Screen {
         this.tabWidget.selectTab(this.currentTab, false);
         
         // Create footer buttons
+        // Accounts tab is index 4 - reset button doesn't apply to accounts
+        boolean isAccountsTab = this.currentTab == 4;
         this.resetButton = Button.builder(Component.translatable("controls.reset"), button -> {
             SpoofSettings defaults = new SpoofSettings();
             settings.copyFrom(defaults);
             config.save();
             refreshScreen();
-        }).width(150).build();
+        }).width(150)
+          .tooltip(Tooltip.create(Component.literal(isAccountsTab 
+                  ? "Reset is disabled on Accounts tab" 
+                  : "Reset all settings to defaults")))
+          .build();
+        
+        // Disable reset button on Accounts tab
+        this.resetButton.active = !isAccountsTab;
         
         this.doneButton = Button.builder(CommonComponents.GUI_DONE, button -> this.onClose())
                 .width(150)
@@ -272,6 +298,328 @@ public class OpsecConfigScreen extends Screen {
                 (button, value) -> { settings.setLogDetections(value); config.save(); }));
         
         return new WidgetTab(Component.translatable("opsec.tab.misc"), widgets);
+    }
+    
+    private Tab createAccountsTab() {
+        List<AbstractWidget> widgets = new ArrayList<>();
+        AccountManager accountManager = AccountManager.getInstance();
+        
+        // Section header
+        widgets.add(createSectionHeader("\u00A7f\u00A7lAccounts"));
+        
+        // Current account info
+        String currentUser = Minecraft.getInstance().getUser().getName();
+        widgets.add(createSectionHeader("\u00A77Current: " + currentUser));
+        
+        // List saved accounts
+        if (!accountManager.getAccounts().isEmpty()) {
+            widgets.add(createSectionHeader("\u00A7f\u00A7lSaved Accounts"));
+            
+            for (SessionAccount account : accountManager.getAccounts()) {
+                String displayName = account.getUsername();
+                boolean isActive = accountManager.isActive(account);
+                boolean isValid = account.isValid();
+                
+                // Create account row with both buttons side by side
+                // Green if active, red if invalid, white otherwise
+                String buttonText;
+                if (!isValid) {
+                    buttonText = "\u00A7c" + displayName + " \u00A78(invalid)";
+                } else if (isActive) {
+                    buttonText = "\u00A7a" + displayName;
+                } else {
+                    buttonText = displayName;
+                }
+                
+                String tooltip;
+                if (!isValid) {
+                    tooltip = "Token expired or invalid\nClick to try login anyway";
+                } else if (isActive) {
+                    tooltip = "Currently logged in\nClick to logout to original account";
+                } else {
+                    tooltip = "Click to login as " + displayName;
+                }
+                
+                widgets.add(new AccountRowWidget(
+                        buttonText,
+                        tooltip,
+                        isActive,
+                        // Login/logout action
+                        () -> {
+                            if (isActive) {
+                                // Logout to original account
+                                if (accountManager.logout()) {
+                                    refreshScreen();
+                                }
+                            } else {
+                                // Login to this account
+                                Opsec.LOGGER.info("[OpSec] Logging into account: {}", account.getUsername());
+                                if (account.login()) {
+                                    accountManager.setActiveAccountUuid(account.getUuid());
+                                    refreshScreen();
+                                }
+                            }
+                        },
+                        // Remove action
+                        () -> {
+                            accountManager.remove(account);
+                            refreshScreen();
+                        }
+                ));
+            }
+            
+            // Refresh button to revalidate all accounts
+            Button refreshButton = Button.builder(Component.literal(
+                    accountManager.isRefreshing() ? "\u00A77Refreshing..." : "Refresh All"
+            ), button -> {
+                if (accountManager.isRefreshing()) {
+                    return; // Already refreshing
+                }
+                button.setMessage(Component.literal("\u00A77Refreshing..."));
+                button.active = false;
+                accountManager.refreshAllAccounts((valid, invalid) -> {
+                    refreshScreen();
+                });
+            }).size(210, 20)
+              .tooltip(Tooltip.create(Component.literal("Revalidate all accounts\nInvalid tokens will be marked red\nAdds delay between requests to avoid rate limiting")))
+              .build();
+            
+            // Disable button if already refreshing
+            if (accountManager.isRefreshing()) {
+                refreshButton.active = false;
+            }
+            
+            widgets.add(refreshButton);
+        }
+        
+        // Add account section
+        widgets.add(createSectionHeader("\u00A7f\u00A7lAdd Account"));
+        
+        // Add button to open add account dialog
+        widgets.add(Button.builder(Component.literal("Add Session Token"), button -> {
+            this.minecraft.setScreen(new AddAccountScreen(this));
+        }).size(210, 20)
+          .tooltip(Tooltip.create(Component.literal("Add a new account using a session token")))
+          .build());
+        
+        // Import/Export buttons
+        widgets.add(new ImportExportRowWidget(
+                // Import action
+                () -> {
+                    openImportDialog();
+                },
+                // Export action
+                () -> {
+                    openExportDialog();
+                }
+        ));
+        
+        return new WidgetTab(Component.translatable("opsec.tab.accounts"), widgets);
+    }
+    
+    private void openImportDialog() {
+        new Thread(() -> {
+            try (MemoryStack stack = MemoryStack.stackPush()) {
+                PointerBuffer filters = stack.mallocPointer(1);
+                filters.put(stack.UTF8("*.json"));
+                filters.flip();
+                
+                String result = TinyFileDialogs.tinyfd_openFileDialog(
+                    "Import Accounts",
+                    "",
+                    filters,
+                    "JSON Files (*.json)",
+                    false
+                );
+                
+                if (result == null) return;
+                
+                File file = new File(result);
+                String content = Files.readString(file.toPath(), StandardCharsets.UTF_8);
+                int imported = AccountManager.getInstance().importFromJson(content);
+                
+                // Refresh UI on main thread
+                Minecraft.getInstance().execute(() -> {
+                    if (imported > 0) {
+                        Opsec.LOGGER.info("[OpSec] Imported {} accounts from {}", imported, file.getName());
+                    }
+                    refreshScreen();
+                });
+            } catch (Exception e) {
+                Opsec.LOGGER.error("[OpSec] Failed to import accounts: {}", e.getMessage());
+            }
+        }, "OpSec-Import-Thread").start();
+    }
+    
+    private void openExportDialog() {
+        new Thread(() -> {
+            try (MemoryStack stack = MemoryStack.stackPush()) {
+                PointerBuffer filters = stack.mallocPointer(1);
+                filters.put(stack.UTF8("*.json"));
+                filters.flip();
+                
+                String result = TinyFileDialogs.tinyfd_saveFileDialog(
+                    "Export Accounts",
+                    "opsec-accounts-export.json",
+                    filters,
+                    "JSON Files (*.json)"
+                );
+                
+                if (result == null) return;
+                
+                File file = new File(result);
+                if (!file.getName().toLowerCase().endsWith(".json")) {
+                    file = new File(file.getParentFile(), file.getName() + ".json");
+                }
+                
+                String json = AccountManager.getInstance().exportToJson();
+                Files.write(file.toPath(), json.getBytes(StandardCharsets.UTF_8),
+                    StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+                    
+                Opsec.LOGGER.info("[OpSec] Exported accounts to {}", file.getPath());
+            } catch (Exception e) {
+                Opsec.LOGGER.error("[OpSec] Failed to export accounts: {}", e.getMessage());
+            }
+        }, "OpSec-Export-Thread").start();
+    }
+    
+    // Custom widget for account row (account button + remove button side by side)
+    private static class AccountRowWidget extends AbstractWidget {
+        private final Button accountButton;
+        private final Button removeButton;
+        private final Runnable onAccountClick;
+        private final Runnable onRemoveClick;
+        
+        public AccountRowWidget(String accountName, String tooltip, boolean isActive, Runnable onAccountClick, Runnable onRemoveClick) {
+            super(0, 0, 210, 20, Component.empty());
+            this.onAccountClick = onAccountClick;
+            this.onRemoveClick = onRemoveClick;
+            
+            this.accountButton = Button.builder(Component.literal(accountName), btn -> onAccountClick.run())
+                    .size(150, 20)
+                    .tooltip(Tooltip.create(Component.literal(tooltip)))
+                    .build();
+            
+            this.removeButton = Button.builder(Component.literal("\u00A7cRemove"), btn -> onRemoveClick.run())
+                    .size(55, 20)
+                    .tooltip(Tooltip.create(Component.literal("Remove this account")))
+                    .build();
+        }
+        
+        @Override
+        public void setX(int x) {
+            super.setX(x);
+            updateButtonPositions();
+        }
+        
+        @Override
+        public void setY(int y) {
+            super.setY(y);
+            updateButtonPositions();
+        }
+        
+        private void updateButtonPositions() {
+            // Center the pair of buttons
+            int totalWidth = 150 + 5 + 55; // account button + gap + remove button
+            int startX = getX() + (getWidth() - totalWidth) / 2;
+            accountButton.setX(startX);
+            accountButton.setY(getY());
+            removeButton.setX(startX + 150 + 5);
+            removeButton.setY(getY());
+        }
+        
+        @Override
+        protected void renderWidget(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
+            updateButtonPositions();
+            accountButton.render(graphics, mouseX, mouseY, partialTick);
+            removeButton.render(graphics, mouseX, mouseY, partialTick);
+        }
+        
+        // Handle click - onClick signature changed in 1.21.9
+        //? if <1.21.9 {
+        @Override
+        public void onClick(double mouseX, double mouseY) {
+            if (accountButton.isMouseOver(mouseX, mouseY)) {
+                onAccountClick.run();
+            } else if (removeButton.isMouseOver(mouseX, mouseY)) {
+                onRemoveClick.run();
+            }
+        }
+        //?}
+        
+        @Override
+        protected void updateWidgetNarration(NarrationElementOutput output) {
+            accountButton.updateNarration(output);
+        }
+    }
+    
+    // Custom widget for import/export row
+    private static class ImportExportRowWidget extends AbstractWidget {
+        private final Button importButton;
+        private final Button exportButton;
+        private final Runnable onImportAction;
+        private final Runnable onExportAction;
+        
+        public ImportExportRowWidget(Runnable onImport, Runnable onExport) {
+            super(0, 0, 210, 20, Component.empty());
+            this.onImportAction = onImport;
+            this.onExportAction = onExport;
+            
+            this.importButton = Button.builder(Component.literal("Import"), btn -> onImport.run())
+                    .size(100, 20)
+                    .tooltip(Tooltip.create(Component.literal("Import accounts from JSON file")))
+                    .build();
+            
+            this.exportButton = Button.builder(Component.literal("Export"), btn -> onExport.run())
+                    .size(100, 20)
+                    .tooltip(Tooltip.create(Component.literal("Export accounts to JSON file")))
+                    .build();
+        }
+        
+        @Override
+        public void setX(int x) {
+            super.setX(x);
+            updateButtonPositions();
+        }
+        
+        @Override
+        public void setY(int y) {
+            super.setY(y);
+            updateButtonPositions();
+        }
+        
+        private void updateButtonPositions() {
+            int totalWidth = 100 + 5 + 100;
+            int startX = getX() + (getWidth() - totalWidth) / 2;
+            importButton.setX(startX);
+            importButton.setY(getY());
+            exportButton.setX(startX + 100 + 5);
+            exportButton.setY(getY());
+        }
+        
+        @Override
+        protected void renderWidget(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
+            updateButtonPositions();
+            importButton.render(graphics, mouseX, mouseY, partialTick);
+            exportButton.render(graphics, mouseX, mouseY, partialTick);
+        }
+        
+        // Handle click - onClick signature changed in 1.21.9
+        //? if <1.21.9 {
+        @Override
+        public void onClick(double mouseX, double mouseY) {
+            if (importButton.isMouseOver(mouseX, mouseY)) {
+                onImportAction.run();
+            } else if (exportButton.isMouseOver(mouseX, mouseY)) {
+                onExportAction.run();
+            }
+        }
+        //?}
+        
+        @Override
+        protected void updateWidgetNarration(NarrationElementOutput output) {
+            importButton.updateNarration(output);
+        }
     }
     
     private Tab createWhitelistTab(SpoofSettings settings) {

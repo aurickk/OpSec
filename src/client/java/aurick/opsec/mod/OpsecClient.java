@@ -1,5 +1,6 @@
 package aurick.opsec.mod;
 
+import aurick.opsec.mod.accounts.AccountManager;
 import aurick.opsec.mod.command.OpsecCommand;
 import aurick.opsec.mod.config.OpsecConfig;
 import aurick.opsec.mod.tracking.ModRegistry;
@@ -37,6 +38,7 @@ public class OpsecClient implements ClientModInitializer {
 		
 		OpsecConfig.getInstance();
 		OpsecCommand.register();
+		AccountManager.getInstance(); // Load saved accounts
 		
 		// Scan for registered channels after all mods have initialized
 		ClientLifecycleEvents.CLIENT_STARTED.register(client -> {

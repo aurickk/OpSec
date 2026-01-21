@@ -3,8 +3,9 @@
   
   "opsec.tab.identity": "Identity",
   "opsec.tab.protection": "Protection",
+  "opsec.tab.accounts": "Accounts",
   "opsec.tab.whitelist": "Whitelist",
-  "opsec.tab.misc": "Miscellaneous",
+  "opsec.tab.misc": "Misc",
   
   "opsec.option.spoofBrand": "Spoof Brand",
   "opsec.option.brandType": "Brand Type",

@@ -34,7 +34,8 @@ public class DownloadQueueMixin {
 
     @ModifyExpressionValue(
         method = "method_55485",
-        at = @At(value = "INVOKE", target = "Ljava/nio/file/Path;resolve(Ljava/lang/String;)Ljava/nio/file/Path;")
+        at = @At(value = "INVOKE", target = "Ljava/nio/file/Path;resolve(Ljava/lang/String;)Ljava/nio/file/Path;"),
+        require = 0, expect = 0
     )
     private Path opsec$isolatePackPath(Path original, @Local(argsOnly = true) UUID packId) {
         if (!OpsecConfig.getInstance().shouldIsolatePackCache()) {

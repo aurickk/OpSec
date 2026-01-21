@@ -38,7 +38,6 @@ import org.lwjgl.util.tinyfd.TinyFileDialogs;
 import java.io.File;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -317,15 +316,16 @@ public class OpsecConfigScreen extends Screen {
             
             for (SessionAccount account : accountManager.getAccounts()) {
                 String displayName = account.getUsername();
-                boolean isActive = accountManager.isActive(account);
+                // Check if this account is actually the current logged-in user (not just stored as active)
+                boolean isLoggedIn = currentUser.equals(account.getUsername());
                 boolean isValid = account.isValid();
                 
                 // Create account row with both buttons side by side
-                // Green if active, red if invalid, white otherwise
+                // Green only if actually logged in, red if invalid, white otherwise
                 String buttonText;
                 if (!isValid) {
                     buttonText = "\u00A7c" + displayName + " \u00A78(invalid)";
-                } else if (isActive) {
+                } else if (isLoggedIn) {
                     buttonText = "\u00A7a" + displayName;
                 } else {
                     buttonText = displayName;
@@ -333,20 +333,30 @@ public class OpsecConfigScreen extends Screen {
                 
                 String tooltip;
                 if (!isValid) {
-                    tooltip = "Token expired or invalid\nClick to try login anyway";
-                } else if (isActive) {
+                    String errorMsg = account.getLastError();
+                    if (errorMsg != null && !errorMsg.isEmpty()) {
+                        tooltip = "\u00A7c" + errorMsg + "\n\u00A77Click to try login anyway";
+                    } else {
+                        tooltip = "\u00A7cToken expired or invalid\n\u00A77Click to try login anyway";
+                    }
+                } else if (isLoggedIn) {
                     tooltip = "Currently logged in\nClick to logout to original account";
                 } else {
-                    tooltip = "Click to login as " + displayName;
+                    String errorMsg = account.getLastError();
+                    if (errorMsg != null && !errorMsg.isEmpty()) {
+                        tooltip = "\u00A7cLast error: " + errorMsg + "\n\u00A77Click to login as " + displayName;
+                    } else {
+                        tooltip = "Click to login as " + displayName;
+                    }
                 }
                 
                 widgets.add(new AccountRowWidget(
                         buttonText,
                         tooltip,
-                        isActive,
+                        isLoggedIn,
                         // Login/logout action
                         () -> {
-                            if (isActive) {
+                            if (isLoggedIn) {
                                 // Logout to original account
                                 if (accountManager.logout()) {
                                     refreshScreen();
@@ -356,8 +366,9 @@ public class OpsecConfigScreen extends Screen {
                                 Opsec.LOGGER.info("[OpSec] Logging into account: {}", account.getUsername());
                                 if (account.login()) {
                                     accountManager.setActiveAccountUuid(account.getUuid());
-                                    refreshScreen();
                                 }
+                                // Always refresh to update tooltip with error or success state
+                                refreshScreen();
                             }
                         },
                         // Remove action
@@ -489,6 +500,9 @@ public class OpsecConfigScreen extends Screen {
         private final Button removeButton;
         private final Runnable onAccountClick;
         private final Runnable onRemoveClick;
+        //? if >=1.21.9 {
+        /*private boolean wasMouseDown = false;*/
+        //?}
         
         public AccountRowWidget(String accountName, String tooltip, boolean isActive, Runnable onAccountClick, Runnable onRemoveClick) {
             super(0, 0, 210, 20, Component.empty());
@@ -533,17 +547,38 @@ public class OpsecConfigScreen extends Screen {
             updateButtonPositions();
             accountButton.render(graphics, mouseX, mouseY, partialTick);
             removeButton.render(graphics, mouseX, mouseY, partialTick);
+            
+            //? if >=1.21.9 {
+            /*// Poll mouse state for click detection since mouseClicked API changed
+            long windowHandle = org.lwjgl.glfw.GLFW.glfwGetCurrentContext();
+            boolean isMouseDown = org.lwjgl.glfw.GLFW.glfwGetMouseButton(windowHandle, org.lwjgl.glfw.GLFW.GLFW_MOUSE_BUTTON_LEFT) == org.lwjgl.glfw.GLFW.GLFW_PRESS;
+            
+            if (!isMouseDown && wasMouseDown) {
+                // Mouse was just released
+                if (accountButton.isMouseOver(mouseX, mouseY)) {
+                    onAccountClick.run();
+                } else if (removeButton.isMouseOver(mouseX, mouseY)) {
+                    onRemoveClick.run();
+                }
+            }
+            wasMouseDown = isMouseDown;*/
+            //?}
         }
         
-        // Handle click - onClick signature changed in 1.21.9
+        // Forward mouse clicks to child buttons
         //? if <1.21.9 {
         @Override
-        public void onClick(double mouseX, double mouseY) {
-            if (accountButton.isMouseOver(mouseX, mouseY)) {
-                onAccountClick.run();
-            } else if (removeButton.isMouseOver(mouseX, mouseY)) {
-                onRemoveClick.run();
+        public boolean mouseClicked(double mouseX, double mouseY, int button) {
+            if (button == 0) { // Left click only
+                if (accountButton.isMouseOver(mouseX, mouseY)) {
+                    onAccountClick.run();
+                    return true;
+                } else if (removeButton.isMouseOver(mouseX, mouseY)) {
+                    onRemoveClick.run();
+                    return true;
+                }
             }
+            return false;
         }
         //?}
         
@@ -559,6 +594,9 @@ public class OpsecConfigScreen extends Screen {
         private final Button exportButton;
         private final Runnable onImportAction;
         private final Runnable onExportAction;
+        //? if >=1.21.9 {
+        /*private boolean wasMouseDown = false;*/
+        //?}
         
         public ImportExportRowWidget(Runnable onImport, Runnable onExport) {
             super(0, 0, 210, 20, Component.empty());
@@ -602,17 +640,38 @@ public class OpsecConfigScreen extends Screen {
             updateButtonPositions();
             importButton.render(graphics, mouseX, mouseY, partialTick);
             exportButton.render(graphics, mouseX, mouseY, partialTick);
+            
+            //? if >=1.21.9 {
+            /*// Poll mouse state for click detection since mouseClicked API changed
+            long windowHandle = org.lwjgl.glfw.GLFW.glfwGetCurrentContext();
+            boolean isMouseDown = org.lwjgl.glfw.GLFW.glfwGetMouseButton(windowHandle, org.lwjgl.glfw.GLFW.GLFW_MOUSE_BUTTON_LEFT) == org.lwjgl.glfw.GLFW.GLFW_PRESS;
+            
+            if (!isMouseDown && wasMouseDown) {
+                // Mouse was just released
+                if (importButton.isMouseOver(mouseX, mouseY)) {
+                    onImportAction.run();
+                } else if (exportButton.isMouseOver(mouseX, mouseY)) {
+                    onExportAction.run();
+                }
+            }
+            wasMouseDown = isMouseDown;*/
+            //?}
         }
         
-        // Handle click - onClick signature changed in 1.21.9
+        // Forward mouse clicks to child buttons
         //? if <1.21.9 {
         @Override
-        public void onClick(double mouseX, double mouseY) {
-            if (importButton.isMouseOver(mouseX, mouseY)) {
-                onImportAction.run();
-            } else if (exportButton.isMouseOver(mouseX, mouseY)) {
-                onExportAction.run();
+        public boolean mouseClicked(double mouseX, double mouseY, int button) {
+            if (button == 0) { // Left click only
+                if (importButton.isMouseOver(mouseX, mouseY)) {
+                    onImportAction.run();
+                    return true;
+                } else if (exportButton.isMouseOver(mouseX, mouseY)) {
+                    onExportAction.run();
+                    return true;
+                }
             }
+            return false;
         }
         //?}
         
@@ -810,6 +869,17 @@ public class OpsecConfigScreen extends Screen {
     }
     
     @Override
+    public void tick() {
+        super.tick();
+        // Update reset button state based on current tab (Accounts tab = index 4)
+        if (this.resetButton != null) {
+            int currentTabIndex = getCurrentTabIndex();
+            boolean isAccountsTab = currentTabIndex == 4;
+            this.resetButton.active = !isAccountsTab;
+        }
+    }
+    
+    @Override
     public void onClose() {
         config.save();
         this.minecraft.setScreen(parent);
@@ -951,8 +1021,8 @@ public class OpsecConfigScreen extends Screen {
                 return List.of(widget);
             }
 
-            //? if <1.21.6 {
-            /*@Override
+            //? if <1.21.9 {
+            @Override
             public boolean mouseClicked(double mouseX, double mouseY, int button) {
                 return widget.mouseClicked(mouseX, mouseY, button);
             }
@@ -965,7 +1035,7 @@ public class OpsecConfigScreen extends Screen {
             @Override
             public boolean charTyped(char chr, int modifiers) {
                 return widget.charTyped(chr, modifiers);
-            }*/
+            }
             //?}
         }
     }

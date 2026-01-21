@@ -40,6 +40,7 @@ public class SessionAccount {
     private String uuid;
     private long lastValidated;
     private boolean valid = true; // Assume valid until proven otherwise
+    private String lastError = null; // Last error message for display in UI
     
     private static final String PROFILE_URL = "https://api.minecraftservices.com/minecraft/profile";
     private static final HttpClient HTTP_CLIENT = HttpClient.newBuilder()
@@ -130,11 +131,35 @@ public class SessionAccount {
     /**
      * Logs into this account by switching the Minecraft session and reinitializing services.
      * This properly handles chat signatures by regenerating profile keys.
+     * Validates the token before switching to ensure it's still valid.
      * @return true if login was successful
      */
     public boolean login() {
-        if (accessToken == null || accessToken.isBlank() || uuid == null || uuid.isBlank()) {
-            Opsec.LOGGER.error("[OpSec] Cannot login: missing token or UUID");
+        if (accessToken == null || accessToken.isBlank()) {
+            this.lastError = "Missing token";
+            Opsec.LOGGER.error("[OpSec] Cannot login: missing token");
+            return false;
+        }
+        
+        // Validate token before attempting login
+        ValidationResult validationResult = fetchInfoWithResult();
+        if (validationResult != ValidationResult.VALID) {
+            this.valid = (validationResult != ValidationResult.INVALID);
+            switch (validationResult) {
+                case INVALID -> this.lastError = "Token expired or invalid";
+                case RATE_LIMITED -> this.lastError = "Rate limited - try again later";
+                case ERROR -> this.lastError = "Network error - check connection";
+                default -> this.lastError = "Validation failed";
+            }
+            Opsec.LOGGER.error("[OpSec] Cannot login: token validation failed ({})", validationResult);
+            return false;
+        }
+        this.valid = true;
+        this.lastError = null; // Clear error on success
+        
+        if (uuid == null || uuid.isBlank()) {
+            this.lastError = "Missing UUID after validation";
+            Opsec.LOGGER.error("[OpSec] Cannot login: missing UUID after validation");
             return false;
         }
         
@@ -189,6 +214,7 @@ public class SessionAccount {
             return true;
             
         } catch (Exception e) {
+            this.lastError = "Login error: " + e.getMessage();
             Opsec.LOGGER.error("[OpSec] Failed to login: {}", e.getMessage(), e);
             return false;
         }
@@ -215,8 +241,10 @@ public class SessionAccount {
     public String getUuid() { return uuid; }
     public long getLastValidated() { return lastValidated; }
     public boolean isValid() { return valid; }
+    public String getLastError() { return lastError; }
     
     public void setValid(boolean valid) { this.valid = valid; }
+    public void clearError() { this.lastError = null; }
     
     public boolean hasValidInfo() {
         return username != null && !username.isBlank() && uuid != null && !uuid.isBlank();
@@ -258,6 +286,7 @@ public class SessionAccount {
         json.addProperty("username", username);
         json.addProperty("uuid", uuid);
         json.addProperty("lastValidated", lastValidated);
+        json.addProperty("valid", valid);
         return json;
     }
     
@@ -269,6 +298,9 @@ public class SessionAccount {
         SessionAccount account = new SessionAccount(token, username, uuid);
         if (json.has("lastValidated")) {
             account.lastValidated = json.get("lastValidated").getAsLong();
+        }
+        if (json.has("valid")) {
+            account.valid = json.get("valid").getAsBoolean();
         }
         return account;
     }

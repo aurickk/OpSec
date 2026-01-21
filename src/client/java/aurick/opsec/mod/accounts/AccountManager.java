@@ -89,14 +89,17 @@ public class AccountManager {
     
     /**
      * Remove an account from the manager.
+     * If the removed account was currently logged in, automatically logs out to original account.
      */
     public void remove(SessionAccount account) {
         if (account == null) return;
         
+        boolean wasActive = account.getUuid().equals(activeAccountUuid);
+        
         if (accounts.removeIf(a -> a.getUuid().equals(account.getUuid()))) {
-            // Clear active if it was the removed account
-            if (account.getUuid().equals(activeAccountUuid)) {
-                activeAccountUuid = null;
+            // If the removed account was active, logout to original
+            if (wasActive) {
+                logout();
             }
             save();
             Opsec.LOGGER.info("[OpSec] Removed account: {} ({})", account.getUsername(), account.getUuid());

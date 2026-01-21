@@ -15,6 +15,7 @@
 - **[Mod Whitelist](#mod-whitelist)** - Exempt specific mods from channel spoofing and translation protection
 - **[Chat Signing Control](#chat-signing-control)** - Configure chat message signing behavior
 - **[Telemetry Blocking](#telemetry-blocking)** - Disable data collection sent to Mojang
+- **[Account Manager](#account-manager)** - Switch between Minecraft accounts using session tokens
 
 ## Requirements
 
@@ -74,6 +75,16 @@ If settings are changed while connected to a server it is recommended to reconne
 | **Show Alerts** | Display chat messages when tracking is detected |
 | **Show Toasts** | Display popup notifications for important events |
 | **Log Detections** | Log all detection events to game log for transparency |
+
+#### Accounts Tab
+
+| Setting | Description |
+|---------|-------------|
+| **Saved Accounts** | List of added accounts with login/logout and remove buttons |
+| **Refresh All** | Revalidate all account tokens (invalid tokens marked red) |
+| **Add Session Token** | Add a new account using a session (access) token |
+| **Import** | Import accounts from a JSON file |
+| **Export** | Export accounts to a JSON file |
 
 ### Debug Commands
 
@@ -256,6 +267,31 @@ Minecraft collects and sends telemetry data to Mojang, including:
 
 OpSec blocks telemetry sending to Mojang when telemetry blocking is enabled. Does not effect gameplay.
 
+---
+
+### Account Manager
+
+Based on [Meteor Client](https://github.com/MeteorDevelopment/meteor-client).
+
+Switch between Minecraft accounts without restarting the game. Accounts are stored locally and validated against the Minecraft Services API.
+
+**Features:**
+- **Session Token Login** - Add accounts using access tokens from your Minecraft session
+- **Account Switching** - Click an account to login, click again to logout to original account
+- **Token Validation** - Refresh to check if tokens are still valid (expired tokens marked red)
+- **Import/Export** - Backup and restore accounts via JSON files
+
+**How to get a session token:**
+1. Launch Minecraft with the account you want to add
+2. The session token can be extracted from the launcher logs or memory
+3. Tools like [TokenExtractor](https://github.com/topics/minecraft-token) can help
+
+> [!NOTE]
+> Session tokens expire after some time. Use the Refresh button to check validity.
+
+> [!WARNING]
+> Keep your session tokens secure. Anyone with your token can access your account until it expires.
+
 ## Building from Source
 
 ### Prerequisites
@@ -300,6 +336,7 @@ Output JARs are located in `versions/<minecraft_version>/build/libs/`:
 
 - [ExploitPreventer](https://github.com/NikOverflow/ExploitPreventer) - Local URL blocking and sign translation protection
 - [LiquidBounce](https://github.com/CCBlueX/LiquidBounce/blob/nextgen/src/main/java/net/ccbluex/liquidbounce/injection/mixins/minecraft/util/MixinDownloadQueue.java) - Cached server resource pack isolation
+- [Meteor Client](https://github.com/MeteorDevelopment/meteor-client) - Account manager implementation reference
 - [No Chat Reports](https://modrinth.com/mod/no-chat-reports) - Chat signing control and telemetry blocking
 - [No Prying Eyes](https://github.com/Daxanius/NoPryingEyes?tab=readme-ov-file) - Secure chat enforcement detection
 - [MixinSquared](https://github.com/Bawnorton/MixinSquared) - Mixin cancellation for Meteor Fix

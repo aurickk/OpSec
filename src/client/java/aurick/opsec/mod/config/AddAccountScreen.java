@@ -125,15 +125,6 @@ public class AddAccountScreen extends Screen {
         
         // Status message
         graphics.drawCenteredString(this.font, statusMessage, centerX, centerY + 40, 0xFFFFFF);
-        
-        // Instructions
-        graphics.drawCenteredString(
-                this.font,
-                Component.literal("\u00A78Session tokens can be obtained from your launcher"),
-                centerX,
-                centerY + 55,
-                0xFFFFFF
-        );
     }
     
     @Override

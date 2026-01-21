@@ -57,6 +57,7 @@ If settings are changed while connected to a server it is recommended to reconne
 | **Block Local Pack URLs** | Enable/disable [local URL blocking](#block-local-urls) |
 | **Clear Cache** | Delete all cached server resource packs |
 | **Spoof Translation Keys** | Enable/disable [translation exploit protection](#translation-exploit-protection) |
+| **Fake Default Keybinds** | Return default vanilla keybind values instead of actual bindings |
 | **Meteor Fix** | Disable Meteor Client's broken translation protection (only shown when Meteor is installed) |
 | **Signing Mode** | Configure [chat signing](#chat-signing-control) behavior:<br/>• **OFF**: Strip signatures (maximum privacy)<br/>• **ON**: Default Minecraft behavior<br/>• **AUTO**: Only sign when required (recommended) |
 | **Disable Telemetry** | Enable/disable [telemetry blocking](#telemetry-blocking) |
@@ -164,12 +165,14 @@ Spoofing mod keybinds (Returns raw translation keys/fallback instead of keybind 
 [key.meteor-client.open-gui] 'Right Shift'→'key.meteor-client.open-gui'
 ```
 
-Spoofing vanilla keybinds (Returns default keybinds):
+Spoofing vanilla keybinds with **Fake Default Keybinds** enabled (Returns default keybinds):
 ```
 [key.hotbar.6] 'Q'→'6'
 [key.hotbar.7] 'E'→'7'
 [key.hotbar.8] 'R'→'8'
 ```
+
+When **Fake Default Keybinds** is disabled, vanilla keybinds resolve to their actual values (alerts still shown if detection logging is enabled).
 
 Forge mode fabrication (Returns fake Forge values):
 ```

@@ -391,8 +391,8 @@ public class OpsecConfigScreen extends Screen {
                 accountManager.refreshAllAccounts((valid, invalid) -> {
                     refreshScreen();
                 });
-            }).size(210, 20)
-              .tooltip(Tooltip.create(Component.literal("Revalidate all accounts\nInvalid tokens will be marked red\nAdds delay between requests to avoid rate limiting")))
+            }).size(210, 20)              .tooltip(Tooltip.create(Component.literal("Revalidate all accounts\nInvalid tokens will be marked red")))
+
               .build();
             
             // Disable button if already refreshing

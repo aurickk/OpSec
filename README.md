@@ -157,6 +157,8 @@ OpSec intercepts translation keys and blocks Minecraft from resolving them based
 - **Fabric mode**: Allows Fabric API keys and whitelisted mod keys, blocks everything else
 - **Forge mode**: Returns fabricated Forge/FML translation values (e.g., `fml.menu.mods` → `"Mods"`), blocks other mod keys
 
+When **Fake Default Keybinds** is disabled, vanilla keybinds resolve to their actual values.
+
 #### Examples
 
 Spoofing mod keybinds (Returns raw translation keys/fallback instead of keybind values):
@@ -171,8 +173,6 @@ Spoofing vanilla keybinds with **Fake Default Keybinds** enabled (Returns defaul
 [key.hotbar.7] 'E'→'7'
 [key.hotbar.8] 'R'→'8'
 ```
-
-When **Fake Default Keybinds** is disabled, vanilla keybinds resolve to their actual values (alerts still shown if detection logging is enabled).
 
 Forge mode fabrication (Returns fake Forge values):
 ```

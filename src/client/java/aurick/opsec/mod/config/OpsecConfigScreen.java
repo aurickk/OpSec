@@ -42,6 +42,7 @@ import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
 
 public class OpsecConfigScreen extends Screen {
@@ -49,6 +50,12 @@ public class OpsecConfigScreen extends Screen {
         Boolean.TRUE.equals(b) 
             ? Component.literal("\u00A7aON") 
             : Component.literal("\u00A7cOFF");
+    
+    // Track which account is currently logging in (null = none)
+    private static volatile String loggingInAccountUuid = null;
+    // Track if we're currently logging out
+    private static volatile boolean isLoggingOut = false;
+    private static int animationTicks = 0;
     
     // Helper method to create CycleButton builder with values in correct order
     // API changed in 1.21.11 - builder() now requires a default value parameter and doesn't have withInitialValue()
@@ -321,9 +328,20 @@ public class OpsecConfigScreen extends Screen {
                 boolean isValid = account.isValid();
                 
                 // Create account row with both buttons side by side
-                // Green only if actually logged in, red if invalid, white otherwise
+                // Check if this account is currently logging in
+                boolean isLoggingIn = account.getUuid() != null && account.getUuid().equals(loggingInAccountUuid);
+                
+                // Green only if actually logged in, red if invalid, yellow if logging in/out, white otherwise
                 String buttonText;
-                if (!isValid) {
+                if (isLoggingIn) {
+                    // Animated "Logging in" text
+                    String dots = ".".repeat((animationTicks / 5) % 4);
+                    buttonText = "\u00A7e" + displayName + " \u00A77(logging in" + dots + ")";
+                } else if (isLoggedIn && isLoggingOut) {
+                    // Animated "Logging out" text
+                    String dots = ".".repeat((animationTicks / 5) % 4);
+                    buttonText = "\u00A7e" + displayName + " \u00A77(logging out" + dots + ")";
+                } else if (!isValid) {
                     buttonText = "\u00A7c" + displayName + " \u00A78(invalid)";
                 } else if (isLoggedIn) {
                     buttonText = "\u00A7a" + displayName;
@@ -331,22 +349,23 @@ public class OpsecConfigScreen extends Screen {
                     buttonText = displayName;
                 }
                 
+                String refreshInfo = account.hasRefreshToken() ? "\n\u00A72Auto-refresh enabled" : "";
                 String tooltip;
                 if (!isValid) {
                     String errorMsg = account.getLastError();
                     if (errorMsg != null && !errorMsg.isEmpty()) {
-                        tooltip = "\u00A7c" + errorMsg + "\n\u00A77Click to try login anyway";
+                        tooltip = "\u00A7c" + errorMsg + "\n\u00A77Click to try login anyway" + refreshInfo;
                     } else {
-                        tooltip = "\u00A7cToken expired or invalid\n\u00A77Click to try login anyway";
+                        tooltip = "\u00A7cToken expired or invalid\n\u00A77Click to try login anyway" + refreshInfo;
                     }
                 } else if (isLoggedIn) {
-                    tooltip = "Currently logged in\nClick to logout to original account";
+                    tooltip = "Currently logged in\nClick to logout to original account" + refreshInfo;
                 } else {
                     String errorMsg = account.getLastError();
                     if (errorMsg != null && !errorMsg.isEmpty()) {
-                        tooltip = "\u00A7cLast error: " + errorMsg + "\n\u00A77Click to login as " + displayName;
+                        tooltip = "\u00A7cLast error: " + errorMsg + "\n\u00A77Click to login as " + displayName + refreshInfo;
                     } else {
-                        tooltip = "Click to login as " + displayName;
+                        tooltip = "Click to login as " + displayName + refreshInfo;
                     }
                 }
                 
@@ -356,25 +375,63 @@ public class OpsecConfigScreen extends Screen {
                         isLoggedIn,
                         // Login/logout action
                         () -> {
+                            if (isLoggingIn || isLoggingOut) {
+                                return; // Already logging in/out
+                            }
                             if (isLoggedIn) {
-                                // Logout to original account
-                                if (accountManager.logout()) {
-                                    refreshScreen();
-                                }
+                                // Logout to original account in background thread
+                                isLoggingOut = true;
+                                Opsec.LOGGER.info("[OpSec] Logging out of account: {}", account.getUsername());
+                                
+                                CompletableFuture.runAsync(() -> {
+                                    accountManager.logout();
+                                }).whenComplete((result, error) -> {
+                                    // Update UI on main thread
+                                    Minecraft.getInstance().execute(() -> {
+                                        isLoggingOut = false;
+                                        refreshScreen();
+                                    });
+                                });
                             } else {
-                                // Login to this account
+                                // Login to this account in background thread
+                                loggingInAccountUuid = account.getUuid();
                                 Opsec.LOGGER.info("[OpSec] Logging into account: {}", account.getUsername());
-                                if (account.login()) {
-                                    accountManager.setActiveAccountUuid(account.getUuid());
-                                }
-                                // Always refresh to update tooltip with error or success state
-                                refreshScreen();
+                                
+                                CompletableFuture.runAsync(() -> {
+                                    boolean success = account.login();
+                                    if (success) {
+                                        accountManager.setActiveAccountUuid(account.getUuid());
+                                    }
+                                }).whenComplete((result, error) -> {
+                                    // Update UI on main thread
+                                    Minecraft.getInstance().execute(() -> {
+                                        loggingInAccountUuid = null;
+                                        refreshScreen();
+                                    });
+                                });
                             }
                         },
                         // Remove action
                         () -> {
-                            accountManager.remove(account);
-                            refreshScreen();
+                            if (isLoggingIn || isLoggingOut) {
+                                return; // Don't remove while logging in/out
+                            }
+                            // If removing the currently active account, logout first (async)
+                            if (isLoggedIn) {
+                                isLoggingOut = true;
+                                CompletableFuture.runAsync(() -> {
+                                    accountManager.logout();
+                                }).whenComplete((result, error) -> {
+                                    Minecraft.getInstance().execute(() -> {
+                                        isLoggingOut = false;
+                                        accountManager.remove(account);
+                                        refreshScreen();
+                                    });
+                                });
+                            } else {
+                                accountManager.remove(account);
+                                refreshScreen();
+                            }
                         }
                 ));
             }
@@ -876,6 +933,17 @@ public class OpsecConfigScreen extends Screen {
             int currentTabIndex = getCurrentTabIndex();
             boolean isAccountsTab = currentTabIndex == 4;
             this.resetButton.active = !isAccountsTab;
+        }
+        
+        // Animate login/logout loading text
+        if (loggingInAccountUuid != null || isLoggingOut) {
+            animationTicks++;
+            // Refresh every 5 ticks to update the animated dots
+            if (animationTicks % 5 == 0) {
+                refreshScreen();
+            }
+        } else {
+            animationTicks = 0;
         }
     }
     

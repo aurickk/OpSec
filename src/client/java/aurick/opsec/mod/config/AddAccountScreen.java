@@ -6,6 +6,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
+import net.minecraft.client.gui.components.StringWidget;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 
@@ -18,15 +19,18 @@ public class AddAccountScreen extends Screen {
     
     private final Screen parent;
     private EditBox tokenInput;
+    private EditBox refreshTokenInput;
     private Button addButton;
     private Button cancelButton;
     private Component statusMessage;
     private boolean isValidating = false;
+    private StringWidget titleLabel;
+    private StringWidget statusLabel;
     
     public AddAccountScreen(Screen parent) {
         super(Component.literal("Add Account"));
         this.parent = parent;
-        this.statusMessage = Component.literal("\u00A77Paste your session token below");
+        this.statusMessage = Component.literal("");
     }
     
     @Override
@@ -34,29 +38,51 @@ public class AddAccountScreen extends Screen {
         int centerX = this.width / 2;
         int centerY = this.height / 2;
         
+        // Title label - always visible (centered manually)
+        int titleWidth = this.font.width(this.title);
+        this.titleLabel = new StringWidget(centerX - titleWidth / 2, centerY - 75, titleWidth, 20, this.title, this.font);
+        this.addRenderableWidget(this.titleLabel);
+        
         // Token input field
         this.tokenInput = new EditBox(
                 this.font,
                 centerX - 150,
-                centerY - 30,
+                centerY - 50,
                 300,
                 20,
                 Component.literal("Session Token")
         );
         this.tokenInput.setMaxLength(2000);
-        this.tokenInput.setHint(Component.literal("Paste session token here..."));
+        this.tokenInput.setHint(Component.literal("Session/Access token (required)"));
         this.addRenderableWidget(this.tokenInput);
+        
+        // Refresh token input field (optional)
+        this.refreshTokenInput = new EditBox(
+                this.font,
+                centerX - 150,
+                centerY - 20,
+                300,
+                20,
+                Component.literal("Refresh Token")
+        );
+        this.refreshTokenInput.setMaxLength(2000);
+        this.refreshTokenInput.setHint(Component.literal("Refresh token (optional, for auto-renewal)"));
+        this.addRenderableWidget(this.refreshTokenInput);
+        
+        // Status label - updated dynamically (centered manually, width updated in render)
+        this.statusLabel = new StringWidget(centerX - 150, centerY + 45, 300, 20, Component.literal(""), this.font);
+        this.addRenderableWidget(this.statusLabel);
         
         // Add button
         this.addButton = Button.builder(Component.literal("Add Account"), button -> {
             addAccount();
-        }).bounds(centerX - 105, centerY + 10, 100, 20).build();
+        }).bounds(centerX - 105, centerY + 15, 100, 20).build();
         this.addRenderableWidget(this.addButton);
         
         // Cancel button
         this.cancelButton = Button.builder(Component.literal("Cancel"), button -> {
             this.onClose();
-        }).bounds(centerX + 5, centerY + 10, 100, 20).build();
+        }).bounds(centerX + 5, centerY + 15, 100, 20).build();
         this.addRenderableWidget(this.cancelButton);
         
         // Focus the token input
@@ -65,9 +91,13 @@ public class AddAccountScreen extends Screen {
     
     private void addAccount() {
         String token = tokenInput.getValue().trim();
+        String refreshToken = refreshTokenInput.getValue().trim();
         
         if (token.isEmpty()) {
             statusMessage = Component.literal("\u00A7cPlease enter a session token");
+            if (statusLabel != null) {
+                statusLabel.setMessage(statusMessage);
+            }
             return;
         }
         
@@ -78,10 +108,15 @@ public class AddAccountScreen extends Screen {
         isValidating = true;
         addButton.active = false;
         statusMessage = Component.literal("\u00A7eValidating token...");
+        if (statusLabel != null) {
+            statusLabel.setMessage(statusMessage);
+        }
         
         // Validate in background thread
         CompletableFuture.runAsync(() -> {
-            SessionAccount account = new SessionAccount(token);
+            SessionAccount account = refreshToken.isEmpty() 
+                    ? new SessionAccount(token)
+                    : new SessionAccount(token, refreshToken);
             boolean valid = account.fetchInfo();
             
             // Update UI on main thread
@@ -98,7 +133,14 @@ public class AddAccountScreen extends Screen {
                         AccountManager.getInstance().setActiveAccountUuid(account.getUuid());
                     }
                     
-                    statusMessage = Component.literal("\u00A7aAdded: " + account.getUsername());
+                    String successMsg = "\u00A7aAdded: " + account.getUsername();
+                    if (account.hasRefreshToken()) {
+                        successMsg += " \u00A77(with refresh)";
+                    }
+                    statusMessage = Component.literal(successMsg);
+                    if (statusLabel != null) {
+                        statusLabel.setMessage(statusMessage);
+                    }
                     
                     // Return to config screen after short delay
                     Minecraft.getInstance().execute(() -> {
@@ -106,6 +148,9 @@ public class AddAccountScreen extends Screen {
                     });
                 } else {
                     statusMessage = Component.literal("\u00A7cInvalid or expired token");
+                    if (statusLabel != null) {
+                        statusLabel.setMessage(statusMessage);
+                    }
                 }
             });
         });
@@ -117,14 +162,15 @@ public class AddAccountScreen extends Screen {
         /*this.renderBackground(graphics, mouseX, mouseY, partialTick);*/
         super.render(graphics, mouseX, mouseY, partialTick);
         
-        int centerX = this.width / 2;
-        int centerY = this.height / 2;
-        
-        // Title
-        graphics.drawCenteredString(this.font, this.title, centerX, centerY - 60, 0xFFFFFF);
-        
-        // Status message
-        graphics.drawCenteredString(this.font, statusMessage, centerX, centerY + 40, 0xFFFFFF);
+        // Update status label position to keep it centered
+        if (statusLabel != null && statusMessage != null && !statusMessage.getString().isEmpty()) {
+            int centerX = this.width / 2;
+            int centerY = this.height / 2;
+            int statusWidth = this.font.width(statusMessage);
+            statusLabel.setX(centerX - statusWidth / 2);
+            statusLabel.setY(centerY + 45);
+            statusLabel.setWidth(statusWidth);
+        }
     }
     
     @Override

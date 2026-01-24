@@ -76,7 +76,7 @@ public abstract class ClientPacketListenerMixin {
             Opsec.LOGGER.debug("[OpSec] Server enforces secure chat");
             
             if (settings.isOnDemand()) {
-                // Enable signing for this session
+                // Enable signing for this session (allows signatures to be included)
                 settings.setTempSign(true);
                 
                 // Show warning toast and message

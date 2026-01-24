@@ -272,40 +272,6 @@ public class ClientConnectionMixin {
         handleOutgoingPacket(packet, ci, (Connection)(Object)this);
     }
     
-    @Inject(method = "send(Lnet/minecraft/network/protocol/Packet;Lnet/minecraft/network/PacketSendListener;)V", 
-            at = @At("HEAD"), cancellable = true, require = 0, expect = 0)
-    private void onSendWithListener(Packet<?> packet, PacketSendListener listener, CallbackInfo ci) {
-        handleOutgoingPacket(packet, ci, (Connection)(Object)this);
-    }
-    
-    @Inject(method = "send(Lnet/minecraft/network/protocol/Packet;Lnet/minecraft/network/PacketSendListener;Z)V", 
-            at = @At("HEAD"), cancellable = true, require = 0, expect = 0)
-    private void onSendWithFlush(Packet<?> packet, PacketSendListener listener, boolean flush, CallbackInfo ci) {
-        handleOutgoingPacket(packet, ci, (Connection)(Object)this);
-    }
-    
-    /** Version-compatible sendPacket injection for 1.21.5+ */
-    @Inject(
-        method = "sendPacket(Lnet/minecraft/network/protocol/Packet;Lnet/minecraft/network/PacketSendListener;)V",
-        at = @At("HEAD"),
-        cancellable = true,
-        require = 0,
-        expect = 0
-    )
-    private void onSendPacketWithListener(Packet<?> packet, PacketSendListener listener, CallbackInfo ci) {
-        handleOutgoingPacket(packet, ci, (Connection)(Object)this);
-    }
-    
-    @Inject(
-        method = "sendPacket(Lnet/minecraft/network/protocol/Packet;Lnet/minecraft/network/PacketSendListener;Z)V",
-        at = @At("HEAD"),
-        cancellable = true,
-        require = 0,
-        expect = 0
-    )
-    private void onSendPacketWithListenerAndFlush(Packet<?> packet, PacketSendListener listener, boolean flush, CallbackInfo ci) {
-        handleOutgoingPacket(packet, ci, (Connection)(Object)this);
-    }
     
     @Unique
     private void handleOutgoingPacket(Packet<?> packet, CallbackInfo ci, Connection connection) {

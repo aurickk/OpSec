@@ -2,6 +2,7 @@ package aurick.opsec.mod.mixin.client;
 
 import aurick.opsec.mod.PrivacyLogger;
 import aurick.opsec.mod.detection.ExploitContext;
+import net.minecraft.client.gui.screens.inventory.AbstractSignEditScreen;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -15,7 +16,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
  * Setting context HERE ensures LanguageMixin blocks translation resolution
  * before the component is converted to a string.
  */
-@Mixin(targets = "net.minecraft.client.gui.screens.inventory.AbstractSignEditScreen")
+@Mixin(AbstractSignEditScreen.class)
 public class SignEditScreenMixin {
     
     /**

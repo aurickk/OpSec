@@ -46,10 +46,12 @@ public abstract class JoinMultiplayerScreenMixin extends Screen {
         this.addRenderableWidget(this.opsec$settingsButton);
     }
     
-    @Inject(method = "repositionElements", at = @At("TAIL"), require = 0)
+    //? if >=1.21.9 {
+    /*@Inject(method = "repositionElements", at = @At("TAIL"))
     private void opsec$onRepositionElements(CallbackInfo ci) {
         opsec$updateButtonPosition();
     }
+    *///?}
     
     @Unique
     private void opsec$updateButtonPosition() {

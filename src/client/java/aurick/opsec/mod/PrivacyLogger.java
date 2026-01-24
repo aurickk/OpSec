@@ -295,7 +295,7 @@ public class PrivacyLogger {
     
     public static void alertSecureChatRequired(String server) {
         toast(AlertType.WARNING, "Secure Chat Required");
-        alert(AlertType.WARNING, "Server " + server + " requires secure chat. Chat signing enabled for this session.");
+        alert(AlertType.WARNING, "Server " + server + " requires secure chat. Chat signing enabled.");
         logDetection("SecureChat", "Server " + server + " enforces secure chat - ON_DEMAND signing activated");
     }
     

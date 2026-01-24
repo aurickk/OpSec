@@ -265,6 +265,7 @@ Based on [Meteor Client](https://github.com/MeteorDevelopment/meteor-client).
 Add Minecraft accounts with session tokens and switch between them without restarting the game. 
 
 - **Session Token Login** - Add accounts using access tokens 
+- **Refresh Token** - Fetch new session tokens for expired accounts
 - **Account Switching** - Click an account to login, click again to logout to original account
 - **Token Validation** - Refresh to check if tokens are still valid (expired tokens marked red)
 - **Import/Export** - Backup and restore accounts via JSON files

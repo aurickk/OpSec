@@ -4,6 +4,11 @@
 
 <p align="center">A client-side Minecraft mod that provides protection against client fingerprinting, tracking exploits, and other privacy focused features.</p>
 
+
+> [!WARNING]
+> OpSec is a vibecoded procrastination project! Although the features here are tested, do not rely on this mod for actual security. We recommend using [ExploitPreventer](https://github.com/NikOverflow/ExploitPreventer) if youre looking for a robust and mature protection made by real competent people. However OpSec tries to bring way more to the table with loads of interative customizations and other protective elements.
+
+
 ## What it does
 
 - **[Brand Spoofing](#brand-spoofing)** - Change client brand name to Vanilla, Fabric, or Forge

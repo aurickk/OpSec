@@ -55,7 +55,8 @@ public class OpsecConfigScreen extends Screen {
     private static volatile String loggingInAccountUuid = null;
     // Track if we're currently logging out
     private static volatile boolean isLoggingOut = false;
-    private static int animationTicks = 0;
+    // Animation ticks for loading indicators - volatile for thread safety
+    private static volatile int animationTicks = 0;
     
     // Helper method to create CycleButton builder with values in correct order
     // API changed in 1.21.11 - builder() now requires a default value parameter and doesn't have withInitialValue()

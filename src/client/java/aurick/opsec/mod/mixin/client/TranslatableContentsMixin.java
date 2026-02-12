@@ -1,5 +1,6 @@
 package aurick.opsec.mod.mixin.client;
 
+import aurick.opsec.mod.Opsec;
 import aurick.opsec.mod.config.OpsecConfig;
 import aurick.opsec.mod.config.SpoofSettings;
 import aurick.opsec.mod.detection.ExploitContext;
@@ -177,6 +178,8 @@ public abstract class TranslatableContentsMixin {
             }
         } catch (Exception e) {
             // Fallback if reflection fails
+            Opsec.LOGGER.debug("[OpSec] Failed to get real translation for key '{}': {}",
+                    translationKey, e.getMessage());
         }
         return defaultValue;
     }

@@ -1,6 +1,7 @@
 package aurick.opsec.mod.accounts;
 
 import aurick.opsec.mod.Opsec;
+import aurick.opsec.mod.config.OpsecConstants;
 import aurick.opsec.mod.mixin.client.MinecraftAccessor;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
@@ -42,23 +43,18 @@ public class SessionAccount {
     private long lastValidated;
     private boolean valid = true; // Assume valid until proven otherwise
     private String lastError = null; // Last error message for display in UI
-    
-    private static final String PROFILE_URL = "https://api.minecraftservices.com/minecraft/profile";
-    private static final String MS_TOKEN_URL = "https://login.live.com/oauth20_token.srf";
-    private static final String XBOX_AUTH_URL = "https://user.auth.xboxlive.com/user/authenticate";
-    private static final String XSTS_AUTH_URL = "https://xsts.auth.xboxlive.com/xsts/authorize";
-    private static final String MC_AUTH_URL = "https://api.minecraftservices.com/authentication/login_with_xbox";
+
     // Common Azure client IDs for Minecraft authentication
     // The refresh token must be used with the same client ID that issued it
     private static final String[] AZURE_CLIENT_IDS = {
-            "00000000402b5328",  // Minecraft public client
-            "000000004C12AE6F",  // Xbox App
-            "00000000441cc96b",  // Minecraft iOS
-            "810e1c10-3b3c-4d4f-be0b-f7e9a01e8b98"  // Common launcher client
+            OpsecConstants.AzureClientIds.MINECRAFT_PUBLIC,
+            OpsecConstants.AzureClientIds.XBOX_APP,
+            OpsecConstants.AzureClientIds.MINECRAFT_IOS,
+            OpsecConstants.AzureClientIds.LAUNCHER_CLIENT
     };
-    
+
     private static final HttpClient HTTP_CLIENT = HttpClient.newBuilder()
-            .connectTimeout(Duration.ofSeconds(10))
+            .connectTimeout(Duration.ofSeconds(OpsecConstants.Retry.HTTP_TIMEOUT_SECONDS))
             .build();
     
     public SessionAccount(String accessToken) {
@@ -183,9 +179,9 @@ public class SessionAccount {
         
         try {
             HttpRequest request = HttpRequest.newBuilder()
-                    .uri(URI.create(PROFILE_URL))
+                    .uri(URI.create(OpsecConstants.AuthUrls.PROFILE_URL))
                     .header("Authorization", "Bearer " + accessToken)
-                    .timeout(Duration.ofSeconds(10))
+                    .timeout(Duration.ofSeconds(OpsecConstants.Retry.HTTP_TIMEOUT_SECONDS))
                     .GET()
                     .build();
             
@@ -256,9 +252,9 @@ public class SessionAccount {
         }
     }
     
-    private static final int MAX_RETRIES = 3;
-    private static final long BASE_RETRY_DELAY_MS = 2000; // Base delay for connection errors
-    private static final long RATE_LIMIT_BASE_DELAY_MS = 5000; // Base delay for rate limits (longer)
+    private static final int MAX_RETRIES = OpsecConstants.Retry.MAX_RETRIES;
+    private static final long BASE_RETRY_DELAY_MS = OpsecConstants.Retry.BASE_RETRY_DELAY_MS;
+    private static final long RATE_LIMIT_BASE_DELAY_MS = OpsecConstants.Retry.RATE_LIMIT_BASE_DELAY_MS;
     
     /**
      * Logs into this account by switching the Minecraft session and reinitializing services.
@@ -547,11 +543,6 @@ public class SessionAccount {
         }
     }
     
-    private String refreshMicrosoftToken() {
-        TokenResult result = refreshMicrosoftTokenWithRetry();
-        return result.token;
-    }
-    
     private TokenResult refreshMicrosoftTokenWithRetry() {
         long maxRetryAfter = 0;
         boolean wasRateLimited = false;
@@ -610,10 +601,10 @@ public class SessionAccount {
                     "&scope=" + scope;
             
             HttpRequest request = HttpRequest.newBuilder()
-                    .uri(URI.create(MS_TOKEN_URL))
+                    .uri(URI.create(OpsecConstants.AuthUrls.MS_TOKEN_URL))
                     .header("Content-Type", "application/x-www-form-urlencoded")
                     .POST(HttpRequest.BodyPublishers.ofString(body))
-                    .timeout(Duration.ofSeconds(10))
+                    .timeout(Duration.ofSeconds(OpsecConstants.Retry.HTTP_TIMEOUT_SECONDS))
                     .build();
             
             HttpResponse<String> response = HTTP_CLIENT.send(request, HttpResponse.BodyHandlers.ofString());
@@ -641,11 +632,6 @@ public class SessionAccount {
             Opsec.LOGGER.debug("[OpSec] Refresh with client {} scope {} error: {}", clientId, scope, e.getMessage());
             return new TokenResult(null, 0, false);
         }
-    }
-    
-    private String authenticateXboxLive(String msToken) {
-        TokenResult result = authenticateXboxLiveWithRetry(msToken);
-        return result.token;
     }
     
     private TokenResult authenticateXboxLiveWithRetry(String msToken) {
@@ -687,11 +673,11 @@ public class SessionAccount {
             body.add("Properties", properties);
             
             HttpRequest request = HttpRequest.newBuilder()
-                    .uri(URI.create(XBOX_AUTH_URL))
+                    .uri(URI.create(OpsecConstants.AuthUrls.XBOX_AUTH_URL))
                     .header("Content-Type", "application/json")
                     .header("Accept", "application/json")
                     .POST(HttpRequest.BodyPublishers.ofString(body.toString()))
-                    .timeout(Duration.ofSeconds(15))
+                    .timeout(Duration.ofSeconds(OpsecConstants.Retry.AUTH_TIMEOUT_SECONDS))
                     .build();
             
             HttpResponse<String> response = HTTP_CLIENT.send(request, HttpResponse.BodyHandlers.ofString());
@@ -715,11 +701,6 @@ public class SessionAccount {
         }
     }
     
-    private String[] authenticateXSTS(String xblToken) {
-        XSTSResult result = authenticateXSTSWithRetry(xblToken);
-        return result.result;
-    }
-    
     private XSTSResult authenticateXSTSWithRetry(String xblToken) {
         try {
             JsonObject body = new JsonObject();
@@ -734,11 +715,11 @@ public class SessionAccount {
             body.add("Properties", properties);
             
             HttpRequest request = HttpRequest.newBuilder()
-                    .uri(URI.create(XSTS_AUTH_URL))
+                    .uri(URI.create(OpsecConstants.AuthUrls.XSTS_AUTH_URL))
                     .header("Content-Type", "application/json")
                     .header("Accept", "application/json")
                     .POST(HttpRequest.BodyPublishers.ofString(body.toString()))
-                    .timeout(Duration.ofSeconds(15))
+                    .timeout(Duration.ofSeconds(OpsecConstants.Retry.AUTH_TIMEOUT_SECONDS))
                     .build();
             
             HttpResponse<String> response = HTTP_CLIENT.send(request, HttpResponse.BodyHandlers.ofString());
@@ -766,22 +747,17 @@ public class SessionAccount {
         }
     }
     
-    private String authenticateMinecraft(String xstsToken, String userHash) {
-        TokenResult result = authenticateMinecraftWithRetry(xstsToken, userHash);
-        return result.token;
-    }
-    
     private TokenResult authenticateMinecraftWithRetry(String xstsToken, String userHash) {
         try {
             JsonObject body = new JsonObject();
             body.addProperty("identityToken", "XBL3.0 x=" + userHash + ";" + xstsToken);
             
             HttpRequest request = HttpRequest.newBuilder()
-                    .uri(URI.create(MC_AUTH_URL))
+                    .uri(URI.create(OpsecConstants.AuthUrls.MC_AUTH_URL))
                     .header("Content-Type", "application/json")
                     .header("Accept", "application/json")
                     .POST(HttpRequest.BodyPublishers.ofString(body.toString()))
-                    .timeout(Duration.ofSeconds(15))
+                    .timeout(Duration.ofSeconds(OpsecConstants.Retry.AUTH_TIMEOUT_SECONDS))
                     .build();
             
             HttpResponse<String> response = HTTP_CLIENT.send(request, HttpResponse.BodyHandlers.ofString());

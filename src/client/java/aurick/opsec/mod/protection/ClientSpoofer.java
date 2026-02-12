@@ -42,19 +42,34 @@ public class ClientSpoofer {
         return brand;
     }
     
+    /**
+     * Check if running in vanilla mode for channel filtering purposes.
+     * Requires both brand spoofing and channel spoofing to be enabled.
+     * Delegates to SpoofSettings for brand mode check.
+     */
     public static boolean isVanillaMode() {
         OpsecConfig config = OpsecConfig.getInstance();
-        return config.shouldSpoofBrand() && config.shouldSpoofChannels() && VANILLA.equals(config.getEffectiveBrand());
+        return config.shouldSpoofChannels() && config.getSettings().isVanillaMode();
     }
-    
+
+    /**
+     * Check if running in fabric mode for channel filtering purposes.
+     * Requires both brand spoofing and channel spoofing to be enabled.
+     * Delegates to SpoofSettings for brand mode check.
+     */
     public static boolean isFabricMode() {
         OpsecConfig config = OpsecConfig.getInstance();
-        return config.shouldSpoofBrand() && config.shouldSpoofChannels() && FABRIC.equals(config.getEffectiveBrand());
+        return config.shouldSpoofChannels() && config.getSettings().isFabricMode();
     }
-    
+
+    /**
+     * Check if running in forge mode for channel filtering purposes.
+     * Requires both brand spoofing and channel spoofing to be enabled.
+     * Delegates to SpoofSettings for brand mode check.
+     */
     public static boolean isForgeMode() {
         OpsecConfig config = OpsecConfig.getInstance();
-        return config.shouldSpoofBrand() && config.shouldSpoofChannels() && FORGE.equals(config.getEffectiveBrand());
+        return config.shouldSpoofChannels() && config.getSettings().isForgeMode();
     }
     
     //? if >=1.21.11 {

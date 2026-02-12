@@ -279,43 +279,48 @@ public class OpsecCommand {
     }
     
     // ==================== FORMATTING HELPERS ====================
-    
+
     private static MutableComponent header(String text) {
-        return Component.literal("§6§l[OpSec] §r§e" + text);
+        return Component.literal("")
+                .withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD)
+                .append("[OpSec] ")
+                .append(Component.literal(text).withStyle(ChatFormatting.YELLOW));
     }
-    
+
     private static MutableComponent subheader(String text) {
-        return Component.literal("§7" + text);
+        return Component.literal(text).withStyle(ChatFormatting.GRAY);
     }
-    
+
     private static MutableComponent info(String text) {
-        return Component.literal("§f" + text);
+        return Component.literal(text).withStyle(ChatFormatting.WHITE);
     }
-    
+
     private static MutableComponent success(String text) {
-        return Component.literal("§a" + text);
+        return Component.literal(text).withStyle(ChatFormatting.GREEN);
     }
-    
+
     private static MutableComponent warning(String text) {
-        return Component.literal("§e" + text);
+        return Component.literal(text).withStyle(ChatFormatting.YELLOW);
     }
-    
+
     private static MutableComponent error(String text) {
-        return Component.literal("§c" + text);
+        return Component.literal(text).withStyle(ChatFormatting.RED);
     }
-    
+
     private static MutableComponent dim(String text) {
-        return Component.literal("§8" + text);
+        return Component.literal(text).withStyle(ChatFormatting.DARK_GRAY);
     }
-    
+
     private static MutableComponent listItem(String text) {
-        return Component.literal("§7  - §f" + text);
+        return Component.literal("  - ")
+                .withStyle(ChatFormatting.GRAY)
+                .append(Component.literal(text).withStyle(ChatFormatting.WHITE));
     }
-    
+
     private static MutableComponent modEntry(ModRegistry.ModInfo info) {
-        StringBuilder sb = new StringBuilder();
-        sb.append("§f").append(info.getDisplayName());
-        
+        MutableComponent component = Component.literal(info.getDisplayName())
+                .withStyle(ChatFormatting.WHITE);
+
         List<String> details = new ArrayList<>();
         if (info.hasTranslationKeys()) {
             details.add(info.getTranslationKeys().size() + " keys");
@@ -326,11 +331,12 @@ public class OpsecCommand {
         if (info.hasChannels()) {
             details.add(info.getChannels().size() + " channels");
         }
-        
+
         if (!details.isEmpty()) {
-            sb.append(" §7(").append(String.join(", ", details)).append(")");
+            component.append(Component.literal(" (" + String.join(", ", details) + ")")
+                    .withStyle(ChatFormatting.GRAY));
         }
-        
-        return Component.literal(sb.toString());
+
+        return component;
     }
 }

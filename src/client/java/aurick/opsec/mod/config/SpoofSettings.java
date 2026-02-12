@@ -164,21 +164,27 @@ public class SpoofSettings {
      * Check if currently in vanilla mode.
      * Uses getEffectiveBrand() which respects whitelist settings.
      */
-    public boolean isVanillaMode() { return spoofBrand && VANILLA.equalsIgnoreCase(getEffectiveBrand()); }
-    
+    public boolean isVanillaMode() {
+        return spoofBrand && VANILLA.equals(getEffectiveBrand());
+    }
+
     /**
      * Check if currently in fabric mode.
      * Uses getEffectiveBrand() which respects whitelist settings.
      * Note: When whitelist is enabled, this will always return true.
      */
-    public boolean isFabricMode() { return spoofBrand && FABRIC.equalsIgnoreCase(getEffectiveBrand()); }
-    
+    public boolean isFabricMode() {
+        return spoofBrand && FABRIC.equals(getEffectiveBrand());
+    }
+
     /**
      * Check if currently in forge mode.
      * Uses getEffectiveBrand() which respects whitelist settings.
      * Note: When whitelist is enabled, this will always return false.
      */
-    public boolean isForgeMode() { return spoofBrand && FORGE.equalsIgnoreCase(getEffectiveBrand()); }
+    public boolean isForgeMode() {
+        return spoofBrand && FORGE.equals(getEffectiveBrand());
+    }
     
     public JsonObject toJson() {
         JsonObject json = new JsonObject();

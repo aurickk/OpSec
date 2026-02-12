@@ -1,6 +1,7 @@
 package aurick.opsec.mod.accounts;
 
 import aurick.opsec.mod.Opsec;
+import aurick.opsec.mod.config.OpsecConstants;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
@@ -17,6 +18,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Manages saved Minecraft accounts for OpSec.
@@ -37,9 +39,9 @@ public class AccountManager {
     
     // Store the original session info for logout
     private SessionAccount originalAccount = null;
-    
-    // Prevent concurrent refresh operations
-    private volatile boolean isRefreshing = false;
+
+    // Prevent concurrent refresh operations using atomic compare-and-set
+    private final AtomicBoolean isRefreshing = new AtomicBoolean(false);
     
     private AccountManager() {
         load();
@@ -243,7 +245,7 @@ public class AccountManager {
      * Check if a refresh operation is in progress.
      */
     public boolean isRefreshing() {
-        return isRefreshing;
+        return isRefreshing.get();
     }
     
     /**
@@ -253,13 +255,11 @@ public class AccountManager {
      * @param callback Called on main thread when complete with (valid, invalid) counts
      */
     public void refreshAllAccounts(java.util.function.BiConsumer<Integer, Integer> callback) {
-        // Prevent concurrent refresh operations
-        if (isRefreshing) {
+        // Use atomic compare-and-set to prevent concurrent refresh operations
+        if (!isRefreshing.compareAndSet(false, true)) {
             Opsec.LOGGER.warn("[OpSec] Refresh already in progress, ignoring request");
             return;
         }
-        
-        isRefreshing = true;
         
         new Thread(() -> {
             try {
@@ -273,7 +273,7 @@ public class AccountManager {
                     // Add delay between requests to avoid rate limiting (except first)
                     if (i > 0) {
                         try {
-                            Thread.sleep(1500); // 1.5 second delay between requests
+                            Thread.sleep(OpsecConstants.Retry.ACCOUNT_REFRESH_DELAY_MS);
                         } catch (InterruptedException e) {
                             Thread.currentThread().interrupt();
                             break;
@@ -307,7 +307,7 @@ public class AccountManager {
                     net.minecraft.client.Minecraft.getInstance().execute(() -> callback.accept(v, inv));
                 }
             } finally {
-                isRefreshing = false;
+                isRefreshing.set(false);
             }
         }, "OpSec-Account-Refresh").start();
     }

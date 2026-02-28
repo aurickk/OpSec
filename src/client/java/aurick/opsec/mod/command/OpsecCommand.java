@@ -1,5 +1,6 @@
 package aurick.opsec.mod.command;
 
+import aurick.opsec.mod.config.OpsecConfig;
 import aurick.opsec.mod.tracking.ModRegistry;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.StringArgumentType;
@@ -189,7 +190,10 @@ public class OpsecCommand {
         
         // Whitelist status
         source.sendFeedback(Component.empty());
-        boolean isWhitelisted = ModRegistry.isWhitelistedMod(info.getModId());
+        OpsecConfig opsecConfig = OpsecConfig.getInstance();
+        boolean isWhitelisted = info.getModId() != null
+            && opsecConfig.getSettings().isWhitelistEnabled()
+            && opsecConfig.getSettings().isModWhitelisted(info.getModId());
         if (isWhitelisted) {
             source.sendFeedback(success("Whitelist Status: ALLOWED"));
         } else {

@@ -96,19 +96,10 @@ public class ClientSpoofer {
         }
         
         if (FABRIC.equals(brand)) {
-            if (OpsecConstants.Channels.MINECRAFT.equals(namespace) 
-                    || OpsecConstants.Channels.COMMON.equals(namespace)) {
+            if (ChannelFilterHelper.isCoreNamespace(namespace)) {
                 return false;
             }
-            
-            if (OpsecConstants.Channels.FABRIC_NAMESPACE.equals(namespace) 
-                    || namespace.startsWith(OpsecConstants.Channels.FABRIC_NAMESPACE + "-")) {
-                if (Opsec.LOGGER.isDebugEnabled()) {
-                Opsec.LOGGER.debug("[OpSec] FABRIC MODE - Allowing fabric channel: {}", channel);
-                }
-                return false;
-            }
-            
+
             // Allow whitelisted mod channels
             if (ModRegistry.isWhitelistedChannel(payloadId)) {
                 if (Opsec.LOGGER.isDebugEnabled()) {

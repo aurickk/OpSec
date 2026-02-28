@@ -26,5 +26,13 @@ public class AnvilScreenMixin {
     private static void opsec$enterAnvilContext(CallbackInfo ci) {
         ExploitContext.enterContext(PrivacyLogger.ExploitSource.ANVIL);
     }
+
+    /**
+     * Exit context when screen closes (defense-in-depth alongside MinecraftMixin fallback).
+     */
+    @Inject(method = "onClose", at = @At("HEAD"), require = 0)
+    private void opsec$exitAnvilContext(CallbackInfo ci) {
+        ExploitContext.exitContext();
+    }
 }
 

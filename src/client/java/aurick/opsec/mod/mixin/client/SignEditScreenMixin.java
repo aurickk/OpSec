@@ -26,7 +26,6 @@ public class SignEditScreenMixin {
      */
     @Inject(method = "<init>", at = @At("HEAD"), require = 0)
     private static void opsec$enterSignContext(CallbackInfo ci) {
-        aurick.opsec.mod.Opsec.LOGGER.info("[SignEditScreen] Setting SIGN context in AbstractSignEditScreen constructor");
         ExploitContext.enterContext(PrivacyLogger.ExploitSource.SIGN);
     }
     

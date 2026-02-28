@@ -2,7 +2,9 @@ package aurick.opsec.mod.protection;
 
 import aurick.opsec.mod.Opsec;
 import aurick.opsec.mod.config.OpsecConfig;
+import aurick.opsec.mod.tracking.ModIdResolver;
 import aurick.opsec.mod.tracking.ModRegistry;
+import static aurick.opsec.mod.config.OpsecConstants.Channels.*;
 //? if >=1.21.11 {
 /*import net.minecraft.resources.Identifier;
 */
@@ -22,7 +24,22 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public final class ChannelFilterHelper {
     
     private ChannelFilterHelper() {}
-    
+
+    /** Tracks whether play channel filtering has been logged this session */
+    public static final AtomicBoolean playLogged = new AtomicBoolean(false);
+
+    /** Tracks whether config channel filtering has been logged this session */
+    public static final AtomicBoolean configLogged = new AtomicBoolean(false);
+
+    /**
+     * Reset channel filter logging flags. Called on server reconnect
+     * so debug logs appear for each new connection.
+     */
+    public static void resetLogging() {
+        playLogged.set(false);
+        configLogged.set(false);
+    }
+
     /**
      * Filter a channel set based on current spoofing configuration.
      * 
@@ -99,5 +116,64 @@ public final class ChannelFilterHelper {
     public static boolean isAllowedFabricChannel(ResourceLocation id) {
     //?}
         return ModRegistry.isWhitelistedChannel(id);
+    }
+
+    /**
+     * Check if a channel namespace belongs to the core set that is always allowed through filtering.
+     * Core namespaces: minecraft, fabric, fabric-* (prefix), c
+     *
+     * <p>This is the single canonical implementation of the core namespace allow-list.
+     * All filtering code must call this method instead of re-implementing the four-clause check.</p>
+     */
+    public static boolean isCoreNamespace(String namespace) {
+        if (namespace == null) return false;
+        return MINECRAFT.equals(namespace)
+            || FABRIC_NAMESPACE.equals(namespace)
+            || namespace.startsWith(FABRIC_NAMESPACE + "-")
+            || COMMON.equals(namespace);
+    }
+
+    /**
+     * Record channels from a set into ModRegistry, skipping core namespace channels.
+     * Called from mixin injection points that intercept Fabric's channel advertisement.
+     *
+     * <p>Resolves channel namespaces to actual mod IDs before recording, so that
+     * channels with non-modId namespaces (e.g., "jm" for JourneyMap) are correctly
+     * attributed to their owning mod.</p>
+     *
+     * <p>Only channels whose namespace is NOT a core namespace (minecraft, fabric, fabric-*, c)
+     * are recorded. Core channels are always allowed and do not need tracking.</p>
+     */
+    //? if >=1.21.11 {
+    /*public static void trackChannels(Set<Identifier> channels) {
+        if (channels == null || channels.isEmpty()) return;
+        for (Identifier channel : channels) {*/
+    //?} else {
+    public static void trackChannels(Set<ResourceLocation> channels) {
+        if (channels == null || channels.isEmpty()) return;
+        for (ResourceLocation channel : channels) {
+    //?}
+            String namespace = channel.getNamespace();
+            if (isCoreNamespace(namespace)) continue;
+
+            // Try to resolve namespace to actual mod ID
+            Set<String> resolvedModIds = ModRegistry.resolveModIdsForNamespace(namespace);
+            if (!resolvedModIds.isEmpty()) {
+                for (String modId : resolvedModIds) {
+                    ModRegistry.recordChannel(modId, channel);
+                }
+            } else {
+                // Namespace is not a known mod ID and has no cached mapping.
+                // Try stack-trace resolution (works at mixin intercept time).
+                String stackModId = ModIdResolver.getModIdFromStacktrace();
+                if (stackModId != null && !stackModId.equals(namespace)) {
+                    ModRegistry.recordNamespaceMapping(namespace, stackModId);
+                    ModRegistry.recordChannel(stackModId, channel);
+                } else {
+                    // Fall back to namespace as mod ID (backwards compat)
+                    ModRegistry.recordChannel(namespace, channel);
+                }
+            }
+        }
     }
 }

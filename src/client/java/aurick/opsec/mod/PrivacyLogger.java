@@ -268,19 +268,6 @@ public class PrivacyLogger {
         public String getDisplayName() { return displayName; }
     }
     
-    public static void alertTranslationExploitDetected(ExploitSource source, String spoofedContent) {
-        String sourceName = source.getDisplayName();
-        
-        logDetection("TranslationExploit:" + sourceName, 
-            "Server attempted exploit via " + sourceName.toLowerCase() + 
-            (spoofedContent != null ? " - Spoofed: " + spoofedContent : ""));
-        
-        alert(AlertType.DANGER, "Translation exploit detected!");
-        
-        toastWithCooldown(AlertType.DANGER, "Translation Exploit Detected", 
-            null, "exploit_translation", OpsecConstants.Timeouts.EXPLOIT_TOAST_COOLDOWN_MS);
-    }
-    
     public static void alertClientBrandSpoofed(String originalBrand, String spoofedBrand) {
         logDetection("Spoof", "Brand spoofed from '" + originalBrand + "' to '" + spoofedBrand + "'");
     }
@@ -295,8 +282,8 @@ public class PrivacyLogger {
     
     public static void alertSecureChatRequired(String server) {
         toast(AlertType.WARNING, "Secure Chat Required");
-        alert(AlertType.WARNING, "Server " + server + " requires secure chat. Chat signing enabled.");
-        logDetection("SecureChat", "Server " + server + " enforces secure chat - ON_DEMAND signing activated");
+        alert(AlertType.WARNING, "Server requires secure chat. Chat signing enabled.");
+        logDetection("SecureChat", "Server enforces secure chat - ON_DEMAND signing activated");
     }
     
     public static void alertCacheIsolationActive(String accountId) {

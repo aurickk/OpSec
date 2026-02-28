@@ -7,7 +7,6 @@ import aurick.opsec.mod.detection.ExploitContext;
 import aurick.opsec.mod.protection.ForgeTranslations;
 import aurick.opsec.mod.protection.TranslationProtectionHandler;
 import aurick.opsec.mod.tracking.ModRegistry;
-import net.minecraft.client.resources.language.ClientLanguage;
 import net.minecraft.locale.Language;
 import net.minecraft.network.chat.contents.TranslatableContents;
 import org.spongepowered.asm.mixin.Final;
@@ -18,7 +17,6 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import java.lang.reflect.Field;
 import java.util.Map;
 
 /**
@@ -38,10 +36,6 @@ public abstract class TranslatableContentsMixin {
     // Track the language instance when this was last decomposed
     @Shadow private Language decomposedWith;
     
-    // Cached reflection field for getting real translations
-    @Unique
-    private static Field storageField;
-    
     /**
      * Force re-decomposition when in exploit context.
      */
@@ -55,10 +49,17 @@ public abstract class TranslatableContentsMixin {
         
         // Always allow server resource pack keys
         if (ModRegistry.isServerPackTranslationKey(key)) return;
-        
+
         OpsecConfig config = OpsecConfig.getInstance();
         SpoofSettings settings = config.getSettings();
-        
+
+        // If protection is disabled, still detect/log but don't break cache
+        if (!config.isTranslationProtectionEnabled()) {
+            TranslationProtectionHandler.notifyExploitDetected();
+            opsec$logDetection();
+            return;
+        }
+
         // VANILLA MODE: Block all mod keys
         if (settings.isVanillaMode()) {
             this.decomposedWith = null;
@@ -135,41 +136,18 @@ public abstract class TranslatableContentsMixin {
     
     /**
      * Get the real translation value by directly accessing ClientLanguage's storage map.
-     * This bypasses our LanguageMixin interception.
+     * Uses {@link ClientLanguageAccessor} to bypass our LanguageMixin interception.
      */
     @Unique
-    @SuppressWarnings("unchecked")
     private String opsec$getRealTranslation(String translationKey, String defaultValue) {
         try {
             Language lang = Language.getInstance();
-            if (lang instanceof ClientLanguage clientLang) {
-                // Find the storage field - it may have different names in dev vs runtime
-                if (storageField == null) {
-                    // Search for a Map<String, String> field
-                    for (Field field : ClientLanguage.class.getDeclaredFields()) {
-                        if (Map.class.isAssignableFrom(field.getType())) {
-                            field.setAccessible(true);
-                            Object value = field.get(clientLang);
-                            if (value instanceof Map<?, ?> map && !map.isEmpty()) {
-                                // Check if it's String -> String
-                                Map.Entry<?, ?> entry = map.entrySet().iterator().next();
-                                if (entry.getKey() instanceof String && entry.getValue() instanceof String) {
-                                    storageField = field;
-                                    break;
-                                }
-                            }
-                        }
-                    }
-                }
-                
-                if (storageField != null) {
-                    Map<String, String> storage = (Map<String, String>) storageField.get(clientLang);
-                    String value = storage.get(translationKey);
-                    return value != null ? value : defaultValue;
-                }
+            if (lang instanceof ClientLanguageAccessor accessor) {
+                Map<String, String> storage = accessor.opsec$getStorage();
+                String value = storage.get(translationKey);
+                return value != null ? value : defaultValue;
             }
         } catch (Exception e) {
-            // Fallback if reflection fails
             Opsec.LOGGER.debug("[OpSec] Failed to get real translation for key '{}': {}",
                     translationKey, e.getMessage());
         }

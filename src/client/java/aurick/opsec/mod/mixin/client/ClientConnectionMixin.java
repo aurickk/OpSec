@@ -2,6 +2,7 @@ package aurick.opsec.mod.mixin.client;
 
 import aurick.opsec.mod.Opsec;
 import aurick.opsec.mod.config.OpsecConfig;
+import aurick.opsec.mod.protection.ChannelFilterHelper;
 import aurick.opsec.mod.tracking.ModRegistry;
 import aurick.opsec.mod.util.ServerAddressTracker;
 import io.netty.channel.Channel;
@@ -478,8 +479,7 @@ public class ClientConnectionMixin {
             String namespace = channel.getNamespace();
             
             // Skip core channels
-            if (MINECRAFT.equals(namespace) || FABRIC_NAMESPACE.equals(namespace) || 
-                namespace.startsWith(FABRIC_NAMESPACE + "-") || COMMON.equals(namespace)) {
+            if (ChannelFilterHelper.isCoreNamespace(namespace)) {
                 continue;
             }
             

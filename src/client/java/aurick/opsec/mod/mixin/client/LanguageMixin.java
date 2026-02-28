@@ -38,7 +38,10 @@ public abstract class LanguageMixin {
         
         // Always allow server resource pack keys
         if (ModRegistry.isServerPackTranslationKey(key)) return;
-        
+
+        // If protection is disabled, allow normal resolution
+        if (!OpsecConfig.getInstance().isTranslationProtectionEnabled()) return;
+
         OpsecConfig config = OpsecConfig.getInstance();
         SpoofSettings settings = config.getSettings();
         

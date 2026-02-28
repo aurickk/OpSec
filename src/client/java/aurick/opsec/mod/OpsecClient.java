@@ -3,6 +3,7 @@ package aurick.opsec.mod;
 import aurick.opsec.mod.accounts.AccountManager;
 import aurick.opsec.mod.command.OpsecCommand;
 import aurick.opsec.mod.config.OpsecConfig;
+import aurick.opsec.mod.protection.ChannelFilterHelper;
 import aurick.opsec.mod.tracking.ModRegistry;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientLifecycleEvents;
@@ -67,7 +68,7 @@ public class OpsecClient implements ClientModInitializer {
 			for (ResourceLocation channel : playChannels) {
 			//?}
 				String namespace = channel.getNamespace();
-				if (!isSystemChannel(namespace)) {
+				if (!ChannelFilterHelper.isCoreNamespace(namespace)) {
 					ModRegistry.recordChannel(namespace, channel);
 					channelCount++;
 				}
@@ -85,7 +86,7 @@ public class OpsecClient implements ClientModInitializer {
 			for (ResourceLocation channel : configChannels) {
 			//?}
 				String namespace = channel.getNamespace();
-				if (!isSystemChannel(namespace)) {
+				if (!ChannelFilterHelper.isCoreNamespace(namespace)) {
 					ModRegistry.recordChannel(namespace, channel);
 					channelCount++;
 				}
@@ -94,14 +95,79 @@ public class OpsecClient implements ClientModInitializer {
 			Opsec.LOGGER.debug("[OpSec] Could not scan config channels: {}", e.getMessage());
 		}
 		
+		try {
+			//? if >=1.21.11 {
+			/*Set<Identifier> playReceived = ClientPlayNetworking.getReceived();
+			for (Identifier channel : playReceived) {*/
+			//?} else {
+			Set<ResourceLocation> playReceived = ClientPlayNetworking.getReceived();
+			for (ResourceLocation channel : playReceived) {
+			//?}
+				String namespace = channel.getNamespace();
+				if (!ChannelFilterHelper.isCoreNamespace(namespace)) {
+					ModRegistry.recordChannel(namespace, channel);
+					channelCount++;
+				}
+			}
+		} catch (Exception e) {
+			Opsec.LOGGER.debug("[OpSec] Could not scan play received channels: {}", e.getMessage());
+		}
+
+		try {
+			//? if >=1.21.11 {
+			/*Set<Identifier> playSendable = ClientPlayNetworking.getSendable();
+			for (Identifier channel : playSendable) {*/
+			//?} else {
+			Set<ResourceLocation> playSendable = ClientPlayNetworking.getSendable();
+			for (ResourceLocation channel : playSendable) {
+			//?}
+				String namespace = channel.getNamespace();
+				if (!ChannelFilterHelper.isCoreNamespace(namespace)) {
+					ModRegistry.recordChannel(namespace, channel);
+					channelCount++;
+				}
+			}
+		} catch (Exception e) {
+			Opsec.LOGGER.debug("[OpSec] Could not scan play sendable channels: {}", e.getMessage());
+		}
+
+		try {
+			//? if >=1.21.11 {
+			/*Set<Identifier> configReceived = ClientConfigurationNetworking.getReceived();
+			for (Identifier channel : configReceived) {*/
+			//?} else {
+			Set<ResourceLocation> configReceived = ClientConfigurationNetworking.getReceived();
+			for (ResourceLocation channel : configReceived) {
+			//?}
+				String namespace = channel.getNamespace();
+				if (!ChannelFilterHelper.isCoreNamespace(namespace)) {
+					ModRegistry.recordChannel(namespace, channel);
+					channelCount++;
+				}
+			}
+		} catch (Exception e) {
+			Opsec.LOGGER.debug("[OpSec] Could not scan config received channels: {}", e.getMessage());
+		}
+
+		try {
+			//? if >=1.21.11 {
+			/*Set<Identifier> configSendable = ClientConfigurationNetworking.getSendable();
+			for (Identifier channel : configSendable) {*/
+			//?} else {
+			Set<ResourceLocation> configSendable = ClientConfigurationNetworking.getSendable();
+			for (ResourceLocation channel : configSendable) {
+			//?}
+				String namespace = channel.getNamespace();
+				if (!ChannelFilterHelper.isCoreNamespace(namespace)) {
+					ModRegistry.recordChannel(namespace, channel);
+					channelCount++;
+				}
+			}
+		} catch (Exception e) {
+			Opsec.LOGGER.debug("[OpSec] Could not scan config sendable channels: {}", e.getMessage());
+		}
+
 		Opsec.LOGGER.debug("[OpSec] Scanned {} mod channels at startup", channelCount);
-	}
-	
-	private boolean isSystemChannel(String namespace) {
-		return "minecraft".equals(namespace) || 
-			   "fabric".equals(namespace) || 
-			   namespace.startsWith("fabric-") || 
-			   "c".equals(namespace);
 	}
 	
 	/**

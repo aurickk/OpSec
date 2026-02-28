@@ -21,6 +21,7 @@
 		"ChatOptionsScreenMixin",
 		"ServerboundChatPacketMixin",
 		"HttpUtilMixin",
+		"ClientLanguageAccessor",
 		"ClientLanguageMixin",
 		"KeyBindingRegistryImplMixin",
 		"OptionsMixin",

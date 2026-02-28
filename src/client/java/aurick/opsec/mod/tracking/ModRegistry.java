@@ -3,6 +3,7 @@ package aurick.opsec.mod.tracking;
 import aurick.opsec.mod.Opsec;
 import aurick.opsec.mod.config.OpsecConfig;
 import aurick.opsec.mod.config.SpoofSettings;
+import aurick.opsec.mod.protection.ChannelFilterHelper;
 import net.fabricmc.loader.api.FabricLoader;
 import net.fabricmc.loader.api.ModContainer;
 //? if >=1.21.11 {
@@ -46,6 +47,9 @@ public class ModRegistry {
     /** All known keybinds for fast lookup */
     private static final Set<String> allKnownKeybinds = ConcurrentHashMap.newKeySet();
     
+    /** Maps channel namespaces to their owning Fabric mod IDs (e.g., "jm" -> "journeymap") */
+    private static final Map<String, Set<String>> namespaceToModIds = new ConcurrentHashMap<>();
+
     /** Recently logged keys for deduplication (cleared periodically) */
     private static final Map<String, Long> recentlyLoggedKeys = new ConcurrentHashMap<>();
     private static final long LOG_DEDUP_MS = 1000; // 1 second deduplication window
@@ -430,8 +434,49 @@ public class ModRegistry {
     }
     
     
+    // ==================== NAMESPACE RESOLUTION ====================
+
+    /**
+     * Resolve a channel namespace to the mod ID(s) that own it.
+     * First checks if the namespace is itself a Fabric mod ID, then falls back
+     * to the cached namespace-to-modId mapping table.
+     *
+     * @param namespace The channel namespace (e.g., "jm", "journeymap")
+     * @return Set of mod IDs that own this namespace, or empty set if unknown
+     */
+    public static Set<String> resolveModIdsForNamespace(String namespace) {
+        if (namespace == null) return Set.of();
+
+        // If the namespace IS a registered Fabric mod ID, return it directly
+        if (FabricLoader.getInstance().getModContainer(namespace).isPresent()) {
+            return Set.of(namespace);
+        }
+
+        // Check cached namespace-to-modId mappings
+        Set<String> mapped = namespaceToModIds.get(namespace);
+        if (mapped != null && !mapped.isEmpty()) {
+            return Collections.unmodifiableSet(mapped);
+        }
+
+        return Set.of();
+    }
+
+    /**
+     * Record a mapping from a channel namespace to its owning mod ID.
+     * Skips identity mappings (where namespace equals modId).
+     *
+     * @param namespace The channel namespace (e.g., "jm")
+     * @param modId The owning mod ID (e.g., "journeymap")
+     */
+    public static void recordNamespaceMapping(String namespace, String modId) {
+        if (namespace == null || modId == null || namespace.equals(modId)) return;
+
+        namespaceToModIds.computeIfAbsent(namespace, k -> ConcurrentHashMap.newKeySet()).add(modId);
+        Opsec.LOGGER.debug("[ModRegistry] Mapped namespace '{}' to mod '{}'", namespace, modId);
+    }
+
     // ==================== CHANNEL TRACKING ====================
-    
+
     /**
      * Record a network channel registered by a mod.
      */
@@ -450,7 +495,8 @@ public class ModRegistry {
     
     /**
      * Check if a channel is from a whitelisted mod.
-     * Also checks the channel namespace as a fallback with fuzzy matching.
+     * Uses exact matching via tracked channel ownership, direct namespace match,
+     * and namespace-to-modId alias resolution. No fuzzy matching.
      */
     //? if >=1.21.11 {
     /*public static boolean isWhitelistedChannel(Identifier channel) {*/
@@ -458,95 +504,42 @@ public class ModRegistry {
     public static boolean isWhitelistedChannel(ResourceLocation channel) {
     //?}
         if (channel == null) return false;
-        
+
         String namespace = channel.getNamespace();
-        
+
         // Always allow core channels
-        if (MINECRAFT.equals(namespace) || FABRIC_NAMESPACE.equals(namespace) 
-                || namespace.startsWith(FABRIC_NAMESPACE + "-") || COMMON.equals(namespace)) {
+        if (ChannelFilterHelper.isCoreNamespace(namespace)) {
             return true;
         }
-        
+
         OpsecConfig config = OpsecConfig.getInstance();
         if (!config.getSettings().isWhitelistEnabled()) {
             return false;
         }
-        
-        // Check if any whitelisted mod owns this channel (exact match from tracking)
+
+        // Check 1: Does any whitelisted mod own this channel via tracking data? (exact)
         for (ModInfo info : registry.values()) {
             if (info.channels.contains(channel) && config.getSettings().isModWhitelisted(info.modId)) {
                 return true;
             }
         }
-        
-        // Fallback: channel namespace is typically the mod ID (exact match)
+
+        // Check 2: Is the namespace itself whitelisted? (exact match, backwards compat)
+        // Handles users who whitelisted "jm" directly instead of "journeymap"
         if (config.getSettings().isModWhitelisted(namespace)) {
             return true;
         }
-        
-        // Fuzzy match: check if namespace matches any whitelisted mod ID
-        // (handles cases like xaerominimap vs xaeros_minimap)
-        String normalizedNamespace = normalizeModId(namespace);
-        for (String whitelistedMod : config.getSettings().getWhitelistedMods()) {
-            if (normalizeModId(whitelistedMod).equals(normalizedNamespace)) {
-                return true;
-            }
-            // Also check if the namespace starts with or is contained in the mod ID
-            if (normalizedNamespace.startsWith(normalizeModId(whitelistedMod)) ||
-                normalizeModId(whitelistedMod).startsWith(normalizedNamespace)) {
+
+        // Check 3: Resolve namespace to mod ID(s) via alias table (exact match)
+        // Handles: user whitelisted "journeymap" but channel namespace is "jm"
+        Set<String> resolvedModIds = resolveModIdsForNamespace(namespace);
+        for (String resolvedModId : resolvedModIds) {
+            if (config.getSettings().isModWhitelisted(resolvedModId)) {
                 return true;
             }
         }
-        
+
         return false;
-    }
-    
-    /**
-     * Normalize a mod ID for fuzzy matching.
-     * Removes common separators and converts to lowercase.
-     */
-    private static String normalizeModId(String modId) {
-        if (modId == null) return "";
-        return modId.toLowerCase()
-            .replace("-", "")
-            .replace("_", "")
-            .replace(".", "");
-    }
-    
-    /**
-     * Check if a channel namespace (mod ID) is whitelisted.
-     */
-    public static boolean isWhitelistedChannelNamespace(String namespace) {
-        if (namespace == null) return false;
-        
-        // Always allow core channels
-        if (MINECRAFT.equals(namespace) || FABRIC_NAMESPACE.equals(namespace) 
-                || namespace.startsWith(FABRIC_NAMESPACE + "-") || COMMON.equals(namespace)) {
-            return true;
-        }
-        
-        OpsecConfig config = OpsecConfig.getInstance();
-        if (!config.getSettings().isWhitelistEnabled()) {
-            return false;
-        }
-        
-        return config.getSettings().isModWhitelisted(namespace);
-    }
-    
-    // ==================== WHITELIST HELPERS ====================
-    
-    /**
-     * Check if a mod is whitelisted.
-     */
-    public static boolean isWhitelistedMod(String modId) {
-        if (modId == null) return false;
-        
-        OpsecConfig config = OpsecConfig.getInstance();
-        if (!config.getSettings().isWhitelistEnabled()) {
-            return false;
-        }
-        
-        return config.getSettings().isModWhitelisted(modId);
     }
     
     // ==================== INITIALIZATION ====================

@@ -156,11 +156,6 @@ public class OpsecConfig {
         return settings.isSpoofBrand() && settings.isSpoofChannels(); 
     }
     
-    /** Convenience method to check if both brand and channel spoofing are active */
-    public boolean shouldSpoofBrandAndChannels() { 
-        return settings.isSpoofBrand() && settings.isSpoofChannels(); 
-    }
-    
     public String getEffectiveBrand() { return settings.getEffectiveBrand(); }
     
     // Resource pack protection

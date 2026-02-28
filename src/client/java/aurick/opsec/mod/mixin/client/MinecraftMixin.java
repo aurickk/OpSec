@@ -1,6 +1,7 @@
 package aurick.opsec.mod.mixin.client;
 
 import aurick.opsec.mod.Opsec;
+import aurick.opsec.mod.PrivacyLogger;
 import aurick.opsec.mod.config.OpsecConfig;
 import aurick.opsec.mod.detection.ExploitContext;
 import net.minecraft.client.Minecraft;
@@ -61,12 +62,18 @@ public class MinecraftMixin {
     /**
      * Schedule context cleanup after a brief delay.
      * This ensures packet serialization completes before context is cleared.
+     *
+     * Captures the current context source at deferral time and only clears
+     * if it still matches — prevents a race where a new exploitable screen
+     * opens before the deferred cleanup fires.
      */
     @Unique
     private void opsec$scheduleContextCleanup() {
+        PrivacyLogger.ExploitSource contextAtClose = ExploitContext.getSource();
         Minecraft.getInstance().execute(() -> {
-            // Clear on next tick, after any pending packet serialization
-            ExploitContext.exitContext();
+            if (ExploitContext.getSource() == contextAtClose) {
+                ExploitContext.exitContext();
+            }
         });
     }
 }

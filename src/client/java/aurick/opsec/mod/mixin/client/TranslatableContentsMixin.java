@@ -9,7 +9,6 @@ import aurick.opsec.mod.protection.TranslationProtectionHandler;
 import aurick.opsec.mod.tracking.ModRegistry;
 import net.minecraft.client.resources.language.ClientLanguage;
 import net.minecraft.locale.Language;
-import net.minecraft.network.chat.FormattedText;
 import net.minecraft.network.chat.contents.TranslatableContents;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -17,11 +16,10 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.lang.reflect.Field;
 import java.util.Map;
-import java.util.Optional;
 
 /**
  * Intercepts TranslatableContents to block mod translation resolution.
@@ -46,15 +44,9 @@ public abstract class TranslatableContentsMixin {
     
     /**
      * Force re-decomposition when in exploit context.
-     * By clearing decomposedWith, we force decompose() to run again,
-     * where LanguageMixin will block the resolution.
      */
-    @Inject(
-        method = "visit(Lnet/minecraft/network/chat/FormattedText$ContentConsumer;)Ljava/util/Optional;",
-        at = @At("HEAD"),
-        require = 0
-    )
-    private <T> void opsec$forceRedecompose(FormattedText.ContentConsumer<T> consumer, CallbackInfoReturnable<Optional<T>> cir) {
+    @Inject(method = "decompose", at = @At("HEAD"))
+    private void opsec$forceRedecompose(CallbackInfo ci) {
         // Only when in exploitable context
         if (!ExploitContext.isInExploitableContext()) return;
         

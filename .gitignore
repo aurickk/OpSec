@@ -39,3 +39,8 @@ logs/
 # Python cache
 __pycache__/
 *.py[cod]
+
+# Skidding
+CLAUDE.md
+.planning/
+AGENTS.md

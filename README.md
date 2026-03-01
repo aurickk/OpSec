@@ -61,7 +61,7 @@ If settings are changed while connected to a server it is recommended to reconne
 | **Isolate Pack Cache** | Enable/disable [cache isolation](#isolate-pack-cache) |
 | **Block Local Pack URLs** | Enable/disable [local URL blocking](#block-local-urls) |
 | **Clear Cache** | Delete all cached server resource packs |
-| **Spoof Translation Keys** | Enable/disable [key resolution protection](#translation-exploit-protection) |
+| **Key Resolution Spoofing** | Enable/disable [key resolution protection](#translation-exploit-protection) |
 | **Fake Default Keybinds** | Return default vanilla keybind values instead of actual bindings |
 | **Meteor Fix** | Disable Meteor Client's broken key resolution protection (only shown when Meteor is installed) |
 | **Signing Mode** | Configure [chat signing](#chat-signing-control) behavior:<br/>• **OFF**: Strip signatures (maximum privacy)<br/>• **ON**: Default Minecraft behavior<br/>• **AUTO**: Only sign when required (recommended) |

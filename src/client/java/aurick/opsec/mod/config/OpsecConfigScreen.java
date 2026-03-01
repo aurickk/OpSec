@@ -233,7 +233,7 @@ public class OpsecConfigScreen extends Screen {
         
         widgets.add(cycleBuilder(COLORED_BOOL_TO_TEXT, List.of(Boolean.TRUE, Boolean.FALSE), settings.isTranslationProtectionEnabled())
             .withTooltip(v -> Tooltip.create(Component.literal("Mask translation key values to appear as default vanilla client")))
-                .create(0, 0, 210, 20, Component.literal("Spoof Translation Keys"),
+                .create(0, 0, 210, 20, Component.translatable("opsec.option.keyResolutionSpoofing"),
                     (button, value) -> { 
                         settings.setTranslationProtection(value); 
                         config.save();
@@ -245,7 +245,7 @@ public class OpsecConfigScreen extends Screen {
             widgets.add(cycleBuilder(COLORED_BOOL_TO_TEXT, List.of(Boolean.TRUE, Boolean.FALSE), settings.isFakeDefaultKeybinds())
                 .withTooltip(v -> Tooltip.create(Component.literal(
                     "Spoof vanilla keybinds to default values when enabled")))
-                    .create(0, 0, 210, 20, Component.literal("Fake Default Keybinds"),
+                    .create(0, 0, 210, 20, Component.translatable("opsec.option.fakeDefaultKeybinds"),
                         (button, value) -> { 
                             settings.setFakeDefaultKeybinds(value); 
                             config.save();
@@ -254,7 +254,7 @@ public class OpsecConfigScreen extends Screen {
             widgets.add(cycleBuilder(COLORED_BOOL_TO_TEXT, List.of(Boolean.TRUE, Boolean.FALSE), settings.isMeteorFix())
                 .withTooltip(v -> Tooltip.create(Component.literal(
                     "Blacklist a Meteor Client mixin to allow OpSec's proper protection handling")))
-                    .create(0, 0, 210, 20, Component.literal("Meteor Fix"),
+                    .create(0, 0, 210, 20, Component.translatable("opsec.option.meteorFix"),
                         (button, value) -> { 
                             settings.setMeteorFix(value); 
                             config.save();
@@ -272,7 +272,7 @@ public class OpsecConfigScreen extends Screen {
         
         widgets.add(cycleBuilder(SigningModeDisplay::getDisplayName, List.of(SpoofSettings.SigningMode.values()), settings.getSigningMode())
                 .withTooltip(v -> Tooltip.create(SigningModeDisplay.getTooltip(v)))
-                .create(0, 0, 210, 20, Component.literal("Chat Signing"),
+                .create(0, 0, 210, 20, Component.translatable("opsec.option.chatSigning"),
                 (button, value) -> { settings.setSigningMode(value); config.save(); }));
         
         widgets.add(cycleBuilder(COLORED_BOOL_TO_TEXT, List.of(Boolean.TRUE, Boolean.FALSE), settings.isDisableTelemetry())
@@ -846,7 +846,7 @@ public class OpsecConfigScreen extends Screen {
         widgets.add(cycleBuilder(COLORED_BOOL_TO_TEXT, List.of(Boolean.TRUE, Boolean.FALSE), settings.isWhitelistEnabled())
                 .withTooltip(v -> Tooltip.create(Component.literal(
                     "Allow whitelisted mods' translation keys and channels to pass through")))
-                .create(0, 0, 210, 20, Component.literal("Enable Whitelist"),
+                .create(0, 0, 210, 20, Component.translatable("opsec.option.whitelistEnabled"),
                     (button, value) -> { 
                         settings.setWhitelistEnabled(value);
                         config.save();

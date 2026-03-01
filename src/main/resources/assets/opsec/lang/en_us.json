@@ -17,9 +17,10 @@
   "opsec.option.isolatePackCache": "Isolate Pack Cache",
   "opsec.option.blockLocalPackUrls": "Block Local URLs",
   "opsec.option.clearCache": "Clear Cached Resource Packs",
-  "opsec.option.blockTranslationExploit": "Key Resolution Protection",
-  "opsec.option.translationExploitMode": "Protection Mode",
-  "opsec.option.signingMode": "Disable Chat Signing",
+  "opsec.option.keyResolutionSpoofing": "Key Resolution Spoofing",
+  "opsec.option.fakeDefaultKeybinds": "Fake Default Keybinds",
+  "opsec.option.meteorFix": "Meteor Fix",
+  "opsec.option.chatSigning": "Chat Signing",
   "opsec.option.disableTelemetry": "Disable Telemetry",
   
   "opsec.option.showAlerts": "Chat Alerts",

@@ -38,11 +38,10 @@
 
 ## Configurations
 
-The settings menu is accessible via the `OpSec` button in the multiplayer server selection menu footer or [Mod Menu](https://modrinth.com/mod/modmenu).
+The settings menu is accessible via the `OpSec` button in the multiplayer server selection menu header or via [Mod Menu](https://modrinth.com/mod/modmenu).
 
-<img width="376" height="141" alt="opsec button" src="https://github.com/user-attachments/assets/01b68390-0610-42d4-bced-30b86d3d76e8" />
+<img width="1465" height="820" alt="image" src="https://github.com/user-attachments/assets/c69a768b-60ac-4f78-9705-184f6c4e4495" />
 
-<img width="852" height="477" alt="opsec setting menu" src="https://github.com/user-attachments/assets/130a9ffb-a316-44c1-a4d5-0c55a51967d2" />
 
 If settings are changed while connected to a server it is recommended to reconnect to the server to ensure changes are applied.
 

@@ -20,8 +20,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
-import static aurick.opsec.mod.config.OpsecConstants.Channels.*;
-
 /**
  * Unified registry for tracking mod information including translation keys,
  * keybinds, and network channels. This provides a single source of truth

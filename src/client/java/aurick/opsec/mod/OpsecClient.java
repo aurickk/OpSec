@@ -3,6 +3,7 @@ package aurick.opsec.mod;
 import aurick.opsec.mod.accounts.AccountManager;
 import aurick.opsec.mod.command.OpsecCommand;
 import aurick.opsec.mod.config.OpsecConfig;
+import aurick.opsec.mod.config.UpdateChecker;
 import aurick.opsec.mod.protection.ChannelFilterHelper;
 import aurick.opsec.mod.tracking.ModRegistry;
 import net.fabricmc.api.ClientModInitializer;
@@ -35,19 +36,24 @@ public class OpsecClient implements ClientModInitializer {
 	public void onInitializeClient() {
 		// Log mod initialization
 		Opsec.LOGGER.info("{} v{} - Privacy protection for Minecraft", Opsec.MOD_NAME, Opsec.getVersion());
-		Opsec.LOGGER.info("Protecting against: TrackPack, Sign Translation Exploit, Client Fingerprinting");
+		Opsec.LOGGER.info("Protecting against: TrackPack, Key Resolution Exploit, Client Fingerprinting");
 		
 		OpsecConfig.getInstance();
 		OpsecCommand.register();
 		AccountManager.getInstance(); // Load saved accounts
-		
+
+		// Check for mod updates (non-blocking)
+		if (!OpsecConfig.getInstance().getSettings().isDismissUpdateNotification()) {
+			UpdateChecker.checkForUpdate();
+		}
+
 		// Scan for registered channels after all mods have initialized
 		ClientLifecycleEvents.CLIENT_STARTED.register(client -> {
 			scanRegisteredChannels();
 			// Fallback: scan mods for language files if mixin didn't catch them
 			scanModsForLanguageFiles();
 		});
-		
+
 		Opsec.LOGGER.info("OpSec client protection initialized");
 	}
 	

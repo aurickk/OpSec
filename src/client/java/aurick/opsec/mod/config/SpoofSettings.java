@@ -28,17 +28,17 @@ public class SpoofSettings {
     
     // Brand spoofing
     private boolean spoofBrand = true;
-    private String customBrand = VANILLA;
+    private String customBrand = FABRIC;
     private boolean spoofChannels = false;
     
     // Resource pack protection
     private boolean isolatePackCache = true;
     private boolean blockLocalPackUrls = true;
     
-    // Translation exploit protection
+    // Key resolution protection
     private boolean translationProtection = true;
     private boolean fakeDefaultKeybinds = true;  // Spoof vanilla keybinds to default values
-    private boolean meteorFix = true;  // Block Meteor's broken translation protection
+    private boolean meteorFix = true;  // Block Meteor's broken key resolution protection
     
     // Alerts
     private boolean showAlerts = true;
@@ -56,6 +56,9 @@ public class SpoofSettings {
     // UI Settings
     private int buttonX = -1;
     private int buttonY = -1;
+
+    // Update notification
+    private boolean dismissUpdateNotification = false;
     
     // Whitelist settings
     private boolean whitelistEnabled = false;
@@ -147,9 +150,13 @@ public class SpoofSettings {
     public Set<String> getWhitelistedMods() { return whitelistedMods; }
     public void setWhitelistedMods(Set<String> mods) { this.whitelistedMods = mods != null ? mods : new HashSet<>(); }
     
-    public boolean isModWhitelisted(String modId) { 
-        return whitelistEnabled && modId != null && whitelistedMods.contains(modId); 
+    public boolean isModWhitelisted(String modId) {
+        return whitelistEnabled && modId != null && whitelistedMods.contains(modId);
     }
+
+    // Update notification methods
+    public boolean isDismissUpdateNotification() { return dismissUpdateNotification; }
+    public void setDismissUpdateNotification(boolean dismiss) { this.dismissUpdateNotification = dismiss; }
     
     public String getEffectiveBrand() {
         if (!spoofBrand) return FABRIC;
@@ -203,7 +210,8 @@ public class SpoofSettings {
         json.addProperty("disableTelemetry", disableTelemetry);
         json.addProperty("buttonX", buttonX);
         json.addProperty("buttonY", buttonY);
-        
+        json.addProperty("dismissUpdateNotification", dismissUpdateNotification);
+
         // Whitelist settings
         json.addProperty("whitelistEnabled", whitelistEnabled);
         JsonArray modsArray = new JsonArray();
@@ -249,7 +257,8 @@ public class SpoofSettings {
         if (json.has("disableTelemetry")) s.disableTelemetry = json.get("disableTelemetry").getAsBoolean();
         if (json.has("buttonX")) s.buttonX = json.get("buttonX").getAsInt();
         if (json.has("buttonY")) s.buttonY = json.get("buttonY").getAsInt();
-        
+        if (json.has("dismissUpdateNotification")) s.dismissUpdateNotification = json.get("dismissUpdateNotification").getAsBoolean();
+
         // Whitelist settings
         if (json.has("whitelistEnabled")) s.whitelistEnabled = json.get("whitelistEnabled").getAsBoolean();
         if (json.has("whitelistedMods")) {
@@ -279,6 +288,7 @@ public class SpoofSettings {
         this.disableTelemetry = other.disableTelemetry;
         this.buttonX = other.buttonX;
         this.buttonY = other.buttonY;
+        this.dismissUpdateNotification = other.dismissUpdateNotification;
         this.whitelistEnabled = other.whitelistEnabled;
         this.whitelistedMods = new HashSet<>(other.whitelistedMods);
     }

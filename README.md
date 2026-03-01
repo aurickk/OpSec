@@ -6,7 +6,7 @@
 
 
 > [!WARNING]
-> OpSec is a **vibecoded** procrastination project! Although the features here are tested, do not rely on this mod for actual security. We recommend using [ExploitPreventer](https://github.com/NikOverflow/ExploitPreventer) if you're looking for a robust and mature protection made by real competent people. However OpSec tries to bring way more to the table with loads of interative customizations and other protective elements.
+> This is a passion project mostly built with AI. Everything is tested but don't rely on this for actual security. If you want something proven, use [ExploitPreventer](https://github.com/NikOverflow/ExploitPreventer) (Do not use this to bypass Meteor Client checks). OpSec just tries to offer more features and interactive customization on top of the basics.
 
 
 ## What it does
@@ -15,9 +15,9 @@
 - **[Channel Spoofing](#channel-spoofing)** - Hide or fake mod channels to prevent mod detection
 - **[Isolate Pack Cache](#isolate-pack-cache)** - Isolate resource packs per-account to prevent tracking
 - **[Block Local URLs](#block-local-urls)** - Automatically fail local requests from server resource packs 
-- **[Translation Exploit Protection](#translation-exploit-protection)** - Protect against key resolution mod detection
-- **[Meteor Fix](#meteor-fix)** - Disable Meteor Client's broken translation protection
-- **[Mod Whitelist](#mod-whitelist)** - Exempt specific mods from channel spoofing and translation protection
+- **[Key Resolution Protection](#translation-exploit-protection)** - Protect against key resolution mod detection in signs and anvils
+- **[Meteor Fix](#meteor-fix)** - Disable Meteor Client's broken key resolution protection
+- **[Mod Whitelist](#mod-whitelist)** - Exempt specific mods from channel spoofing and key resolution protection in signs and anvils
 - **[Chat Signing Control](#chat-signing-control)** - Configure chat message signing behavior
 - **[Account Manager](#account-manager)** - Switch between Minecraft accounts using session tokens
 - **[Telemetry Blocking](#telemetry-blocking)** - Disable data collection sent to Mojang
@@ -61,9 +61,9 @@ If settings are changed while connected to a server it is recommended to reconne
 | **Isolate Pack Cache** | Enable/disable [cache isolation](#isolate-pack-cache) |
 | **Block Local Pack URLs** | Enable/disable [local URL blocking](#block-local-urls) |
 | **Clear Cache** | Delete all cached server resource packs |
-| **Spoof Translation Keys** | Enable/disable [translation exploit protection](#translation-exploit-protection) |
+| **Spoof Translation Keys** | Enable/disable [key resolution protection](#translation-exploit-protection) |
 | **Fake Default Keybinds** | Return default vanilla keybind values instead of actual bindings |
-| **Meteor Fix** | Disable Meteor Client's broken translation protection (only shown when Meteor is installed) |
+| **Meteor Fix** | Disable Meteor Client's broken key resolution protection (only shown when Meteor is installed) |
 | **Signing Mode** | Configure [chat signing](#chat-signing-control) behavior:<br/>• **OFF**: Strip signatures (maximum privacy)<br/>• **ON**: Default Minecraft behavior<br/>• **AUTO**: Only sign when required (recommended) |
 | **Disable Telemetry** | Enable/disable [telemetry blocking](#telemetry-blocking) |
 
@@ -105,7 +105,7 @@ Use `/opsec` in-game to access debug information:
 
 ### Understanding Alerts
 
-- **Translation Exploit Detected**: Server is probing your keybind
+- **Key Resolution Exploit Detected**: Server is probing your keybind
 - **Resource Pack Fingerprinting Detected**: Suspicious resource pack URL detected
 - **Local URL Scan Detected**: Resource pack attempted to scan local network 
 
@@ -148,7 +148,7 @@ OpSec detects resource pack URLs pointing to local/private IP addresses and redi
 
 ---
 
-### Translation Exploit Protection
+### Key Resolution Protection
 
 Servers can send translatable text in signs and anvils containing keys like `key.attack` or `key.hide_icons` to probe which keys you have bound or mod UI elements your client can resolve. This can reveal the client's installed mods.
 
@@ -215,7 +215,7 @@ What a Vanilla response would actaully be:
 ```
 'key.meteor-client.open-gui' '⟦FALLBACK⟧'→'⟦FALLBACK⟧'
 ```
-OpSec's bandaid fix for Meteor is to blacklist the `AbstractSignEditScreenMixin` Mixin to disable Meteor's broken translation protection. Allowing OpSec's protection to take over, which already handle fallbacks correctly to match the Vanilla response.
+OpSec's bandaid fix for Meteor is to blacklist the `AbstractSignEditScreenMixin` Mixin to disable Meteor's broken key resolution protection. Allowing OpSec's protection to take over, which already handle fallbacks correctly to match the Vanilla response.
 
 <img width="901" height="107" alt="image" src="https://github.com/user-attachments/assets/506b9c73-6747-40f8-9a56-52c0353034b4" />
 
@@ -236,7 +236,7 @@ When enabled, OpSec spoofs mod channels that are registered with the server base
 
 ### Mod Whitelist
 
-Some mods require server communication to function properly (e.g., VoiceChat, Xaero's Minimap waypoint sharing). The whitelist allows you to exempt specific mods from channel spoofing and translation exploit protection.
+Some mods require server communication to function properly (e.g., VoiceChat, Xaero's Minimap waypoint sharing). The whitelist allows you to exempt specific mods from channel spoofing and key resolution protection.
 
 <img width="853" height="478" alt="whitelist settings menu" src="https://github.com/user-attachments/assets/6ae423de-dd98-47c1-a617-f6df747c9293" />
 
@@ -338,7 +338,7 @@ Output JARs are located in `versions/<minecraft_version>/build/libs/`:
 
 ## References
 
-- [ExploitPreventer](https://github.com/NikOverflow/ExploitPreventer) - Local URL blocking and sign translation protection
+- [ExploitPreventer](https://github.com/NikOverflow/ExploitPreventer) - Local URL blocking and sign key resolution protection
 - [LiquidBounce](https://github.com/CCBlueX/LiquidBounce/blob/nextgen/src/main/java/net/ccbluex/liquidbounce/injection/mixins/minecraft/util/MixinDownloadQueue.java) - Cached server resource pack isolation
 - [Meteor Client](https://github.com/MeteorDevelopment/meteor-client) - Session token sign in
 - [No Chat Reports](https://modrinth.com/mod/no-chat-reports) - Chat signing control and telemetry blocking

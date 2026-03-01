@@ -12,7 +12,7 @@
 		"sources": "https://github.com/aurickk/OpSec",
 		"issues": "https://github.com/aurickk/OpSec/issues"
 	},
-	"license": "MIT",
+	"license": "GPL-3.0-only",
 	"icon": "assets/opsec/icon.png",
 	"environment": "client",
 	"entrypoints": {

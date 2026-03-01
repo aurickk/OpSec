@@ -6,7 +6,7 @@ import org.slf4j.LoggerFactory;
 
 /**
  * Shared constants and utilities for OpSec - Privacy protection for Minecraft.
- * Protects against client fingerprinting, tracking, and translation exploits.
+ * Protects against client fingerprinting, tracking, and key resolution exploits.
  * 
  * Note: This is a client-only mod. The actual initialization happens in
  * {@link aurick.opsec.mod.OpsecClient#onInitializeClient()}.

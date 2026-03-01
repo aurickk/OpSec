@@ -17,7 +17,7 @@
   "opsec.option.isolatePackCache": "Isolate Pack Cache",
   "opsec.option.blockLocalPackUrls": "Block Local URLs",
   "opsec.option.clearCache": "Clear Cached Resource Packs",
-  "opsec.option.blockTranslationExploit": "Translation Protection",
+  "opsec.option.blockTranslationExploit": "Key Resolution Protection",
   "opsec.option.translationExploitMode": "Protection Mode",
   "opsec.option.signingMode": "Disable Chat Signing",
   "opsec.option.disableTelemetry": "Disable Telemetry",

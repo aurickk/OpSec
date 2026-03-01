@@ -9,10 +9,10 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * Centralized handler for translation key and keybind protection alerts.
- * 
+ * Centralized handler for key resolution protection alerts.
+ *
  * Alert format:
- * ⛔ [OpSec] Translation exploit detected!     (header with cooldown)
+ * ⛔ [OpSec] Key resolution exploit detected!     (header with cooldown)
  * [key.meteor-client.open-gui] 'Right Shift'→'key.meteor-client.open-gui'  (detail, deduped)
  * [key.hotbar.6] 'Q'→'6'
  * 
@@ -59,7 +59,7 @@ public class TranslationProtectionHandler {
             lastClearTime = now;
         }
         
-        // Header with cooldown: ⛔ [OpSec] Translation exploit detected!
+        // Header with cooldown: ⛔ [OpSec] Key resolution exploit detected!
         if (now - lastHeaderTime >= HEADER_COOLDOWN_MS) {
             lastHeaderTime = now;
             
@@ -68,15 +68,15 @@ public class TranslationProtectionHandler {
             
             // Alert without source (source is in logs)
             if (OpsecConfig.getInstance().shouldShowAlerts()) {
-                PrivacyLogger.alert(PrivacyLogger.AlertType.DANGER, "Translation exploit detected!");
+                PrivacyLogger.alert(PrivacyLogger.AlertType.DANGER, "Key resolution exploit detected!");
             }
             
             // Toast notification (separate from chat alerts)
-            PrivacyLogger.toast(PrivacyLogger.AlertType.DANGER, "Translation Exploit Detected");
+            PrivacyLogger.toast(PrivacyLogger.AlertType.DANGER, "Key Resolution Exploit Detected");
             
             // Log with source
             if (OpsecConfig.getInstance().isLogDetections()) {
-                Opsec.LOGGER.info("[OpSec] Translation exploit detected via {}", 
+                Opsec.LOGGER.info("[OpSec] Key resolution exploit detected via {}", 
                     source.getDisplayName().toLowerCase());
             }
         }

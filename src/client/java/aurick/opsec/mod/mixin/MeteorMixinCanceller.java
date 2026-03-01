@@ -47,7 +47,7 @@ public class MeteorMixinCanceller implements MixinCanceller {
         appliedMeteorFix = meteorPresent && meteorFixEnabled;
         
         if (meteorPresent && meteorFixEnabled) {
-            LOGGER.info("[OpSec] Meteor Client detected - Meteor Fix enabled, will disable Meteor's broken translation protection");
+            LOGGER.info("[OpSec] Meteor Client detected - Meteor Fix enabled, will disable Meteor's broken key resolution protection");
         } else if (meteorPresent) {
             LOGGER.warn("[OpSec] Meteor Client detected - Meteor Fix is DISABLED. Meteor's translation protection may expose your mods to servers!");
         }
@@ -102,7 +102,7 @@ public class MeteorMixinCanceller implements MixinCanceller {
                 
                 // If translation protection is disabled, Meteor Fix is also disabled
                 if (settings.has("translationProtection") && !settings.get("translationProtection").getAsBoolean()) {
-                    LOGGER.info("[OpSec] Translation protection is disabled, Meteor Fix will not apply");
+                    LOGGER.info("[OpSec] Key resolution protection is disabled, Meteor Fix will not apply");
                     return false;
                 }
                 

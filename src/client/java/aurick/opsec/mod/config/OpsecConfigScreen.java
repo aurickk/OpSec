@@ -228,8 +228,8 @@ public class OpsecConfigScreen extends Screen {
           .tooltip(Tooltip.create(Component.literal("Deletes all cached server resource packs\nAlso resets download queue state")))
           .build());
         
-        // Translation Exploit Protection Section
-        widgets.add(createSectionHeader("\u00A7f\u00A7lTranslation Exploit Protection"));
+        // Key Resolution Protection Section
+        widgets.add(createSectionHeader("\u00A7f\u00A7lKey Resolution Protection"));
         
         widgets.add(cycleBuilder(COLORED_BOOL_TO_TEXT, List.of(Boolean.TRUE, Boolean.FALSE), settings.isTranslationProtectionEnabled())
             .withTooltip(v -> Tooltip.create(Component.literal("Mask translation key values to appear as default vanilla client")))
@@ -739,6 +739,103 @@ public class OpsecConfigScreen extends Screen {
         }
     }
     
+    // Custom widget for toggle all on/off row in whitelist
+    private static class ToggleAllRowWidget extends AbstractWidget {
+        private final Button enableAllButton;
+        private final Button disableAllButton;
+        private final Runnable onEnableAll;
+        private final Runnable onDisableAll;
+        //? if >=1.21.9 {
+        /*private boolean wasMouseDown = false;*/
+        //?}
+
+        public ToggleAllRowWidget(Runnable onEnableAll, Runnable onDisableAll) {
+            super(0, 0, 210, 20, Component.empty());
+            this.onEnableAll = onEnableAll;
+            this.onDisableAll = onDisableAll;
+
+            this.enableAllButton = Button.builder(Component.literal("Enable All"), btn -> onEnableAll.run())
+                    .size(100, 20)
+                    .tooltip(Tooltip.create(Component.literal("Whitelist all installed mods")))
+                    .build();
+
+            this.disableAllButton = Button.builder(Component.literal("Disable All"), btn -> onDisableAll.run())
+                    .size(100, 20)
+                    .tooltip(Tooltip.create(Component.literal("Remove all mods from whitelist")))
+                    .build();
+        }
+
+        @Override
+        public void setX(int x) {
+            super.setX(x);
+            updateButtonPositions();
+        }
+
+        @Override
+        public void setY(int y) {
+            super.setY(y);
+            updateButtonPositions();
+        }
+
+        private void updateButtonPositions() {
+            int totalWidth = 100 + 5 + 100;
+            int startX = getX() + (getWidth() - totalWidth) / 2;
+            enableAllButton.setX(startX);
+            enableAllButton.setY(getY());
+            disableAllButton.setX(startX + 100 + 5);
+            disableAllButton.setY(getY());
+        }
+
+        @Override
+        protected void renderWidget(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
+            updateButtonPositions();
+            enableAllButton.render(graphics, mouseX, mouseY, partialTick);
+            disableAllButton.render(graphics, mouseX, mouseY, partialTick);
+
+            //? if >=1.21.9 {
+            /*// Poll mouse state for click detection since mouseClicked API changed
+            long windowHandle = org.lwjgl.glfw.GLFW.glfwGetCurrentContext();
+            boolean isMouseDown = org.lwjgl.glfw.GLFW.glfwGetMouseButton(windowHandle, org.lwjgl.glfw.GLFW.GLFW_MOUSE_BUTTON_LEFT) == org.lwjgl.glfw.GLFW.GLFW_PRESS;
+
+            if (!isMouseDown && wasMouseDown) {
+                // Mouse was just released
+                if (enableAllButton.isMouseOver(mouseX, mouseY)) {
+                    enableAllButton.playDownSound(Minecraft.getInstance().getSoundManager());
+                    onEnableAll.run();
+                } else if (disableAllButton.isMouseOver(mouseX, mouseY)) {
+                    disableAllButton.playDownSound(Minecraft.getInstance().getSoundManager());
+                    onDisableAll.run();
+                }
+            }
+            wasMouseDown = isMouseDown;*/
+            //?}
+        }
+
+        // Forward mouse clicks to child buttons
+        //? if <1.21.9 {
+        @Override
+        public boolean mouseClicked(double mouseX, double mouseY, int button) {
+            if (button == 0) { // Left click only
+                if (enableAllButton.isMouseOver(mouseX, mouseY)) {
+                    enableAllButton.playDownSound(Minecraft.getInstance().getSoundManager());
+                    onEnableAll.run();
+                    return true;
+                } else if (disableAllButton.isMouseOver(mouseX, mouseY)) {
+                    disableAllButton.playDownSound(Minecraft.getInstance().getSoundManager());
+                    onDisableAll.run();
+                    return true;
+                }
+            }
+            return false;
+        }
+        //?}
+
+        @Override
+        protected void updateWidgetNarration(NarrationElementOutput output) {
+            enableAllButton.updateNarration(output);
+        }
+    }
+
     private Tab createWhitelistTab(SpoofSettings settings) {
         List<AbstractWidget> widgets = new ArrayList<>();
         
@@ -759,9 +856,26 @@ public class OpsecConfigScreen extends Screen {
         if (settings.isWhitelistEnabled()) {
             // Mod list header
             widgets.add(createSectionHeader("\u00A7f\u00A7lInstalled Mods"));
-            
+
+            // Toggle all on/off buttons
+            List<ModContainer> whitelistableMods = getWhitelistableMods();
+            widgets.add(new ToggleAllRowWidget(
+                () -> {
+                    for (ModContainer m : whitelistableMods) {
+                        settings.getWhitelistedMods().add(m.getMetadata().getId());
+                    }
+                    config.save();
+                    refreshScreen();
+                },
+                () -> {
+                    settings.getWhitelistedMods().clear();
+                    config.save();
+                    refreshScreen();
+                }
+            ));
+
             // Create mod entries
-            for (ModContainer mod : getWhitelistableMods()) {
+            for (ModContainer mod : whitelistableMods) {
                 String modId = mod.getMetadata().getId();
                 String modName = mod.getMetadata().getName();
                 

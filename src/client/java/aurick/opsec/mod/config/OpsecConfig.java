@@ -162,7 +162,7 @@ public class OpsecConfig {
     public boolean shouldIsolatePackCache() { return settings.isIsolatePackCache(); }
     public boolean shouldBlockLocalPackUrls() { return settings.isBlockLocalPackUrls(); }
     
-    // Translation protection
+    // Key resolution protection
     public boolean isTranslationProtectionEnabled() { return settings.isTranslationProtectionEnabled(); }
     public boolean isMeteorFix() { return settings.isMeteorFix(); }
     

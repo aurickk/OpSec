@@ -14,14 +14,15 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 /**
  * Adds an OpSec settings button to the multiplayer server list screen.
- * Button is positioned at the top-right of the footer area.
+ * Button is positioned in the header area, aligned with the server list's left edge.
  */
 @Mixin(JoinMultiplayerScreen.class)
 public abstract class JoinMultiplayerScreenMixin extends Screen {
     
-    @Unique private static final int BUTTON_WIDTH = 70;
     @Unique private static final int BUTTON_HEIGHT = 20;
-    @Unique private static final int MARGIN = 7;
+    @Unique private static final int BUTTON_PADDING = 8;
+    /** Half of ServerSelectionList.getRowWidth() (305), used to align with the list's left edge. */
+    @Unique private static final int SERVER_LIST_HALF_ROW_WIDTH = 152;
     
     @Unique private Button opsec$settingsButton;
     
@@ -56,9 +57,10 @@ public abstract class JoinMultiplayerScreenMixin extends Screen {
     @Unique
     private void opsec$updateButtonPosition() {
         if (this.opsec$settingsButton != null) {
-            this.opsec$settingsButton.setX(this.width - BUTTON_WIDTH - MARGIN);
-            this.opsec$settingsButton.setY(this.height - 56);
-            this.opsec$settingsButton.setWidth(BUTTON_WIDTH);
+            int textWidth = this.font.width(this.opsec$settingsButton.getMessage());
+            this.opsec$settingsButton.setX(this.width / 2 - SERVER_LIST_HALF_ROW_WIDTH);
+            this.opsec$settingsButton.setY(6);
+            this.opsec$settingsButton.setWidth(textWidth + BUTTON_PADDING);
             this.opsec$settingsButton.setHeight(BUTTON_HEIGHT);
         }
     }

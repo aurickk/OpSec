@@ -29,7 +29,7 @@ public class SpoofSettings {
     // Brand spoofing
     private boolean spoofBrand = true;
     private String customBrand = VANILLA;
-    private boolean spoofChannels = true;
+    private boolean spoofChannels = false;
     
     // Resource pack protection
     private boolean isolatePackCache = true;

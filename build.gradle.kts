@@ -17,11 +17,11 @@ base {
 
 // Use "+" separator instead of default "-" for version
 tasks.named<Jar>("jar") {
-    archiveFileName.set("${base.archivesName.get()}+${project.version}.jar")
+    archiveFileName.set("${base.archivesName.get()}+v${project.version}.jar")
 }
 
 tasks.named("remapJar") {
-    (this as org.gradle.jvm.tasks.Jar).archiveFileName.set("${base.archivesName.get()}+${project.version}.jar")
+    (this as org.gradle.jvm.tasks.Jar).archiveFileName.set("${base.archivesName.get()}+v${project.version}.jar")
 }
 
 loom {

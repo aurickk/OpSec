@@ -36,7 +36,7 @@ public class HttpUtilMixin {
     @WrapOperation(
         method = "downloadFile",
         at = @At(value = "INVOKE", target = "Ljava/net/HttpURLConnection;getInputStream()Ljava/io/InputStream;"),
-        require = 0
+        require = 1
     )
     private static InputStream opsec$checkRedirects(
             HttpURLConnection instance, 
@@ -102,10 +102,6 @@ public class HttpUtilMixin {
             redirectCount++;
             
             Opsec.LOGGER.debug("[OpSec] Following redirect #{}: {}", redirectCount, redirectUrl);
-        }
-        
-        if (redirectCount >= maxRedirects) {
-            throw new ProtocolException("Server redirected too many times (" + maxRedirects + ")");
         }
         
         httpURLConnection.set(instance);

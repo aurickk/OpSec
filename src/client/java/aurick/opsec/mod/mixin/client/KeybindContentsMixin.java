@@ -51,8 +51,7 @@ public class KeybindContentsMixin {
      */
     @WrapOperation(
         method = "getNestedComponent",
-        at = @At(value = "INVOKE", target = "Ljava/util/function/Supplier;get()Ljava/lang/Object;"),
-        require = 0
+        at = @At(value = "INVOKE", target = "Ljava/util/function/Supplier;get()Ljava/lang/Object;")
     )
     private Object opsec$interceptKeybind(Supplier<?> supplier, Operation<Object> original) {
         // Not in exploitable context - allow normal resolution (no detection needed)

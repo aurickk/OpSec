@@ -11,9 +11,12 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 /**
  * Sets exploit context at the very start of anvil screen construction.
  * Uses static injection to run BEFORE super() and any content processing.
- * 
+ *
  * This ensures keybind/translation resolution that happens during
  * screen initialization is already protected.
+ *
+ * Context cleanup is handled by {@link MinecraftMixin#opsec$onSetScreen}
+ * with deferred scheduling to avoid premature cleanup during packet serialization.
  */
 @Mixin(AnvilScreen.class)
 public class AnvilScreenMixin {
@@ -22,17 +25,9 @@ public class AnvilScreenMixin {
      * Enter ANVIL context at constructor HEAD (before super()).
      * Must be static for injection before super() invocation.
      */
-    @Inject(method = "<init>", at = @At("HEAD"), require = 0)
+    @Inject(method = "<init>", at = @At("HEAD"))
     private static void opsec$enterAnvilContext(CallbackInfo ci) {
         ExploitContext.enterContext(PrivacyLogger.ExploitSource.ANVIL);
-    }
-
-    /**
-     * Exit context when screen closes (defense-in-depth alongside MinecraftMixin fallback).
-     */
-    @Inject(method = "onClose", at = @At("HEAD"), require = 0)
-    private void opsec$exitAnvilContext(CallbackInfo ci) {
-        ExploitContext.exitContext();
     }
 }
 

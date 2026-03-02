@@ -8,6 +8,7 @@ import aurick.opsec.mod.config.SpoofSettings;
 import aurick.opsec.mod.detection.ExploitContext;
 import aurick.opsec.mod.protection.ForgeTranslations;
 import aurick.opsec.mod.protection.TranslationProtectionHandler;
+import aurick.opsec.mod.protection.TranslationProtectionHandler.InterceptionType;
 import aurick.opsec.mod.tracking.ModRegistry;
 import net.minecraft.locale.Language;
 import net.minecraft.network.chat.contents.TranslatableContents;
@@ -115,7 +116,10 @@ public abstract class TranslatableContentsMixin {
             return OPSEC_ALLOW_ORIGINAL;
         }
 
-        // Always allow vanilla keys
+        // In exploit context — always notify header (cooldown prevents spam)
+        TranslationProtectionHandler.notifyExploitDetected();
+
+        // Always allow vanilla keys (no value change, no detail)
         if (ModRegistry.isVanillaTranslationKey(translationKey)) {
             return OPSEC_ALLOW_ORIGINAL;
         }
@@ -128,11 +132,9 @@ public abstract class TranslatableContentsMixin {
         OpsecConfig config = OpsecConfig.getInstance();
         SpoofSettings settings = config.getSettings();
 
-        // If protection is disabled, still detect/log but allow resolution
+        // If protection is disabled, still log but allow resolution
         if (!config.isTranslationProtectionEnabled()) {
-            TranslationProtectionHandler.notifyExploitDetected();
-            // We can't call original here, so log with what we know and allow through
-            TranslationProtectionHandler.logDetection(translationKey,
+            TranslationProtectionHandler.logDetection(InterceptionType.TRANSLATION, translationKey,
                     opsec$getRealTranslation(translationKey, defaultValue),
                     opsec$getRealTranslation(translationKey, defaultValue));
             return OPSEC_ALLOW_ORIGINAL;
@@ -140,7 +142,6 @@ public abstract class TranslatableContentsMixin {
 
         // VANILLA MODE: Block all mod keys
         if (settings.isVanillaMode()) {
-            TranslationProtectionHandler.notifyExploitDetected();
             opsec$logBlocked(translationKey, defaultValue);
             return defaultValue;
         }
@@ -148,11 +149,8 @@ public abstract class TranslatableContentsMixin {
         // FABRIC MODE: Allow whitelisted mod keys, block others
         if (settings.isFabricMode()) {
             if (ModRegistry.isWhitelistedTranslationKey(translationKey)) {
-                // Still alert (server is probing) but allow since whitelisted
-                TranslationProtectionHandler.notifyExploitDetected();
                 return OPSEC_ALLOW_ORIGINAL;
             }
-            TranslationProtectionHandler.notifyExploitDetected();
             opsec$logBlocked(translationKey, defaultValue);
             return defaultValue;
         }
@@ -161,22 +159,17 @@ public abstract class TranslatableContentsMixin {
         if (settings.isForgeMode()) {
             String forgeValue = ForgeTranslations.getTranslation(translationKey);
             if (forgeValue != null) {
-                TranslationProtectionHandler.notifyExploitDetected();
                 opsec$logForgeFabrication(translationKey, defaultValue, forgeValue);
                 return forgeValue;
             }
-            // Block non-Forge mod keys
-            TranslationProtectionHandler.notifyExploitDetected();
             opsec$logBlocked(translationKey, defaultValue);
             return defaultValue;
         }
 
         // Fallback: Use whitelist behavior
         if (ModRegistry.isWhitelistedTranslationKey(translationKey)) {
-            TranslationProtectionHandler.notifyExploitDetected();
             return OPSEC_ALLOW_ORIGINAL;
         }
-        TranslationProtectionHandler.notifyExploitDetected();
         opsec$logBlocked(translationKey, defaultValue);
         return defaultValue;
     }
@@ -190,9 +183,9 @@ public abstract class TranslatableContentsMixin {
         String originalValue = opsec$getRealTranslation(translationKey, defaultValue);
 
         if (!originalValue.equals(defaultValue)) {
-            TranslationProtectionHandler.sendDetail(translationKey, originalValue, defaultValue);
+            TranslationProtectionHandler.sendDetail(InterceptionType.TRANSLATION, translationKey, originalValue, defaultValue);
         }
-        TranslationProtectionHandler.logDetection(translationKey, originalValue, defaultValue);
+        TranslationProtectionHandler.logDetection(InterceptionType.TRANSLATION, translationKey, originalValue, defaultValue);
     }
 
     /**
@@ -200,8 +193,8 @@ public abstract class TranslatableContentsMixin {
      */
     @Unique
     private void opsec$logForgeFabrication(String translationKey, String defaultValue, String fabricatedValue) {
-        TranslationProtectionHandler.sendDetail(translationKey, defaultValue, fabricatedValue);
-        TranslationProtectionHandler.logDetection(translationKey, defaultValue, fabricatedValue);
+        TranslationProtectionHandler.sendDetail(InterceptionType.TRANSLATION, translationKey, defaultValue, fabricatedValue);
+        TranslationProtectionHandler.logDetection(InterceptionType.TRANSLATION, translationKey, defaultValue, fabricatedValue);
     }
 
     /**

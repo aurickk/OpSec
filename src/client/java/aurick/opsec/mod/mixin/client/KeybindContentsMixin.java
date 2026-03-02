@@ -7,6 +7,7 @@ import aurick.opsec.mod.config.SpoofSettings;
 import aurick.opsec.mod.detection.ExploitContext;
 import aurick.opsec.mod.protection.ForgeTranslations;
 import aurick.opsec.mod.protection.TranslationProtectionHandler;
+import aurick.opsec.mod.protection.TranslationProtectionHandler.InterceptionType;
 import aurick.opsec.mod.tracking.ModRegistry;
 import aurick.opsec.mod.util.KeybindDefaults;
 import net.minecraft.network.chat.Component;
@@ -58,48 +59,43 @@ public class KeybindContentsMixin {
         if (!ExploitContext.isInExploitableContext()) {
             return original.call(supplier);
         }
-        
-        // Server resource pack keybind - allow (prevents anti-spoof detection)
-        // Check this BEFORE triggering detection alerts
+
+        // In exploit context — always notify header (cooldown prevents spam)
+        TranslationProtectionHandler.notifyExploitDetected();
+
+        // Server resource pack keybind - allow (no value change, no detail)
         if (ModRegistry.isServerPackTranslationKey(name)) {
             return original.call(supplier);
         }
-        
+
         OpsecConfig config = OpsecConfig.getInstance();
         SpoofSettings settings = config.getSettings();
-        
+
         // FORGE MODE: Fabricate known Forge keys sent through keybind mechanism
         if (settings.isForgeMode() && ForgeTranslations.isForgeKey(name)) {
             String fabricatedValue = ForgeTranslations.getTranslation(name);
             if (fabricatedValue != null) {
-                TranslationProtectionHandler.notifyExploitDetected();
-                // Log: 'rawKey' → 'fabricatedValue'
-                TranslationProtectionHandler.sendDetail(name, name, fabricatedValue);
-                TranslationProtectionHandler.logDetection(name, name, fabricatedValue);
+                TranslationProtectionHandler.sendDetail(InterceptionType.KEYBIND, name, name, fabricatedValue);
+                TranslationProtectionHandler.logDetection(InterceptionType.KEYBIND, name, name, fabricatedValue);
                 return Component.literal(fabricatedValue);
             }
         }
-        
-        // Whitelisted mod keybind - allow but still show header alert
+
+        // Whitelisted mod keybind - allow (no value change, no detail)
         if (ModRegistry.isWhitelistedKeybind(name)) {
-            // Still alert (server is probing) but allow resolution since whitelisted
-            TranslationProtectionHandler.notifyExploitDetected();
             return original.call(supplier);
         }
-        
-        // In exploitable context - notify detection (header alert)
-        TranslationProtectionHandler.notifyExploitDetected();
-        
+
         // Get original value
         Object originalResult = original.call(supplier);
         String originalValue = originalResult instanceof Component c ? c.getString() : originalResult.toString();
-        
-        // If protection is disabled, allow normal resolution but still log detection
-        if (!OpsecConfig.getInstance().isTranslationProtectionEnabled()) {
-            TranslationProtectionHandler.logDetection(name, originalValue, originalValue);
+
+        // If protection is disabled, allow normal resolution but still log
+        if (!config.isTranslationProtectionEnabled()) {
+            TranslationProtectionHandler.logDetection(InterceptionType.KEYBIND, name, originalValue, originalValue);
             return originalResult;
         }
-        
+
         // Protection enabled - determine spoofed value
         String spoofedValue;
         if (KeybindDefaults.hasDefault(name)) {
@@ -107,23 +103,23 @@ public class KeybindContentsMixin {
             if (settings.isFakeDefaultKeybinds()) {
                 spoofedValue = KeybindDefaults.getDefault(name);
             } else {
-                // Fake defaults disabled - allow real value but still log detection
-                TranslationProtectionHandler.logDetection(name, originalValue, originalValue);
+                // Fake defaults disabled - allow real value but still log
+                TranslationProtectionHandler.logDetection(InterceptionType.KEYBIND, name, originalValue, originalValue);
                 return originalResult;
             }
         } else {
             // Mod keybind or unknown - return raw key name
             spoofedValue = name;
         }
-        
-        // Send detail alert if value changed
+
+        // Send detail alert only if value was actually changed
         if (!originalValue.equals(spoofedValue)) {
-            TranslationProtectionHandler.sendDetail(name, originalValue, spoofedValue);
+            TranslationProtectionHandler.sendDetail(InterceptionType.KEYBIND, name, originalValue, spoofedValue);
         }
-        
+
         // Always log detection (even if value unchanged)
-        TranslationProtectionHandler.logDetection(name, originalValue, spoofedValue);
-        
+        TranslationProtectionHandler.logDetection(InterceptionType.KEYBIND, name, originalValue, spoofedValue);
+
         return Component.literal(spoofedValue);
     }
 }

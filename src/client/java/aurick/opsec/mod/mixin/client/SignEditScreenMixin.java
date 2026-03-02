@@ -2,6 +2,7 @@ package aurick.opsec.mod.mixin.client;
 
 import aurick.opsec.mod.PrivacyLogger;
 import aurick.opsec.mod.detection.ExploitContext;
+import aurick.opsec.mod.protection.TranslationProtectionHandler;
 import net.minecraft.client.gui.screens.inventory.AbstractSignEditScreen;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -29,6 +30,7 @@ public class SignEditScreenMixin {
      */
     @Inject(method = "<init>", at = @At("HEAD"))
     private static void opsec$enterSignContext(CallbackInfo ci) {
+        TranslationProtectionHandler.clearDedup();
         ExploitContext.enterContext(PrivacyLogger.ExploitSource.SIGN);
     }
 }

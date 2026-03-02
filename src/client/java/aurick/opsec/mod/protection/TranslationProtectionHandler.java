@@ -5,6 +5,11 @@ import aurick.opsec.mod.PrivacyLogger;
 import aurick.opsec.mod.config.OpsecConfig;
 import aurick.opsec.mod.detection.ExploitContext;
 
+import aurick.opsec.mod.config.SpoofSettings;
+import net.minecraft.ChatFormatting;
+import net.minecraft.client.Minecraft;
+import net.minecraft.network.chat.Component;
+
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -80,8 +85,21 @@ public class TranslationProtectionHandler {
             
             // Log with source
             if (OpsecConfig.getInstance().isLogDetections()) {
-                Opsec.LOGGER.info("[OpSec] Key resolution exploit detected via {}", 
+                Opsec.LOGGER.info("[OpSec] Key resolution exploit detected via {}",
                     source.getDisplayName().toLowerCase());
+            }
+
+            // One-time hint about disabling alerts
+            SpoofSettings settings = OpsecConfig.getInstance().getSettings();
+            if (!settings.isAlertHintShown()) {
+                settings.setAlertHintShown(true);
+                OpsecConfig.getInstance().save();
+                Minecraft mc = Minecraft.getInstance();
+                if (mc.player != null) {
+                    mc.player.displayClientMessage(
+                        Component.literal("Chat and toast alerts can be disabled in OpSec > Misc settings.")
+                            .withStyle(ChatFormatting.DARK_GRAY), false);
+                }
             }
         }
     }

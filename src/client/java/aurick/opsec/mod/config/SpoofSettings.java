@@ -59,6 +59,9 @@ public class SpoofSettings {
 
     // Update notification
     private boolean dismissUpdateNotification = false;
+
+    // One-time hints (persisted, never shown again)
+    private boolean alertHintShown = false;
     
     // Whitelist settings
     private boolean whitelistEnabled = false;
@@ -143,6 +146,10 @@ public class SpoofSettings {
         this.buttonY = y;
     }
     
+    // Alert hint methods
+    public boolean isAlertHintShown() { return alertHintShown; }
+    public void setAlertHintShown(boolean shown) { this.alertHintShown = shown; }
+
     // Whitelist methods
     public boolean isWhitelistEnabled() { return whitelistEnabled; }
     public void setWhitelistEnabled(boolean enabled) { this.whitelistEnabled = enabled; }
@@ -211,6 +218,7 @@ public class SpoofSettings {
         json.addProperty("buttonX", buttonX);
         json.addProperty("buttonY", buttonY);
         json.addProperty("dismissUpdateNotification", dismissUpdateNotification);
+        json.addProperty("alertHintShown", alertHintShown);
 
         // Whitelist settings
         json.addProperty("whitelistEnabled", whitelistEnabled);
@@ -258,6 +266,7 @@ public class SpoofSettings {
         if (json.has("buttonX")) s.buttonX = json.get("buttonX").getAsInt();
         if (json.has("buttonY")) s.buttonY = json.get("buttonY").getAsInt();
         if (json.has("dismissUpdateNotification")) s.dismissUpdateNotification = json.get("dismissUpdateNotification").getAsBoolean();
+        if (json.has("alertHintShown")) s.alertHintShown = json.get("alertHintShown").getAsBoolean();
 
         // Whitelist settings
         if (json.has("whitelistEnabled")) s.whitelistEnabled = json.get("whitelistEnabled").getAsBoolean();
@@ -289,6 +298,7 @@ public class SpoofSettings {
         this.buttonX = other.buttonX;
         this.buttonY = other.buttonY;
         this.dismissUpdateNotification = other.dismissUpdateNotification;
+        this.alertHintShown = other.alertHintShown;
         this.whitelistEnabled = other.whitelistEnabled;
         this.whitelistedMods = new HashSet<>(other.whitelistedMods);
     }

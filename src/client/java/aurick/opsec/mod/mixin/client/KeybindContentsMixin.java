@@ -2,6 +2,7 @@ package aurick.opsec.mod.mixin.client;
 
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
+import aurick.opsec.mod.Opsec;
 import aurick.opsec.mod.config.OpsecConfig;
 import aurick.opsec.mod.config.SpoofSettings;
 import aurick.opsec.mod.detection.ExploitContext;
@@ -10,11 +11,13 @@ import aurick.opsec.mod.protection.TranslationProtectionHandler;
 import aurick.opsec.mod.protection.TranslationProtectionHandler.InterceptionType;
 import aurick.opsec.mod.tracking.ModRegistry;
 import aurick.opsec.mod.util.KeybindDefaults;
+import net.minecraft.client.KeyMapping;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.contents.KeybindContents;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 
 import java.util.function.Supplier;
@@ -46,24 +49,21 @@ public class KeybindContentsMixin {
     private String name;
     
     /**
-     * Intercept keybind resolution with context-aware protection.
-     * Detection and alerts work even when protection is disabled.
-     * Protects ALL keybinds regardless of naming convention.
+     * Context-aware keybind interception. Never resolves what we're going to block —
+     * only calls original.call() for passthrough cases. Blocked keybinds read the
+     * real value through {@link #opsec$readKeybindDisplay()} for logging only.
      */
     @WrapOperation(
         method = "getNestedComponent",
         at = @At(value = "INVOKE", target = "Ljava/util/function/Supplier;get()Ljava/lang/Object;")
     )
     private Object opsec$interceptKeybind(Supplier<?> supplier, Operation<Object> original) {
-        // Not in exploitable context - allow normal resolution (no detection needed)
         if (!ExploitContext.isInExploitableContext()) {
             return original.call(supplier);
         }
 
-        // In exploit context — always notify header (cooldown prevents spam)
         TranslationProtectionHandler.notifyExploitDetected();
 
-        // Server resource pack keybind - allow (no value change, no detail)
         if (ModRegistry.isServerPackTranslationKey(name)) {
             return original.call(supplier);
         }
@@ -71,7 +71,6 @@ public class KeybindContentsMixin {
         OpsecConfig config = OpsecConfig.getInstance();
         SpoofSettings settings = config.getSettings();
 
-        // FORGE MODE: Fabricate known Forge keys sent through keybind mechanism
         if (settings.isForgeMode() && ForgeTranslations.isForgeKey(name)) {
             String fabricatedValue = ForgeTranslations.getTranslation(name);
             if (fabricatedValue != null) {
@@ -81,45 +80,65 @@ public class KeybindContentsMixin {
             }
         }
 
-        // Whitelisted mod keybind - allow (no value change, no detail)
         if (ModRegistry.isWhitelistedKeybind(name)) {
             return original.call(supplier);
         }
 
-        // Get original value
-        Object originalResult = original.call(supplier);
-        String originalValue = originalResult instanceof Component c ? c.getString() : originalResult.toString();
-
-        // If protection is disabled, allow normal resolution but still log
+        // Protection disabled — passthrough with logging
         if (!config.isTranslationProtectionEnabled()) {
+            Object originalResult = original.call(supplier);
+            String originalValue = originalResult instanceof Component c ? c.getString() : originalResult.toString();
             TranslationProtectionHandler.logDetection(InterceptionType.KEYBIND, name, originalValue, originalValue);
             return originalResult;
         }
 
-        // Protection enabled - determine spoofed value
-        String spoofedValue;
+        // Vanilla keybind
         if (KeybindDefaults.hasDefault(name)) {
-            // Vanilla keybind - check if we should fake defaults
-            if (settings.isFakeDefaultKeybinds()) {
-                spoofedValue = KeybindDefaults.getDefault(name);
-            } else {
-                // Fake defaults disabled - allow real value but still log
+            if (!settings.isFakeDefaultKeybinds()) {
+                Object originalResult = original.call(supplier);
+                String originalValue = originalResult instanceof Component c ? c.getString() : originalResult.toString();
                 TranslationProtectionHandler.logDetection(InterceptionType.KEYBIND, name, originalValue, originalValue);
                 return originalResult;
             }
-        } else {
-            // Mod keybind or unknown - return raw key name
-            spoofedValue = name;
+            String spoofedValue = KeybindDefaults.getDefault(name);
+            opsec$logBlocked(name, spoofedValue);
+            return Component.literal(spoofedValue);
         }
 
-        // Send detail alert only if value was actually changed
-        if (!originalValue.equals(spoofedValue)) {
-            TranslationProtectionHandler.sendDetail(InterceptionType.KEYBIND, name, originalValue, spoofedValue);
+        // Mod/unknown keybind
+        opsec$logBlocked(name, name);
+        return Component.literal(name);
+    }
+
+    /**
+     * Log a blocked keybind. Reads the real value via {@link #opsec$readKeybindDisplay()}
+     * to avoid triggering the Supplier resolution chain.
+     */
+    @Unique
+    private void opsec$logBlocked(String keybindName, String spoofedValue) {
+        String realValue = opsec$readKeybindDisplay();
+
+        if (!realValue.equals(spoofedValue)) {
+            TranslationProtectionHandler.sendDetail(InterceptionType.KEYBIND, keybindName, realValue, spoofedValue);
         }
+        TranslationProtectionHandler.logDetection(InterceptionType.KEYBIND, keybindName, realValue, spoofedValue);
+    }
 
-        // Always log detection (even if value unchanged)
-        TranslationProtectionHandler.logDetection(InterceptionType.KEYBIND, name, originalValue, spoofedValue);
-
-        return Component.literal(spoofedValue);
+    /**
+     * Read the keybind's current display value via {@link KeyMapping#createNameSupplier},
+     * bypassing the Supplier chain in {@code getNestedComponent()}.
+     * Keybind equivalent of TranslatableContentsMixin's {@code opsec$getRealTranslation()}.
+     */
+    @Unique
+    private String opsec$readKeybindDisplay() {
+        try {
+            Component display = KeyMapping.createNameSupplier(name).get();
+            if (display != null) {
+                return display.getString();
+            }
+        } catch (Exception e) {
+            Opsec.LOGGER.debug("[OpSec] Failed to read keybind '{}': {}", name, e.getMessage());
+        }
+        return name;
     }
 }

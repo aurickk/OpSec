@@ -36,8 +36,8 @@ public class ModRegistry {
     /** Vanilla keybinds (always whitelisted) */
     private static final Set<String> vanillaKeybinds = ConcurrentHashMap.newKeySet();
     
-    /** Server resource pack translation keys (session whitelist) */
-    private static final Set<String> serverPackTranslationKeys = ConcurrentHashMap.newKeySet();
+    /** Server resource pack translations: key → value (for safe blocking) */
+    private static final Map<String, String> serverPackTranslations = new ConcurrentHashMap<>();
     
     /** All known translation keys for fast lookup */
     private static final Set<String> allKnownTranslationKeys = ConcurrentHashMap.newKeySet();
@@ -160,12 +160,12 @@ public class ModRegistry {
     }
     
     /**
-     * Record a server resource pack translation key.
+     * Record a server resource pack translation key and its value.
      */
-    public static void recordServerPackTranslationKey(String key) {
+    public static void recordServerPackTranslation(String key, String value) {
         if (key == null) return;
-        
-        serverPackTranslationKeys.add(key);
+
+        serverPackTranslations.put(key, value);
         allKnownTranslationKeys.add(key);
     }
     
@@ -180,7 +180,14 @@ public class ModRegistry {
      * Check if a translation key is from a server resource pack.
      */
     public static boolean isServerPackTranslationKey(String key) {
-        return key != null && serverPackTranslationKeys.contains(key);
+        return key != null && serverPackTranslations.containsKey(key);
+    }
+
+    /**
+     * Get the server resource pack translation value for a key, or null if not present.
+     */
+    public static String getServerPackTranslation(String key) {
+        return key != null ? serverPackTranslations.get(key) : null;
     }
     
     /**
@@ -336,8 +343,8 @@ public class ModRegistry {
      * Clear server pack translation keys. Called on disconnect.
      */
     public static void clearServerPackKeys() {
-        serverPackTranslationKeys.clear();
-        Opsec.LOGGER.debug("[ModRegistry] Cleared server pack translation keys");
+        serverPackTranslations.clear();
+        Opsec.LOGGER.debug("[ModRegistry] Cleared server pack translations");
     }
     
     // ==================== KEYBIND TRACKING ====================
@@ -527,7 +534,7 @@ public class ModRegistry {
     }
     
     public static int getServerPackKeyCount() {
-        return serverPackTranslationKeys.size();
+        return serverPackTranslations.size();
     }
     
     public static int getTranslationKeyCount() {
@@ -544,7 +551,7 @@ public class ModRegistry {
     public static void dumpStats() {
         Opsec.LOGGER.debug("[ModRegistry] Stats: {} vanilla keys, {} server pack keys, {} total keys, {} keybinds",
             vanillaTranslationKeys.size(), 
-            serverPackTranslationKeys.size(),
+            serverPackTranslations.size(),
             allKnownTranslationKeys.size(),
             allKnownKeybinds.size());
         

@@ -57,8 +57,6 @@ public abstract class TranslatableContentsMixin {
 
         // Only invalidate for keys that need protection
         if (ModRegistry.isVanillaTranslationKey(key)) return;
-        if (ModRegistry.isServerPackTranslationKey(key)) return;
-
         this.decomposedWith = null;
     }
 
@@ -124,11 +122,6 @@ public abstract class TranslatableContentsMixin {
             return OPSEC_ALLOW_ORIGINAL;
         }
 
-        // Always allow server resource pack keys
-        if (ModRegistry.isServerPackTranslationKey(translationKey)) {
-            return OPSEC_ALLOW_ORIGINAL;
-        }
-
         OpsecConfig config = OpsecConfig.getInstance();
         SpoofSettings settings = config.getSettings();
 
@@ -142,8 +135,9 @@ public abstract class TranslatableContentsMixin {
 
         // VANILLA MODE: Block all mod keys
         if (settings.isVanillaMode()) {
-            opsec$logBlocked(translationKey, defaultValue);
-            return defaultValue;
+            String blockedValue = opsec$getBlockedValue(translationKey, defaultValue);
+            opsec$logBlocked(translationKey, blockedValue);
+            return blockedValue;
         }
 
         // FABRIC MODE: Allow whitelisted mod keys, block others
@@ -151,8 +145,9 @@ public abstract class TranslatableContentsMixin {
             if (ModRegistry.isWhitelistedTranslationKey(translationKey)) {
                 return OPSEC_ALLOW_ORIGINAL;
             }
-            opsec$logBlocked(translationKey, defaultValue);
-            return defaultValue;
+            String blockedValue = opsec$getBlockedValue(translationKey, defaultValue);
+            opsec$logBlocked(translationKey, blockedValue);
+            return blockedValue;
         }
 
         // FORGE MODE: Fabricate known Forge keys, block others
@@ -162,16 +157,18 @@ public abstract class TranslatableContentsMixin {
                 opsec$logForgeFabrication(translationKey, defaultValue, forgeValue);
                 return forgeValue;
             }
-            opsec$logBlocked(translationKey, defaultValue);
-            return defaultValue;
+            String blockedValue = opsec$getBlockedValue(translationKey, defaultValue);
+            opsec$logBlocked(translationKey, blockedValue);
+            return blockedValue;
         }
 
         // Fallback: Use whitelist behavior
         if (ModRegistry.isWhitelistedTranslationKey(translationKey)) {
             return OPSEC_ALLOW_ORIGINAL;
         }
-        opsec$logBlocked(translationKey, defaultValue);
-        return defaultValue;
+        String blockedValue = opsec$getBlockedValue(translationKey, defaultValue);
+        opsec$logBlocked(translationKey, blockedValue);
+        return blockedValue;
     }
 
     /**
@@ -195,6 +192,17 @@ public abstract class TranslatableContentsMixin {
     private void opsec$logForgeFabrication(String translationKey, String defaultValue, String fabricatedValue) {
         TranslationProtectionHandler.sendDetail(InterceptionType.TRANSLATION, translationKey, defaultValue, fabricatedValue);
         TranslationProtectionHandler.logDetection(InterceptionType.TRANSLATION, translationKey, defaultValue, fabricatedValue);
+    }
+
+    /**
+     * Get the value to return when blocking a key.
+     * If the server resource pack defines a translation for this key, return its value
+     * (matching what a vanilla client without mods would see). Otherwise return the default.
+     */
+    @Unique
+    private String opsec$getBlockedValue(String translationKey, String defaultValue) {
+        String serverPackValue = ModRegistry.getServerPackTranslation(translationKey);
+        return serverPackValue != null ? serverPackValue : defaultValue;
     }
 
     /**

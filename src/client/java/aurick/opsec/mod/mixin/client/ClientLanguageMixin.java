@@ -128,7 +128,7 @@ public class ClientLanguageMixin {
         if (pack instanceof FilePackResources || pack instanceof CompositePackResources) {
             Set<String> serverKeys = new HashSet<>();
             original.call(stream, (BiConsumer<String, String>) (key, value) -> {
-                ModRegistry.recordServerPackTranslationKey(key);
+                ModRegistry.recordServerPackTranslation(key, value);
                 serverKeys.add(key);
                 output.accept(key, value);
             });

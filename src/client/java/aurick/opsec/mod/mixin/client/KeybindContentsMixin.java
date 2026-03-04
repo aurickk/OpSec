@@ -31,7 +31,7 @@ import java.util.function.Supplier;
  * 
  * Whitelist priority:
  * 1. Vanilla keybinds - Return cached default value
- * 2. Server resource pack keybinds - Allow resolution (prevents anti-spoof detection)
+ * 2. Whitelisted mod keybinds - Allow resolution (per user whitelist config)
  * 3. Mod/Unknown keybinds - Return raw key name
  * 
  * This prevents servers from detecting:
@@ -63,10 +63,6 @@ public class KeybindContentsMixin {
         }
 
         TranslationProtectionHandler.notifyExploitDetected();
-
-        if (ModRegistry.isServerPackTranslationKey(name)) {
-            return original.call(supplier);
-        }
 
         OpsecConfig config = OpsecConfig.getInstance();
         SpoofSettings settings = config.getSettings();
@@ -105,9 +101,12 @@ public class KeybindContentsMixin {
             return Component.literal(spoofedValue);
         }
 
-        // Mod/unknown keybind
-        opsec$logBlocked(name, name);
-        return Component.literal(name);
+        // Mod/unknown keybind — return as translatable so server resource pack
+        // values resolve through TranslatableContentsMixin (safe: server gets its
+        // own value back). Matches vanilla behavior for unknown keybinds.
+        String serverPackValue = ModRegistry.getServerPackTranslation(name);
+        opsec$logBlocked(name, serverPackValue != null ? serverPackValue : name);
+        return Component.translatable(name);
     }
 
     /**

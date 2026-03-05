@@ -902,7 +902,7 @@ public class OpsecConfigScreen extends Screen {
     
     /**
      * Get mods that can be whitelisted.
-     * Only shows mods that have registered translation keys OR network channels.
+     * Only shows mods that have registered translation keys, network channels, or keybinds.
      * This filters out libraries and internal mods that don't expose content.
      */
     private static List<ModContainer> getWhitelistableMods() {

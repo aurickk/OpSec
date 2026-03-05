@@ -86,10 +86,10 @@ public class ModRegistry {
         public boolean hasChannels() { return !channels.isEmpty(); }
         
         /**
-         * Check if this mod has any trackable content (translation keys or channels).
+         * Check if this mod has any trackable content (translation keys, channels, or keybinds).
          */
         public boolean hasTrackableContent() {
-            return hasTranslationKeys() || hasChannels();
+            return hasTranslationKeys() || hasChannels() || hasKeybinds();
         }
     }
     

@@ -1156,10 +1156,17 @@ public class OpsecConfigScreen extends Screen {
             return 220;
         }
 
+        //? if >=1.21.2 {
         @Override
         protected int scrollBarX() {
             return this.getX() + this.getWidth() / 2 + 124;
         }
+        //?} else {
+        /*@Override
+        protected int getScrollbarPosition() {
+            return this.getX() + this.getWidth() / 2 + 124;
+        }*/
+        //?}
         
 
         public static class WidgetEntry extends ContainerObjectSelectionList.Entry<WidgetEntry> {

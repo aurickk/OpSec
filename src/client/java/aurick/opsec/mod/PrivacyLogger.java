@@ -114,7 +114,10 @@ public class PrivacyLogger {
                 return;
             }
             
+            //? if >=1.21.2
             var toastComponent = client.getToastManager();
+            //? if <1.21.2
+            /*var toastComponent = client.getToasts();*/
             if (toastComponent == null) return;
             
             Component titleComponent = Component.literal(type.getIcon() + " " + title).withStyle(type.getColor());

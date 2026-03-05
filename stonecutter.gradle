@@ -8,12 +8,12 @@ stonecutter.active '1.21.6' /* [SC] DO NOT EDIT */
 tasks.register('buildAll') {
     group = 'build'
     description = 'Builds all Minecraft versions'
-    dependsOn ':1.21.4:build', ':1.21.6:build'
+    dependsOn ':1.21.1:build', ':1.21.4:build', ':1.21.6:build'
 }
 
 // Task to remap all versions (produces final JARs)
 tasks.register('remapAll') {
     group = 'build'
     description = 'Remaps JARs for all Minecraft versions'
-    dependsOn ':1.21.4:remapJar', ':1.21.6:remapJar'
+    dependsOn ':1.21.1:remapJar', ':1.21.4:remapJar', ':1.21.6:remapJar'
 }

@@ -15,7 +15,7 @@
 - **[Channel Spoofing](#channel-spoofing)** - Hide or fake mod channels to prevent mod detection
 - **[Isolate Pack Cache](#isolate-pack-cache)** - Isolate resource packs per-account to prevent tracking
 - **[Block Local URLs](#block-local-urls)** - Automatically fail local requests from server resource packs 
-- **[Key Resolution Protection](key-resolution-protection)** - Protect against key resolution mod detection in signs and anvils
+- **[Key Resolution Protection](#key-resolution-protection)** - Protect against key resolution mod detection in signs and anvils
 - **[Meteor Fix](#meteor-fix)** - Disable Meteor Client's broken key resolution protection
 - **[Mod Whitelist](#mod-whitelist)** - Exempt specific mods from channel spoofing and key resolution protection in signs and anvils
 - **[Chat Signing Control](#chat-signing-control)** - Configure chat message signing behavior

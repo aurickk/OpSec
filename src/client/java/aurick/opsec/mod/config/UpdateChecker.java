@@ -86,11 +86,13 @@ public final class UpdateChecker {
     }
 
     /**
-     * Returns true if an update is available, the check is complete, and the
-     * update screen has not been shown this session yet.
+     * Returns true if an update is available, the check is complete, the
+     * update screen has not been shown this session, and the user hasn't
+     * skipped this specific version.
      */
     public static boolean isUpdateAvailable() {
-        return checkComplete && updateAvailable && !shownThisSession;
+        return checkComplete && updateAvailable && !shownThisSession
+                && !OpsecConfig.getInstance().getSettings().isVersionSkipped(latestVersion);
     }
 
     /**

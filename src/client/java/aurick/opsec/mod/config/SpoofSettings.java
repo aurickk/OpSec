@@ -58,7 +58,7 @@ public class SpoofSettings {
     private int buttonY = -1;
 
     // Update notification
-    private boolean dismissUpdateNotification = false;
+    private String skippedUpdateVersion = "";
 
     // One-time hints (persisted, never shown again)
     private boolean alertHintShown = false;
@@ -162,8 +162,9 @@ public class SpoofSettings {
     }
 
     // Update notification methods
-    public boolean isDismissUpdateNotification() { return dismissUpdateNotification; }
-    public void setDismissUpdateNotification(boolean dismiss) { this.dismissUpdateNotification = dismiss; }
+    public String getSkippedUpdateVersion() { return skippedUpdateVersion; }
+    public void setSkippedUpdateVersion(String version) { this.skippedUpdateVersion = version != null ? version : ""; }
+    public boolean isVersionSkipped(String version) { return version != null && version.equals(skippedUpdateVersion); }
     
     public String getEffectiveBrand() {
         if (!spoofBrand) return FABRIC;
@@ -203,7 +204,7 @@ public class SpoofSettings {
         json.addProperty("disableTelemetry", disableTelemetry);
         json.addProperty("buttonX", buttonX);
         json.addProperty("buttonY", buttonY);
-        json.addProperty("dismissUpdateNotification", dismissUpdateNotification);
+        json.addProperty("skippedUpdateVersion", skippedUpdateVersion);
         json.addProperty("alertHintShown", alertHintShown);
 
         // Whitelist settings
@@ -251,7 +252,7 @@ public class SpoofSettings {
         if (json.has("disableTelemetry")) s.disableTelemetry = json.get("disableTelemetry").getAsBoolean();
         if (json.has("buttonX")) s.buttonX = json.get("buttonX").getAsInt();
         if (json.has("buttonY")) s.buttonY = json.get("buttonY").getAsInt();
-        if (json.has("dismissUpdateNotification")) s.dismissUpdateNotification = json.get("dismissUpdateNotification").getAsBoolean();
+        if (json.has("skippedUpdateVersion")) s.skippedUpdateVersion = json.get("skippedUpdateVersion").getAsString();
         if (json.has("alertHintShown")) s.alertHintShown = json.get("alertHintShown").getAsBoolean();
 
         // Whitelist settings
@@ -283,7 +284,7 @@ public class SpoofSettings {
         this.disableTelemetry = other.disableTelemetry;
         this.buttonX = other.buttonX;
         this.buttonY = other.buttonY;
-        this.dismissUpdateNotification = other.dismissUpdateNotification;
+        this.skippedUpdateVersion = other.skippedUpdateVersion;
         this.alertHintShown = other.alertHintShown;
         this.whitelistEnabled = other.whitelistEnabled;
         this.whitelistedMods = new HashSet<>(other.whitelistedMods);

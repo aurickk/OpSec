@@ -11,7 +11,7 @@ import java.net.URI;
 
 /**
  * Native Minecraft-style screen that notifies the user when a new version of OpSec is available.
- * Provides three options: Download (opens browser), Don't Show Again (persists to config), Cancel (session dismiss).
+ * Provides three options: Download (opens browser), Skip This Version (skips only this version), Cancel (session dismiss).
  *
  * All text is rendered via StringWidget (not raw drawCenteredString) for compatibility
  * with the stratum-based rendering pipeline in 1.21.9+.
@@ -52,9 +52,9 @@ public class UpdateScreen extends Screen {
             this.onClose();
         }).bounds(centerX - buttonWidth / 2, firstButtonY, buttonWidth, buttonHeight).build());
 
-        // Don't Show Again button (red text)
-        this.addRenderableWidget(Button.builder(Component.literal("\u00A7cDon't Show Again"), button -> {
-            OpsecConfig.getInstance().getSettings().setDismissUpdateNotification(true);
+        // Skip This Version button
+        this.addRenderableWidget(Button.builder(Component.literal("Skip This Version"), button -> {
+            OpsecConfig.getInstance().getSettings().setSkippedUpdateVersion(UpdateChecker.getLatestVersion());
             OpsecConfig.getInstance().save();
             this.onClose();
         }).bounds(centerX - buttonWidth / 2, firstButtonY + buttonSpacing, buttonWidth, buttonHeight).build());

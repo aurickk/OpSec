@@ -43,9 +43,7 @@ public class OpsecClient implements ClientModInitializer {
 		AccountManager.getInstance(); // Load saved accounts
 
 		// Check for mod updates (non-blocking)
-		if (!OpsecConfig.getInstance().getSettings().isDismissUpdateNotification()) {
-			UpdateChecker.checkForUpdate();
-		}
+		UpdateChecker.checkForUpdate();
 
 		// Scan for registered channels after all mods have initialized
 		ClientLifecycleEvents.CLIENT_STARTED.register(client -> {

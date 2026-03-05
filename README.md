@@ -15,7 +15,7 @@
 - **[Channel Spoofing](#channel-spoofing)** - Hide or fake mod channels to prevent mod detection
 - **[Isolate Pack Cache](#isolate-pack-cache)** - Isolate resource packs per-account to prevent tracking
 - **[Block Local URLs](#block-local-urls)** - Automatically fail local requests from server resource packs 
-- **[Key Resolution Protection](#translation-exploit-protection)** - Protect against key resolution mod detection in signs and anvils
+- **[Key Resolution Protection](key-resolution-protection)** - Protect against key resolution mod detection in signs and anvils
 - **[Meteor Fix](#meteor-fix)** - Disable Meteor Client's broken key resolution protection
 - **[Mod Whitelist](#mod-whitelist)** - Exempt specific mods from channel spoofing and key resolution protection in signs and anvils
 - **[Chat Signing Control](#chat-signing-control)** - Configure chat message signing behavior
@@ -60,7 +60,7 @@ If settings are changed while connected to a server it is recommended to reconne
 | **Isolate Pack Cache** | Enable/disable [cache isolation](#isolate-pack-cache) |
 | **Block Local Pack URLs** | Enable/disable [local URL blocking](#block-local-urls) |
 | **Clear Cache** | Delete all cached server resource packs |
-| **Key Resolution Spoofing** | Enable/disable [key resolution protection](#translation-exploit-protection) |
+| **Key Resolution Spoofing** | Enable/disable [key resolution protection](#key-resolution-protection) |
 | **Fake Default Keybinds** | Return default vanilla keybind values instead of actual bindings |
 | **Meteor Fix** | Disable Meteor Client's broken key resolution protection (only shown when Meteor is installed) |
 | **Signing Mode** | Configure [chat signing](#chat-signing-control) behavior:<br/>• **OFF**: Strip signatures (maximum privacy)<br/>• **ON**: Default Minecraft behavior<br/>• **AUTO**: Only sign when required (recommended) |
@@ -99,7 +99,7 @@ Use `/opsec` in-game to access debug information:
 |---------|-------------|
 | `/opsec` | Show available commands |
 | `/opsec info` | Show overview of all tracked mods |
-| `/opsec info <mod>` | Show details for a specific mod (translation keys, keybinds, channels) |
+| `/opsec info <mod>` | Show details for a specific mod (translation keys, key-bind key, channels) |
 | `/opsec channels` | Show all tracked network channels with whitelist status |
 
 ### Understanding Alerts
@@ -112,15 +112,16 @@ Use `/opsec` in-game to access debug information:
 
 ### Brand Spoofing
 
-Servers can detect your client brand (Vanilla, Fabric, Forge, etc.) to fingerprint you or restrict modded clients.
+Servers can query your client brand to detect whether you're running a modded client. OpSec intercepts the brand packet and replaces it with your chosen brand:
 
-OpSec intercepts the client brand packet sent to servers and replaces it with your chosen brand. You can appear as:
-- **Vanilla**
-- **Fabric** 
-- **Forge** 
+- **Vanilla** - Appear as an unmodified Minecraft client
+- **Fabric** - Appear as a standard Fabric client (default)
+- **Forge** - Appear as a Forge client
+
+The brand setting also determines how [Channel Spoofing](#channel-spoofing) and [Key Resolution Protection](#key-resolution-protection) behave for each mode.
 
 > [!IMPORTANT]
-> Server plugins like [AntiSpoof](https://github.com/GigaZelensky/AntiSpoof) can detect the discrepancy between the client brand name and mod channels and flag clients for spoofing if [Channel Spoofing](#channel-spoofing) wasen't enabled.
+> Server plugins like [AntiSpoof](https://github.com/GigaZelensky/AntiSpoof) can detect the discrepancy between the client brand name and mod channels and flag clients for spoofing if [Channel Spoofing](#channel-spoofing) wasn't enabled.
 
 ---
 
@@ -153,19 +154,19 @@ Servers can send translatable text in signs and anvils containing keys like `key
 
 https://wurst.wiki/sign_translation_vulnerability
 
-OpSec intercepts translation keys and blocks Minecraft from resolving them based on your selected brand mode:
+OpSec intercepts resolvable keys and blocks Minecraft from resolving them based on your selected brand mode:
 
 #### Mode-Specific Behavior
 
 - **Vanilla mode**: Blocks all mod keys, returns default keybind values for vanilla keys
 - **Fabric mode**: Allows Fabric API keys and whitelisted mod keys, blocks everything else
-- **Forge mode**: Returns fabricated Forge/FML translation values (e.g., `fml.menu.mods` → `"Mods"`), blocks other mod keys
+- **Forge mode**: Returns fabricated Forge/FML key resolution values (e.g., `fml.menu.mods` → `"Mods"`), blocks other mod keys
 
 When **Fake Default Keybinds** is disabled, vanilla keybinds resolve to their actual values.
 
 #### Examples
 
-Spoofing mod keybinds (Returns raw translation keys/fallback instead of keybind values):
+Spoofing mod keybinds (Returns raw keys/fallback value instead of keybind values):
 ```
 [key.meteor-client.open-commands] '.'→'key.meteor-client.open-commands'
 [key.meteor-client.open-gui] 'Right Shift'→'key.meteor-client.open-gui'
@@ -188,7 +189,7 @@ Forge mode fabrication (Returns fake Forge values):
 
 ### Meteor Fix
 
-Meteor client has their own key protection implementation which can lead to a guaranteed detection with the translation key exploit.
+Meteor client has their own key protection implementation which can lead to a guaranteed detection with the key resolution exploit.
 
 Sometimes the server uses a fallback value so that instead of expecting the raw key from a Vanilla client its expecting the fallback value instead.
 
@@ -245,7 +246,7 @@ When enabled:
 - Non-whitelisted mods remain hidden from the server
 
 > [!NOTE]
-> Only mods that register network channels or translation keys are shown in the whitelist.
+> Only mods that register network channels, translatable keys and keybind keys are shown in the whitelist.
 
 ---
 
@@ -346,3 +347,7 @@ Output JARs are located in `versions/<minecraft_version>/build/libs/`:
 - [Stonecutter](https://stonecutter.kikugie.dev/) - Multi-version build system
 - [Forge](https://github.com/MinecraftForge/MinecraftForge) - Forge translation and keybind keys
 - [Fabric API](https://github.com/FabricMC/fabric-api) - Fabric translation and keybind keys
+
+## Disclaimer
+
+OpSec is a privacy tool designed to protect players from unwanted client fingerprinting and tracking. It is not intended or encouraged for use in bypassing server rules, evading bans, or gaining unfair advantages. Users are responsible for complying with the rules and terms of service of any server they connect to.

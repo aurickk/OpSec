@@ -288,7 +288,7 @@ public class PrivacyLogger {
         alert(AlertType.WARNING, "Server requires secure chat. Chat signing enabled.");
         logDetection("SecureChat", "Server enforces secure chat - ON_DEMAND signing activated");
     }
-    
+
     public static void alertCacheIsolationActive(String accountId) {
         logDetection("CacheIsolation", "Resource pack cache isolated for account: " + accountId);
     }

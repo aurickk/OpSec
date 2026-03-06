@@ -214,7 +214,7 @@ public class SpoofSettings {
             modsArray.add(modId);
         }
         json.add("whitelistedMods", modsArray);
-        
+
         return json;
     }
     
@@ -264,7 +264,7 @@ public class SpoofSettings {
                 s.whitelistedMods.add(modsArray.get(i).getAsString());
             }
         }
-        
+
         return s;
     }
     

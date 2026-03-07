@@ -122,13 +122,6 @@ public class ModRegistry {
     }
     
     /**
-     * Get all tracked mod IDs.
-     */
-    public static Set<String> getAllModIds() {
-        return Collections.unmodifiableSet(registry.keySet());
-    }
-    
-    /**
      * Resolve display name from Fabric mod metadata.
      */
     private static String resolveDisplayName(String modId) {
@@ -177,24 +170,10 @@ public class ModRegistry {
     }
     
     /**
-     * Check if a translation key is from a server resource pack.
-     */
-    public static boolean isServerPackTranslationKey(String key) {
-        return key != null && serverPackTranslations.containsKey(key);
-    }
-
-    /**
      * Get the server resource pack translation value for a key, or null if not present.
      */
     public static String getServerPackTranslation(String key) {
         return key != null ? serverPackTranslations.get(key) : null;
-    }
-    
-    /**
-     * Check if a translation key is known (vanilla or any mod).
-     */
-    public static boolean isKnownTranslationKey(String key) {
-        return key != null && allKnownTranslationKeys.contains(key);
     }
     
     /**
@@ -380,13 +359,6 @@ public class ModRegistry {
     }
     
     /**
-     * Check if a keybind is known.
-     */
-    public static boolean isKnownKeybind(String keybindName) {
-        return keybindName != null && allKnownKeybinds.contains(keybindName);
-    }
-    
-    /**
      * Get the mod ID that owns a keybind.
      */
     public static String getModForKeybind(String keybindName) {
@@ -545,21 +517,4 @@ public class ModRegistry {
         return allKnownKeybinds.size();
     }
     
-    /**
-     * Debug: dump registry stats to log.
-     */
-    public static void dumpStats() {
-        Opsec.LOGGER.debug("[ModRegistry] Stats: {} vanilla keys, {} server pack keys, {} total keys, {} keybinds",
-            vanillaTranslationKeys.size(), 
-            serverPackTranslations.size(),
-            allKnownTranslationKeys.size(),
-            allKnownKeybinds.size());
-        
-        for (ModInfo info : registry.values()) {
-            if (info.hasTrackableContent()) {
-                Opsec.LOGGER.debug("[ModRegistry]   {}: {} keys, {} keybinds, {} channels", 
-                    info.modId, info.translationKeys.size(), info.keybinds.size(), info.channels.size());
-            }
-        }
-    }
 }

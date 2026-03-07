@@ -88,14 +88,6 @@ public final class KeybindDefaults {
     }
     
     /**
-     * Get the vanilla default value for a keybind key, with fallback.
-     */
-    public static String getDefaultOrElse(String key, String fallback) {
-        String defaultVal = getDefault(key);
-        return defaultVal != null ? defaultVal : fallback;
-    }
-    
-    /**
      * Check if a keybind key is a known vanilla keybind.
      */
     public static boolean hasDefault(String key) {
@@ -113,32 +105,4 @@ public final class KeybindDefaults {
         return hasDefault(keyName);
     }
     
-    /**
-     * Get count of known vanilla keybinds.
-     */
-    public static int getVanillaKeybindCount() {
-        if (!initialized) {
-            initialize();
-        }
-        return vanillaKeybinds.size();
-    }
-    
-    /**
-     * Check if a value looks like an unbound keybind message.
-     */
-    public static boolean isUnboundMessage(String value) {
-        if (value == null) return false;
-        String lower = value.toLowerCase();
-        return lower.contains("not bound") || lower.equals("none");
-    }
-    
-    /**
-     * Force re-initialization (useful if keybinds change at runtime).
-     */
-    public static void reinitialize() {
-        initialized = false;
-        dynamicDefaults.clear();
-        vanillaKeybinds.clear();
-        initialize();
-    }
 }

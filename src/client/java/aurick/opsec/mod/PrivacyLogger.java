@@ -99,11 +99,6 @@ public class PrivacyLogger {
         toast(type, title, message);
     }
     
-    public static void alertWithToast(AlertType type, String message, String toastTitle) {
-        alert(type, message);
-        toast(type, toastTitle);
-    }
-    
     public static void showToast(AlertType type, String title, String message) {
         try {
             Minecraft client = Minecraft.getInstance();
@@ -158,19 +153,6 @@ public class PrivacyLogger {
         // Simple format: just the keybind detail in red
         MutableComponent component = Component.literal(detail).withStyle(ChatFormatting.RED);
         client.player.displayClientMessage(component, false);
-    }
-    
-    public static void actionBar(AlertType type, String message) {
-        if (!OpsecConfig.getInstance().shouldShowAlerts()) return;
-        
-        Minecraft client = Minecraft.getInstance();
-        if (client.player == null) return;
-        
-        MutableComponent component = Component.literal(type.getIcon() + " ")
-                .withStyle(type.getColor())
-                .append(Component.literal(message).withStyle(type.getColor()));
-        
-        client.player.displayClientMessage(component, true);
     }
     
     public static void logDetection(String category, String details) {
@@ -289,7 +271,4 @@ public class PrivacyLogger {
         logDetection("SecureChat", "Server enforces secure chat - ON_DEMAND signing activated");
     }
 
-    public static void alertCacheIsolationActive(String accountId) {
-        logDetection("CacheIsolation", "Resource pack cache isolated for account: " + accountId);
-    }
 }

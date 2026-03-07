@@ -180,25 +180,5 @@ public class ModIdResolver {
         return null;
     }
     
-    /**
-     * Check if a class name belongs to Minecraft/vanilla.
-     */
-    public static boolean isMinecraftClass(String className) {
-        return className != null && (
-            className.startsWith("net.minecraft.") ||
-            className.startsWith("com.mojang.")
-        );
-    }
-    
-    /**
-     * Check if a class name belongs to Fabric API.
-     */
-    public static boolean isFabricClass(String className) {
-        return className != null && (
-            className.startsWith("net.fabricmc.fabric.") ||
-            className.startsWith("net.fabricmc.api.")
-        );
-    }
-    
 }
 

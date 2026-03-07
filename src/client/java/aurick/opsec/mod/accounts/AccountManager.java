@@ -109,16 +109,6 @@ public class AccountManager {
     }
     
     /**
-     * Remove an account by UUID.
-     */
-    public void removeByUuid(String uuid) {
-        if (uuid == null) return;
-        
-        Optional<SessionAccount> account = getByUuid(uuid);
-        account.ifPresent(this::remove);
-    }
-    
-    /**
      * Get all saved accounts.
      */
     public List<SessionAccount> getAccounts() {

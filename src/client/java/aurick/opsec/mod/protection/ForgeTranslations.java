@@ -276,10 +276,4 @@ public class ForgeTranslations {
         return key != null ? TRANSLATIONS.get(key) : null;
     }
     
-    /**
-     * Get the number of registered Forge translations.
-     */
-    public static int getTranslationCount() {
-        return TRANSLATIONS.size();
-    }
 }

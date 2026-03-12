@@ -7,15 +7,18 @@ import com.llamalad7.mixinextras.sugar.ref.LocalRef;
 import aurick.opsec.mod.Opsec;
 import aurick.opsec.mod.PrivacyLogger;
 import aurick.opsec.mod.config.OpsecConfig;
-import aurick.opsec.mod.config.OpsecConstants;
-import aurick.opsec.mod.util.ServerAddressTracker;
+import aurick.opsec.mod.util.LocalAddressUtil;
 import net.minecraft.util.HttpUtil;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
+import sun.misc.Unsafe;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.invoke.MethodHandle;
+import java.lang.invoke.MethodHandles;
+import java.lang.invoke.MethodType;
+import java.lang.reflect.Field;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.ProtocolException;
@@ -25,118 +28,117 @@ import java.util.Map;
 import java.util.Objects;
 
 /**
- * Protects against redirect-to-localhost attacks.
+ * Protects against redirect-to-localhost and HTTP 305 proxy redirect attacks.
+ * Aligned with ExploitPreventer's HttpUtilMixin implementation.
+ *
+ * <p>Handles redirect codes 300-303, 305, and 307 with manual redirect following,
+ * per-hop local address checking, and Unsafe Host header injection for 305 responses.
+ *
+ * @see <a href="https://github.com/NikOverflow/ExploitPreventer">ExploitPreventer</a>
  */
 @Mixin(HttpUtil.class)
 public class HttpUtilMixin {
-    
-    @Unique
-    private static boolean opsec$loggedRedirectProtection = false;
-    
+
+    @SuppressWarnings("deprecation")
     @WrapOperation(
         method = "downloadFile",
         at = @At(value = "INVOKE", target = "Ljava/net/HttpURLConnection;getInputStream()Ljava/io/InputStream;"),
         require = 1
     )
-    private static InputStream opsec$checkRedirects(
-            HttpURLConnection instance, 
+    private static InputStream opsec$downloadFile(
+            HttpURLConnection instance,
             Operation<InputStream> original,
             @Local(argsOnly = true) Proxy proxy,
             @Local(argsOnly = true) Map<String, String> requestProperties,
             @Local LocalRef<HttpURLConnection> httpURLConnection) throws IOException {
-        
-        if (!OpsecConfig.getInstance().shouldBlockLocalPackUrls()) {
-            return original.call(instance);
+
+        if (!OpsecConfig.getInstance().shouldBlockLocalPackUrls()) return original.call(instance);
+
+        if (!LocalAddressUtil.isLocalAddress(LocalAddressUtil.serverAddress)
+                && LocalAddressUtil.isLocalAddress(instance.getURL().getHost())) {
+            Opsec.LOGGER.warn("[OpSec] Blocked connection to local address: {}", instance.getURL());
+            PrivacyLogger.alertLocalPortScanDetected(instance.getURL().toString(), true);
+            throw new IllegalStateException("Tried to connect to local address!");
         }
-        
-        if (ServerAddressTracker.isOnLanServer()) {
-            return original.call(instance);
-        }
-        
-        String initialHost = instance.getURL().getHost();
-        if (ServerAddressTracker.isLocalAddress(initialHost)) {
-            Opsec.LOGGER.warn("[OpSec] Blocked local address in HTTP download: {}", instance.getURL());
-            throw new IllegalStateException("[OpSec] Blocked connection to local address: " + instance.getURL());
-        }
-        
+
         instance.setInstanceFollowRedirects(false);
-        int maxRedirects = getMaxRedirects();
-        int redirectCount = 0;
-        int responseCode = instance.getResponseCode();
-        
-        while (isRedirect(responseCode) && instance.getHeaderField("Location") != null) {
-            if (redirectCount >= maxRedirects) {
+
+        int redirects = 0;
+        String maxRedirectString = System.getProperty("http.maxRedirects") == null
+            ? "20" : System.getProperty("http.maxRedirects");
+        int maxRedirects = 20;
+        try { maxRedirects = Math.max(Integer.parseInt(maxRedirectString), 1); }
+        catch (NumberFormatException ignored) {}
+
+        int status = instance.getResponseCode();
+
+        while (instance.getHeaderField("Location") != null
+                && ((status > 299 && status < 304) || status == 305 || status == 307)) {
+            if (redirects > maxRedirects - 1)
                 throw new ProtocolException("Server redirected too many times (" + maxRedirects + ")");
+
+            URL url;
+            try {
+                url = new URL(instance.getHeaderField("Location"));
+                if (!instance.getURL().getProtocol().equalsIgnoreCase(url.getProtocol())) break;
+            } catch (MalformedURLException exception) {
+                url = new URL(instance.getURL(), instance.getHeaderField("Location"));
             }
-            
-            URL redirectUrl = parseRedirectUrl(instance.getURL(), instance.getHeaderField("Location"));
-            
-            if (!instance.getURL().getProtocol().equalsIgnoreCase(redirectUrl.getProtocol())) {
-                Opsec.LOGGER.debug("[OpSec] Stopping at cross-protocol redirect: {} -> {}", 
-                    instance.getURL().getProtocol(), redirectUrl.getProtocol());
-                break;
+
+            String host = null;
+            if (status == 305) {
+                url = new URL(instance.getURL().getProtocol(), url.getHost(), url.getPort(),
+                    instance.getURL().getFile());
+                host = instance.getURL().getHost()
+                    + (instance.getURL().getPort() != instance.getURL().getDefaultPort()
+                        ? (":" + instance.getURL().getPort()) : "");
             }
-            
-            if (ServerAddressTracker.isLocalAddress(redirectUrl.getHost())) {
-                Opsec.LOGGER.warn("[OpSec] Blocked redirect-to-localhost attack! {} -> {}", 
-                    instance.getURL(), redirectUrl);
-                
-                if (!opsec$loggedRedirectProtection) {
-                    opsec$loggedRedirectProtection = true;
-                    PrivacyLogger.alert(PrivacyLogger.AlertType.DANGER, 
-                        "Blocked redirect-to-localhost attack!");
-                }
-                
-                throw new IllegalStateException("[OpSec] Blocked redirect to local address: " + redirectUrl);
-            }
-            
-            instance = (HttpURLConnection) redirectUrl.openConnection(proxy);
+
+            instance = (HttpURLConnection) url.openConnection(proxy);
             instance.setInstanceFollowRedirects(false);
             Objects.requireNonNull(instance);
-            
-            if (requestProperties != null) {
-                requestProperties.forEach(instance::setRequestProperty);
+            requestProperties.forEach(instance::setRequestProperty);
+
+            if (status == 305) {
+                try {
+                    Field theUnsafeField = Unsafe.class.getDeclaredField("theUnsafe");
+                    theUnsafeField.setAccessible(true);
+                    Unsafe unsafe = (Unsafe) theUnsafeField.get(null);
+
+                    Class<?> httpUrlConnectionClass = Class.forName(
+                        "sun.net.www.protocol.http.HttpURLConnection");
+                    Class<?> messageHeaderClass = Class.forName("sun.net.www.MessageHeader");
+
+                    long requestsOffset = unsafe.objectFieldOffset(
+                        httpUrlConnectionClass.getDeclaredField("requests"));
+                    long lookupOffset = unsafe.staticFieldOffset(
+                        MethodHandles.Lookup.class.getDeclaredField("IMPL_LOOKUP"));
+
+                    MethodHandles.Lookup lookup = (MethodHandles.Lookup) unsafe.getObject(
+                        MethodHandles.Lookup.class, lookupOffset);
+                    MethodHandle addHandle = lookup.findVirtual(messageHeaderClass, "add",
+                        MethodType.methodType(void.class, String.class, String.class));
+                    addHandle.invoke(unsafe.getObject(instance, requestsOffset), "Host", host);
+                } catch (Throwable e) {
+                    throw new RuntimeException(e);
+                }
             }
-            
-            responseCode = instance.getResponseCode();
-            redirectCount++;
-            
-            Opsec.LOGGER.debug("[OpSec] Following redirect #{}: {}", redirectCount, redirectUrl);
+
+            if (!LocalAddressUtil.isLocalAddress(LocalAddressUtil.serverAddress)
+                    && LocalAddressUtil.isLocalAddress(instance.getURL().getHost())) {
+                Opsec.LOGGER.warn("[OpSec] Blocked connection to local address: {}", instance.getURL());
+                PrivacyLogger.alertLocalPortScanDetected(instance.getURL().toString(), true);
+                throw new IllegalStateException("Tried to connect to local address!");
+            }
+
+            status = instance.getResponseCode();
+            redirects++;
         }
-        
+
+        if (redirects > maxRedirects - 1)
+            throw new ProtocolException("Server redirected too many times (" + maxRedirects + ")");
+
         httpURLConnection.set(instance);
         return original.call(instance);
     }
-    
-    @Unique
-    private static boolean isRedirect(int responseCode) {
-        return (responseCode >= 300 && responseCode <= 303) || 
-               responseCode == 305 || 
-               responseCode == 307 || 
-               responseCode == 308;
-    }
-    
-    @SuppressWarnings("deprecation")
-    @Unique
-    private static URL parseRedirectUrl(URL baseUrl, String location) throws MalformedURLException {
-        try {
-            return new URL(location);
-        } catch (MalformedURLException e) {
-            return new URL(baseUrl, location);
-        }
-    }
-    
-    @Unique
-    private static int getMaxRedirects() {
-        String maxRedirectProp = System.getProperty("http.maxRedirects");
-        if (maxRedirectProp == null) {
-            return OpsecConstants.Detection.MAX_HTTP_REDIRECTS;
-        }
-        try {
-            return Math.max(Integer.parseInt(maxRedirectProp), 1);
-        } catch (NumberFormatException e) {
-            return OpsecConstants.Detection.MAX_HTTP_REDIRECTS;
-        }
-    }
 }
-

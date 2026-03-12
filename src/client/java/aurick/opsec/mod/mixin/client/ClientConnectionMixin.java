@@ -4,7 +4,7 @@ import aurick.opsec.mod.Opsec;
 import aurick.opsec.mod.config.OpsecConfig;
 import aurick.opsec.mod.protection.ChannelFilterHelper;
 import aurick.opsec.mod.tracking.ModRegistry;
-import aurick.opsec.mod.util.ServerAddressTracker;
+import aurick.opsec.mod.util.LocalAddressUtil;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelOutboundHandlerAdapter;
@@ -51,16 +51,24 @@ public class ClientConnectionMixin {
     private void opsec$onChannelActive(ChannelHandlerContext context, CallbackInfo ci) {
         try {
             if (context.channel() != null && context.channel().remoteAddress() != null) {
-                ServerAddressTracker.onConnect(context.channel().remoteAddress());
+                java.net.SocketAddress addr = context.channel().remoteAddress();
+                if (addr instanceof java.net.InetSocketAddress inetSocketAddress) {
+                    LocalAddressUtil.serverAddress = inetSocketAddress.getAddress().getHostAddress();
+                    Opsec.LOGGER.debug("[OpSec] Connected to server: {}", LocalAddressUtil.serverAddress);
+                } else {
+                    LocalAddressUtil.serverAddress = null;
+                }
             }
         } catch (Exception e) {
             Opsec.LOGGER.debug("[OpSec] Failed to track server address on connect: {}", e.getMessage());
+            LocalAddressUtil.serverAddress = null;
         }
     }
     
     @Inject(method = "channelInactive", at = @At("HEAD"), require = 0)
     private void opsec$onChannelInactive(ChannelHandlerContext context, CallbackInfo ci) {
-        ServerAddressTracker.onDisconnect();
+        Opsec.LOGGER.debug("[OpSec] Disconnected from server");
+        LocalAddressUtil.serverAddress = null;
     }
     
     @Unique

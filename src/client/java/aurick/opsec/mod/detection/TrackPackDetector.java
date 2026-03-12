@@ -2,8 +2,11 @@ package aurick.opsec.mod.detection;
 
 import aurick.opsec.mod.PrivacyLogger;
 import aurick.opsec.mod.config.OpsecConstants;
+import aurick.opsec.mod.util.LocalAddressUtil;
 
 import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.UnknownHostException;
 import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.HashSet;
@@ -119,9 +122,9 @@ public class TrackPackDetector {
     public static boolean isSuspiciousUrl(String url) {
         if (url == null || url.isEmpty()) return false;
         
-        if (LocalUrlDetector.isLocalUrl(url)) {
-            lastDetectionResult.set(new DetectionResult(DetectionType.LOCALHOST_URL, 
-                LocalUrlDetector.getBlockReason(url), 5, url));
+        if (isLocalUrl(url)) {
+            lastDetectionResult.set(new DetectionResult(DetectionType.LOCALHOST_URL,
+                "local/private address", 5, url));
             return true;
         }
         
@@ -168,7 +171,7 @@ public class TrackPackDetector {
             
             if (port == -1 || host == null) return false;
             
-            if (LocalUrlDetector.isLocalUrl(url)) {
+            if (isLocalUrl(url)) {
                 for (int p : KNOWN_DETECTION_PORTS) {
                     if (port == p) return true;
                 }
@@ -223,6 +226,21 @@ public class TrackPackDetector {
         return notifiedPatternOnce.compareAndSet(false, true);
     }
     
+    /**
+     * Checks if a URL points to a local/private address by extracting the host
+     * and delegating to {@link LocalAddressUtil#isLocalAddress(String)}.
+     */
+    private static boolean isLocalUrl(String url) {
+        try {
+            URI uri = new URI(url);
+            String host = uri.getHost();
+            if (host == null) return false;
+            return LocalAddressUtil.isLocalAddress(host);
+        } catch (URISyntaxException | UnknownHostException e) {
+            return false;
+        }
+    }
+
     public static void reset() {
         synchronized (LOCK) {
         recentRequests.clear();

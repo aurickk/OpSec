@@ -114,6 +114,12 @@ public class OpsecConfig {
             settings.setSigningMode(SpoofSettings.SigningMode.ON_DEMAND);
             modified = true;
         }
+
+        if (settings.getWhitelistMode() == null) {
+            Opsec.LOGGER.warn("[OpSec] Invalid whitelist mode, resetting to OFF");
+            settings.setWhitelistMode(SpoofSettings.WhitelistMode.OFF);
+            modified = true;
+        }
         
         if (modified) {
             save();

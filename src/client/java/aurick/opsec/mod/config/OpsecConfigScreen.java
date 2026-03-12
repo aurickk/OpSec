@@ -198,7 +198,7 @@ public class OpsecConfigScreen extends Screen {
                             refreshScreen();
                     }));
             
-            if (settings.isSpoofChannels()) {
+            if (settings.isSpoofChannels() && settings.getWhitelistMode() != SpoofSettings.WhitelistMode.AUTO) {
                 widgets.add(createSectionHeader("\u00A7e\u26A0 May break mods if not whitelisted"));
             }
         }
@@ -838,26 +838,35 @@ public class OpsecConfigScreen extends Screen {
 
     private Tab createWhitelistTab(SpoofSettings settings) {
         List<AbstractWidget> widgets = new ArrayList<>();
-        
+
         // Section header
         widgets.add(createSectionHeader("\u00A7f\u00A7lMod Whitelist"));
-        
-        // Master enable/disable toggle
-        widgets.add(cycleBuilder(COLORED_BOOL_TO_TEXT, List.of(Boolean.TRUE, Boolean.FALSE), settings.isWhitelistEnabled())
-                .withTooltip(v -> Tooltip.create(Component.literal(
-                    "Allow whitelisted mods' translation keys and channels to pass through")))
-                .create(0, 0, 210, 20, Component.translatable("opsec.option.whitelistEnabled"),
-                    (button, value) -> { 
-                        settings.setWhitelistEnabled(value);
+
+        // Tri-state mode selector: OFF → AUTO → ON
+        widgets.add(cycleBuilder(WhitelistModeDisplay::getDisplayName, List.of(SpoofSettings.WhitelistMode.values()), settings.getWhitelistMode())
+                .withTooltip(v -> Tooltip.create(WhitelistModeDisplay.getTooltip(v)))
+                .create(0, 0, 210, 20, Component.translatable("opsec.option.whitelistMode"),
+                    (button, value) -> {
+                        settings.setWhitelistMode(value);
                         config.save();
                         refreshScreen();
                 }));
-        
-        if (settings.isWhitelistEnabled()) {
-            // Mod list header
+
+        if (settings.getWhitelistMode() == SpoofSettings.WhitelistMode.AUTO) {
+            // AUTO mode: read-only list of mods that have channels (auto-whitelisted)
+            List<ModContainer> whitelistableMods = getWhitelistableMods();
+            for (ModContainer mod : whitelistableMods) {
+                String modId = mod.getMetadata().getId();
+                String modName = mod.getMetadata().getName();
+                ModRegistry.ModInfo info = ModRegistry.getModInfo(modId);
+                if (info != null && info.hasChannels()) {
+                    widgets.add(createSectionHeader("\u00A7a" + modName + " \u00A77(" + info.getChannels().size() + " channels)"));
+                }
+            }
+        } else if (settings.getWhitelistMode() == SpoofSettings.WhitelistMode.CUSTOM) {
+            // ON mode: existing manual toggle UI
             widgets.add(createSectionHeader("\u00A7f\u00A7lInstalled Mods"));
 
-            // Toggle all on/off buttons
             List<ModContainer> whitelistableMods = getWhitelistableMods();
             widgets.add(new ToggleAllRowWidget(
                 () -> {
@@ -874,17 +883,16 @@ public class OpsecConfigScreen extends Screen {
                 }
             ));
 
-            // Create mod entries
             for (ModContainer mod : whitelistableMods) {
                 String modId = mod.getMetadata().getId();
                 String modName = mod.getMetadata().getName();
-                
+
                 boolean isWhitelisted = settings.getWhitelistedMods().contains(modId);
                 final String finalModId = modId;
                 CycleButton<Boolean> modButton = cycleBuilder(COLORED_BOOL_TO_TEXT, List.of(Boolean.TRUE, Boolean.FALSE), isWhitelisted)
                     .withTooltip(v -> Tooltip.create(Component.literal(finalModId)))
                     .create(0, 0, 210, 20, Component.literal(modName),
-                        (button, value) -> { 
+                        (button, value) -> {
                             if (value) {
                                 settings.getWhitelistedMods().add(finalModId);
                             } else {
@@ -892,11 +900,11 @@ public class OpsecConfigScreen extends Screen {
                             }
                             config.save();
                     });
-                
+
                 widgets.add(modButton);
             }
         }
-        
+
         return new WidgetTab(Component.literal("Whitelist"), widgets);
     }
     
@@ -1264,6 +1272,27 @@ public class OpsecConfigScreen extends Screen {
     }
     
     
+    /**
+     * Display helper for WhitelistMode enum.
+     */
+    private static class WhitelistModeDisplay {
+        public static Component getDisplayName(SpoofSettings.WhitelistMode mode) {
+            return switch (mode) {
+                case OFF -> Component.literal("\u00A7eOFF");        // Yellow
+                case AUTO -> Component.literal("\u00A7aAUTO");      // Green
+                case CUSTOM -> Component.literal("\u00A7bCUSTOM");  // Aqua
+            };
+        }
+
+        public static Component getTooltip(SpoofSettings.WhitelistMode mode) {
+            return switch (mode) {
+                case OFF -> Component.literal("Whitelist disabled - all mod content blocked");
+                case AUTO -> Component.literal("Mods with network channels are automatically whitelisted");
+                case CUSTOM -> Component.literal("Manually select which mods to whitelist");
+            };
+        }
+    }
+
     /**
      * Display helper for SigningMode enum.
      * Controls whether chat messages are cryptographically signed.

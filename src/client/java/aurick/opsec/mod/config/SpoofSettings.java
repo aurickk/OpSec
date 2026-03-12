@@ -25,11 +25,24 @@ public class SpoofSettings {
         /** Only sign when server requires it (recommended) */
         ON_DEMAND
     }
+
+    /**
+     * Whitelist modes for mod filtering.
+     * Controls which mods are allowed through the whitelist.
+     */
+    public enum WhitelistMode {
+        /** Whitelist disabled - all mod content blocked */
+        OFF,
+        /** Auto-whitelist mods that have registered network channels */
+        AUTO,
+        /** Manual whitelist - only explicitly selected mods allowed */
+        CUSTOM
+    }
     
     // Brand spoofing
     private boolean spoofBrand = true;
     private String customBrand = FABRIC;
-    private boolean spoofChannels = false;
+    private boolean spoofChannels = true;
     
     // Resource pack protection
     private boolean isolatePackCache = true;
@@ -64,7 +77,7 @@ public class SpoofSettings {
     private boolean alertHintShown = false;
     
     // Whitelist settings
-    private boolean whitelistEnabled = false;
+    private WhitelistMode whitelistMode = WhitelistMode.AUTO;
     private Set<String> whitelistedMods = new HashSet<>();
     
     public SpoofSettings() {}
@@ -151,14 +164,18 @@ public class SpoofSettings {
     public void setAlertHintShown(boolean shown) { this.alertHintShown = shown; }
 
     // Whitelist methods
-    public boolean isWhitelistEnabled() { return whitelistEnabled; }
-    public void setWhitelistEnabled(boolean enabled) { this.whitelistEnabled = enabled; }
-    
+    public WhitelistMode getWhitelistMode() { return whitelistMode; }
+    public void setWhitelistMode(WhitelistMode mode) { this.whitelistMode = mode; }
+
+    /** Convenience: returns true when whitelist is active (AUTO or ON) */
+    public boolean isWhitelistEnabled() { return whitelistMode != WhitelistMode.OFF; }
+
     public Set<String> getWhitelistedMods() { return whitelistedMods; }
     public void setWhitelistedMods(Set<String> mods) { this.whitelistedMods = mods != null ? mods : new HashSet<>(); }
-    
+
+    /** Returns true only in ON mode when mod is in the manual set */
     public boolean isModWhitelisted(String modId) {
-        return whitelistEnabled && modId != null && whitelistedMods.contains(modId);
+        return whitelistMode == WhitelistMode.CUSTOM && modId != null && whitelistedMods.contains(modId);
     }
 
     // Update notification methods
@@ -168,8 +185,8 @@ public class SpoofSettings {
     
     public String getEffectiveBrand() {
         if (!spoofBrand) return FABRIC;
-        // When whitelist is enabled, force Fabric brand
-        if (whitelistEnabled) return FABRIC;
+        // When whitelist is enabled (AUTO or ON), force Fabric brand
+        if (isWhitelistEnabled()) return FABRIC;
         if (VANILLA.equalsIgnoreCase(customBrand)) return VANILLA;
         if (FORGE.equalsIgnoreCase(customBrand)) return FORGE;
         return FABRIC;
@@ -208,7 +225,7 @@ public class SpoofSettings {
         json.addProperty("alertHintShown", alertHintShown);
 
         // Whitelist settings
-        json.addProperty("whitelistEnabled", whitelistEnabled);
+        json.addProperty("whitelistMode", whitelistMode.name());
         JsonArray modsArray = new JsonArray();
         for (String modId : whitelistedMods) {
             modsArray.add(modId);
@@ -255,8 +272,18 @@ public class SpoofSettings {
         if (json.has("skippedUpdateVersion")) s.skippedUpdateVersion = json.get("skippedUpdateVersion").getAsString();
         if (json.has("alertHintShown")) s.alertHintShown = json.get("alertHintShown").getAsBoolean();
 
-        // Whitelist settings
-        if (json.has("whitelistEnabled")) s.whitelistEnabled = json.get("whitelistEnabled").getAsBoolean();
+        // Whitelist settings (new tri-state, with backward compat for old boolean)
+        if (json.has("whitelistMode")) {
+            String modeStr = json.get("whitelistMode").getAsString();
+            if ("ON".equals(modeStr)) modeStr = "CUSTOM";
+            try {
+                s.whitelistMode = WhitelistMode.valueOf(modeStr);
+            } catch (IllegalArgumentException e) {
+                s.whitelistMode = WhitelistMode.OFF;
+            }
+        } else if (json.has("whitelistEnabled")) {
+            s.whitelistMode = json.get("whitelistEnabled").getAsBoolean() ? WhitelistMode.CUSTOM : WhitelistMode.OFF;
+        }
         if (json.has("whitelistedMods")) {
             JsonArray modsArray = json.getAsJsonArray("whitelistedMods");
             s.whitelistedMods = new HashSet<>();
@@ -286,7 +313,7 @@ public class SpoofSettings {
         this.buttonY = other.buttonY;
         this.skippedUpdateVersion = other.skippedUpdateVersion;
         this.alertHintShown = other.alertHintShown;
-        this.whitelistEnabled = other.whitelistEnabled;
+        this.whitelistMode = other.whitelistMode;
         this.whitelistedMods = new HashSet<>(other.whitelistedMods);
     }
 }

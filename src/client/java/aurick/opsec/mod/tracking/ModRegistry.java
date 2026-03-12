@@ -196,8 +196,24 @@ public class ModRegistry {
         return null;
     }
     
+    // ==================== AUTO MODE HELPER ====================
+
+    /**
+     * Check if a mod is effectively whitelisted, considering AUTO mode.
+     * In AUTO mode, any mod with registered network channels is whitelisted.
+     * In ON mode, delegates to manual whitelist check.
+     */
+    private static boolean isModEffectivelyWhitelisted(String modId, SpoofSettings settings) {
+        if (modId == null) return false;
+        if (settings.getWhitelistMode() == SpoofSettings.WhitelistMode.AUTO) {
+            ModInfo info = getModInfo(modId);
+            return info != null && info.hasChannels();
+        }
+        return settings.isModWhitelisted(modId);
+    }
+
     // ==================== CENTRALIZED WHITELIST CHECK ====================
-    
+
     /**
      * Centralized whitelist check for both translation keys and keybind keys.
      * Servers can abuse either mechanism, so we use the same logic for both.
@@ -233,14 +249,14 @@ public class ModRegistry {
         // Try to find the mod that owns this key
         // Check keybind tracking first (for actual keybinds)
         String modId = getModForKeybind(key);
-        if (modId != null && settings.isModWhitelisted(modId)) {
+        if (modId != null && isModEffectivelyWhitelisted(modId, settings)) {
             Opsec.LOGGER.debug("[Whitelist] ALLOWED {} '{}' via keybind tracking (mod: {})", source, key, modId);
             return true;
         }
 
         // Check translation tracking (for translation keys or keybinds with translation-style names)
         modId = getModForTranslationKey(key);
-        if (modId != null && settings.isModWhitelisted(modId)) {
+        if (modId != null && isModEffectivelyWhitelisted(modId, settings)) {
             Opsec.LOGGER.debug("[Whitelist] ALLOWED {} '{}' via translation tracking (mod: {})", source, key, modId);
             return true;
         }
@@ -456,16 +472,18 @@ public class ModRegistry {
             return false;
         }
 
+        SpoofSettings settings = config.getSettings();
+
         // Check 1: Does any whitelisted mod own this channel via tracking data? (exact)
         for (ModInfo info : registry.values()) {
-            if (info.channels.contains(channel) && config.getSettings().isModWhitelisted(info.modId)) {
+            if (info.channels.contains(channel) && isModEffectivelyWhitelisted(info.modId, settings)) {
                 return true;
             }
         }
 
         // Check 2: Is the namespace itself whitelisted? (exact match, backwards compat)
         // Handles users who whitelisted "jm" directly instead of "journeymap"
-        if (config.getSettings().isModWhitelisted(namespace)) {
+        if (isModEffectivelyWhitelisted(namespace, settings)) {
             return true;
         }
 
@@ -473,7 +491,7 @@ public class ModRegistry {
         // Handles: user whitelisted "journeymap" but channel namespace is "jm"
         Set<String> resolvedModIds = resolveModIdsForNamespace(namespace);
         for (String resolvedModId : resolvedModIds) {
-            if (config.getSettings().isModWhitelisted(resolvedModId)) {
+            if (isModEffectivelyWhitelisted(resolvedModId, settings)) {
                 return true;
             }
         }

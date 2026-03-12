@@ -11,7 +11,7 @@
   "opsec.option.brandType": "Brand Type",
   "opsec.option.spoofChannels": "Spoof Channels",
   
-  "opsec.option.whitelistEnabled": "Enable Whitelist",
+  "opsec.option.whitelistMode": "Whitelist Mode",
   "opsec.whitelist.search": "Search",
   
   "opsec.option.isolatePackCache": "Isolate Pack Cache",

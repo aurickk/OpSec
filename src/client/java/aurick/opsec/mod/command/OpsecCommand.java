@@ -1,6 +1,7 @@
 package aurick.opsec.mod.command;
 
 import aurick.opsec.mod.config.OpsecConfig;
+import aurick.opsec.mod.config.SpoofSettings;
 import aurick.opsec.mod.tracking.ModRegistry;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.StringArgumentType;
@@ -191,14 +192,27 @@ public class OpsecCommand {
         // Whitelist status
         source.sendFeedback(Component.empty());
         OpsecConfig opsecConfig = OpsecConfig.getInstance();
-        boolean isWhitelisted = info.getModId() != null
-            && opsecConfig.getSettings().isWhitelistEnabled()
-            && opsecConfig.getSettings().isModWhitelisted(info.getModId());
-        if (isWhitelisted) {
-            source.sendFeedback(success("Whitelist Status: ALLOWED"));
-        } else {
-            source.sendFeedback(warning("Whitelist Status: BLOCKED"));
+        SpoofSettings opsecSettings = opsecConfig.getSettings();
+        SpoofSettings.WhitelistMode whitelistMode = opsecSettings.getWhitelistMode();
+
+        String statusText;
+        boolean isAllowed;
+        switch (whitelistMode) {
+            case AUTO:
+                boolean hasChannels = info.hasChannels();
+                isAllowed = hasChannels;
+                statusText = isAllowed ? "Whitelist Status: ALLOWED (AUTO mode)" : "Whitelist Status: BLOCKED (AUTO mode - no channels)";
+                break;
+            case CUSTOM:
+                isAllowed = opsecSettings.isModWhitelisted(info.getModId());
+                statusText = isAllowed ? "Whitelist Status: ALLOWED (CUSTOM mode)" : "Whitelist Status: BLOCKED (CUSTOM mode)";
+                break;
+            default: // OFF
+                isAllowed = false;
+                statusText = "Whitelist Status: BLOCKED (OFF)";
+                break;
         }
+        source.sendFeedback(isAllowed ? success(statusText) : warning(statusText));
         
         return 1;
     }

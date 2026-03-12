@@ -32,6 +32,9 @@
 			"environment": "client"
 		}
 	],
+	"breaks": {
+		"exploitpreventer": "*"
+	},
 	"depends": {
 		"fabricloader": ">=0.16.0",
 		"minecraft": "${minecraft_version_range}",

@@ -65,7 +65,10 @@ public class TranslationProtectionHandler {
         if (!shouldProcess()) {
             return;
         }
-        
+        if (ExploitContext.shouldSuppressAlerts()) {
+            return;
+        }
+
         long now = System.currentTimeMillis();
 
         // Header with cooldown: ⛔ [OpSec] Key resolution exploit detected!
@@ -115,6 +118,9 @@ public class TranslationProtectionHandler {
      * @param spoofedValue What we're returning instead
      */
     public static void sendDetail(InterceptionType type, String keyName, String originalValue, String spoofedValue) {
+        if (ExploitContext.shouldSuppressAlerts()) {
+            return;
+        }
         if (!OpsecConfig.getInstance().shouldShowAlerts()) {
             return;
         }

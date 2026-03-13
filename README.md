@@ -8,7 +8,6 @@
 > [!WARNING]
 > This is a passion project mostly built with AI. Everything is tested but don't rely on this for actual security. If you want something proven, use [ExploitPreventer](https://github.com/NikOverflow/ExploitPreventer) **(See [EP Compatibility](#exploitpreventer-compatibility) and [Meteor Client notes](#pre-patched-meteor-client))**. OpSec just tries to offer more features and interactive customization on top of the basics.
 
-
 ## What it does
 
 - **[Brand Spoofing](#brand-spoofing)** - Change client brand name to Vanilla, Fabric, or Forge
@@ -21,6 +20,8 @@
 - **[Chat Signing Control](#chat-signing-control)** - Configure chat message signing behavior
 - **[Account Manager](#account-manager)** - Switch between Minecraft accounts using session tokens
 - **[Telemetry Blocking](#telemetry-blocking)** - Disable data collection sent to Mojang
+
+> If you're interested in servers or plugins that are using tracking related exploits then look in the [Hall of Shame](https://github.com/NikOverflow/ExploitPreventer/blob/master/HALL_OF_SHAME.md).
 
 ## Requirements
 
@@ -223,7 +224,7 @@ OpSec's bandaid fix for Meteor is to blacklist the `AbstractSignEditScreenMixin`
 
 ### ExploitPreventer Compatibility
 
-When [ExploitPreventer](https://github.com/NikOverflow/ExploitPreventer) is installed alongside OpSec, overlapping features are automatically disabled to let EP handle them. The following OpSec features are deferred to EP:
+Although not recommended and frankly quite redundant, for users that prefers [ExploitPreventer](https://github.com/NikOverflow/ExploitPreventer)'s core protection implementation but still need OpSec's additional features, both can be installed alongside each other, overlapping features are automatically disabled to let EP handle them. The following OpSec features are deferred to EP:
 
 - [Brand Spoofing](#brand-spoofing)
 - [Channel Spoofing](#channel-spoofing)
@@ -238,9 +239,7 @@ Features that don't overlap remain fully functional: alerts, chat signing, accou
 
 #### Pre-patched Meteor Client
 
-If you use Meteor Client with EP but **without** OpSec, you need a Meteor build that fixes the faulty sign translation protection. Either:
-- [NikOverflow's patched build](https://github.com/NikOverflow/meteor-client/releases/tag/fix-sign) which removes the broken sign protection
-- [Meteor's custom translations branch](https://github.com/MeteorDevelopment/meteor-client/tree/translations) which breaks away from Minecraft's translation system to avoid detection
+If you use Meteor Client with EP but **without** OpSec, you need a Meteor build that fixes the faulty sign translation protection such as [NikOverflow's patched build](https://github.com/NikOverflow/meteor-client/releases/tag/fix-sign) which removes the broken sign protection.
 
 If you use continued to use OpSec, this is handled automatically by [Meteor Fix](#meteor-fix) regardless of Meteor version.
 

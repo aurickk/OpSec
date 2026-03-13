@@ -6,7 +6,7 @@
 
 
 > [!WARNING]
-> This is a passion project mostly built with AI. Everything is tested but don't rely on this for actual security. If you want something proven, use [ExploitPreventer](https://github.com/NikOverflow/ExploitPreventer) (Do not use this to bypass Meteor Client checks). OpSec just tries to offer more features and interactive customization on top of the basics.
+> This is a passion project mostly built with AI. Everything is tested but don't rely on this for actual security. If you want something proven, use [ExploitPreventer](https://github.com/NikOverflow/ExploitPreventer) **(See [EP Compatibility](#exploitpreventer-compatibility) and [Meteor Client notes](#pre-patched-meteor-client))**. OpSec just tries to offer more features and interactive customization on top of the basics.
 
 
 ## What it does
@@ -14,10 +14,10 @@
 - **[Brand Spoofing](#brand-spoofing)** - Change client brand name to Vanilla, Fabric, or Forge
 - **[Channel Spoofing](#channel-spoofing)** - Hide or fake mod channels to prevent mod detection
 - **[Isolate Pack Cache](#isolate-pack-cache)** - Isolate resource packs per-account to prevent tracking
-- **[Block Local URLs](#block-local-urls)** - Automatically fail local requests from server resource packs 
+- **[Block Local URLs](#block-local-urls)** - Block resource pack redirects to local/private addresses
 - **[Key Resolution Protection](#key-resolution-protection)** - Protect against key resolution mod detection in signs and anvils
 - **[Meteor Fix](#meteor-fix)** - Disable Meteor Client's broken key resolution protection
-- **[Mod Whitelist](#mod-whitelist)** - Exempt specific mods from channel spoofing and key resolution protection in signs and anvils
+- **[Mod Whitelist](#mod-whitelist)** - Automatically or manually exempt mods from channel spoofing and key resolution protection
 - **[Chat Signing Control](#chat-signing-control)** - Configure chat message signing behavior
 - **[Account Manager](#account-manager)** - Switch between Minecraft accounts using session tokens
 - **[Telemetry Blocking](#telemetry-blocking)** - Disable data collection sent to Mojang
@@ -70,8 +70,8 @@ If settings are changed while connected to a server it is recommended to reconne
 
 | Setting | Description |
 |---------|-------------|
-| **Enable Whitelist** | Enable the [mod whitelist](#mod-whitelist) feature |
-| **Installed Mods** | Toggle individual mods ON/OFF to exempt them from protection |
+| **Whitelist Mode** | Select whitelist behavior:<br/>• **OFF**: All mod content blocked<br/>• **AUTO**: Mods with network channels are automatically whitelisted (default)<br/>• **CUSTOM**: Manually select which mods to whitelist |
+| **Installed Mods** | Toggle individual mods ON/OFF to exempt them from protection (CUSTOM mode only) |
 
 #### Miscellaneous Tab
 
@@ -106,7 +106,7 @@ Use `/opsec` in-game to access debug information:
 
 - **Key Resolution Exploit Detected**: Server is probing your keybind
 - **Resource Pack Fingerprinting Detected**: Suspicious resource pack URL detected
-- **Local URL Scan Detected**: Resource pack attempted to scan local network 
+- **Local URL Scan Detected**: Resource pack redirect targeted a local/private address
 
 ## Feature Details
 
@@ -138,13 +138,13 @@ Instead of storing all resource packs in a shared cache (`~/.minecraft/downloads
 
 ### Block Local URLs
 
-Based on [ExploitPreventer](https://github.com/NikOverflow/ExploitPreventer)
+Taken from [ExploitPreventer](https://github.com/NikOverflow/ExploitPreventer) by [NikOverFlow](https://github.com/NikOverflow)
 
-Malicious servers can send resource pack URLs to probe your local network devices.
+Malicious servers can send resource pack URLs that redirect to your local network to probe for devices and services.
 
 https://alaggydev.github.io/posts/cytooxien/
 
-OpSec detects resource pack URLs pointing to local/private IP addresses and redirects them to an invalid address (`http://0.0.0.0:0/opsec-blocked`), tricking the server into thinking that requests failed naturally.
+OpSec manually follows HTTP redirects (300-303, 305, 307) and checks each hop for local/private addresses using DNS resolution. If a redirect targets a local address, the connection is blocked. This also handles HTTP 305 proxy redirect attacks by injecting the correct Host header to prevent header leakage. Protection is automatically skipped when connected to a local server.
 
 ---
 
@@ -220,6 +220,32 @@ OpSec's bandaid fix for Meteor is to blacklist the `AbstractSignEditScreenMixin`
 <img width="901" height="107" alt="image" src="https://github.com/user-attachments/assets/506b9c73-6747-40f8-9a56-52c0353034b4" />
 
 ---
+
+### ExploitPreventer Compatibility
+
+When [ExploitPreventer](https://github.com/NikOverflow/ExploitPreventer) is installed alongside OpSec, overlapping features are automatically disabled to let EP handle them. The following OpSec features are deferred to EP:
+
+- [Brand Spoofing](#brand-spoofing)
+- [Channel Spoofing](#channel-spoofing)
+- [Isolate Pack Cache](#isolate-pack-cache)
+- [Block Local URLs](#block-local-urls)
+- [Key Resolution Protection](#key-resolution-protection)
+- [Mod Whitelist](#mod-whitelist)
+
+These settings are grayed out in the config screen but your saved preferences are preserved. If you remove EP later, they restore automatically.
+
+Features that don't overlap remain fully functional: alerts, chat signing, account manager, telemetry blocking, and [Meteor Fix](#meteor-fix).
+
+#### Pre-patched Meteor Client
+
+If you use Meteor Client with EP but **without** OpSec, you need a Meteor build that fixes the faulty sign translation protection. Either:
+- [NikOverflow's patched build](https://github.com/NikOverflow/meteor-client/releases/tag/fix-sign) which removes the broken sign protection
+- [Meteor's custom translations branch](https://github.com/MeteorDevelopment/meteor-client/tree/translations) which breaks away from Minecraft's translation system to avoid detection
+
+If you use continued to use OpSec, this is handled automatically by [Meteor Fix](#meteor-fix) regardless of Meteor version.
+
+---
+
 ### Channel Spoofing
 
 Servers can query your registered network channels to detect which mods you have installed.
@@ -240,8 +266,13 @@ Some mods require server communication to function properly (e.g., VoiceChat, Xa
 
 <img width="853" height="478" alt="whitelist settings menu" src="https://github.com/user-attachments/assets/6ae423de-dd98-47c1-a617-f6df747c9293" />
 
-When enabled:
-- **Brand is forced to Fabric** to since you are revealing Fabric mods
+**Modes:**
+- **OFF**: All mod content is blocked
+- **AUTO** (default): Mods that register network channels are automatically whitelisted as they are the most likely to have server-side functionalities
+- **CUSTOM**: Manually select which mods to whitelist from the installed mod list
+
+When the whitelist is active (AUTO or CUSTOM):
+- **Brand is forced to Fabric** since you are revealing Fabric mods
 - Whitelisted mods can register their channels and translation keys normally
 - Non-whitelisted mods remain hidden from the server
 
@@ -295,7 +326,6 @@ OpSec blocks telemetry sending to Mojang when telemetry blocking is enabled. Doe
 ---
 
 
-
 ## Building from Source
 
 ### Prerequisites
@@ -338,7 +368,7 @@ Output JARs are located in `versions/<minecraft_version>/build/libs/`:
 
 ## References
 
-- [ExploitPreventer](https://github.com/NikOverflow/ExploitPreventer) - Local URL blocking and sign key resolution protection
+- [ExploitPreventer](https://github.com/NikOverflow/ExploitPreventer) - Local URL blocking and server key resolution protection anti-measures
 - [LiquidBounce](https://github.com/CCBlueX/LiquidBounce/blob/nextgen/src/main/java/net/ccbluex/liquidbounce/injection/mixins/minecraft/util/MixinDownloadQueue.java) - Cached server resource pack isolation
 - [Meteor Client](https://github.com/MeteorDevelopment/meteor-client) - Session token sign in
 - [No Chat Reports](https://modrinth.com/mod/no-chat-reports) - Chat signing control and telemetry blocking

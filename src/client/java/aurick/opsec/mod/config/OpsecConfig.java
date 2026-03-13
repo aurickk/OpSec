@@ -20,6 +20,9 @@ public class OpsecConfig {
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
     private static final Path CONFIG_PATH = FabricLoader.getInstance().getConfigDir().resolve("opsec.json");
     
+    public static final boolean EXPLOIT_PREVENTER_LOADED =
+        FabricLoader.getInstance().isModLoaded("exploitpreventer");
+
     private static volatile OpsecConfig INSTANCE;
     private static final Object LOCK = new Object();
     
@@ -28,6 +31,9 @@ public class OpsecConfig {
     
     private OpsecConfig() {
         load();
+        if (EXPLOIT_PREVENTER_LOADED) {
+            Opsec.LOGGER.info("[OpSec] Exploit Preventer detected - compatibility mode active.");
+        }
     }
     
     public static OpsecConfig getInstance() {
@@ -150,7 +156,7 @@ public class OpsecConfig {
     public String getCurrentServer() { return currentServer; }
     
     // Identity protection
-    public boolean shouldSpoofBrand() { return settings.isSpoofBrand(); }
+    public boolean shouldSpoofBrand() { return !EXPLOIT_PREVENTER_LOADED && settings.isSpoofBrand(); }
     
     /**
      * Determines if channel spoofing/filtering should be active.
@@ -158,18 +164,18 @@ public class OpsecConfig {
      * Whitelist alone does NOT enable channel filtering - it only affects translation keys.
      * When whitelist is ON but channel spoofing is OFF, channels pass through unmodified.
      */
-    public boolean shouldSpoofChannels() { 
-        return settings.isSpoofBrand() && settings.isSpoofChannels(); 
+    public boolean shouldSpoofChannels() {
+        return !EXPLOIT_PREVENTER_LOADED && settings.isSpoofBrand() && settings.isSpoofChannels();
     }
     
     public String getEffectiveBrand() { return settings.getEffectiveBrand(); }
     
     // Resource pack protection
-    public boolean shouldIsolatePackCache() { return settings.isIsolatePackCache(); }
-    public boolean shouldBlockLocalPackUrls() { return settings.isBlockLocalPackUrls(); }
+    public boolean shouldIsolatePackCache() { return !EXPLOIT_PREVENTER_LOADED && settings.isIsolatePackCache(); }
+    public boolean shouldBlockLocalPackUrls() { return !EXPLOIT_PREVENTER_LOADED && settings.isBlockLocalPackUrls(); }
     
     // Key resolution protection
-    public boolean isTranslationProtectionEnabled() { return settings.isTranslationProtectionEnabled(); }
+    public boolean isTranslationProtectionEnabled() { return !EXPLOIT_PREVENTER_LOADED && settings.isTranslationProtectionEnabled(); }
     public boolean isMeteorFix() { return settings.isMeteorFix(); }
     
     // Alerts and logging

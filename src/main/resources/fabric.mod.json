@@ -32,7 +32,7 @@
 			"environment": "client"
 		}
 	],
-	"breaks": {
+	"conflicts": {
 		"exploitpreventer": "*"
 	},
 	"depends": {

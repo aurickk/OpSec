@@ -165,108 +165,124 @@ public class OpsecConfigScreen extends Screen {
     
     private Tab createIdentityTab(SpoofSettings settings) {
         List<AbstractWidget> widgets = new ArrayList<>();
-        
+
         // Client Brand Section
         widgets.add(createSectionHeader("\u00A7f\u00A7lClient Brand"));
-        
-        widgets.add(cycleBuilder(COLORED_BOOL_TO_TEXT, List.of(Boolean.TRUE, Boolean.FALSE), settings.isSpoofBrand())
-                .withTooltip(v -> Tooltip.create(Component.literal("Replace your client brand with a spoofed value")))
-                .create(0, 0, 210, 20, Component.translatable("opsec.option.spoofBrand"), 
-                    (button, value) -> { 
-                        settings.setSpoofBrand(value);
-                        config.save();
-                        refreshScreen();
-                }));
-        
-        if (settings.isSpoofBrand()) {
-            // When whitelist is enabled, show greyed-out forced Fabric indicator
-            if (settings.isWhitelistEnabled()) {
-                widgets.add(createSectionHeader("\u00A77Brand: Fabric (forced by whitelist)"));
-            } else {
-                widgets.add(cycleBuilder(BrandType::getDisplayName, List.of(BrandType.values()), BrandType.fromString(settings.getCustomBrand()))
-                        .withTooltip(v -> Tooltip.create(Component.literal("Select the brand to appear as")))
-                        .create(0, 0, 210, 20, Component.translatable("opsec.option.brandType"),
-                        (button, value) -> { settings.setCustomBrand(value.getValue()); config.save(); }));
-            }
-            
-            widgets.add(cycleBuilder(COLORED_BOOL_TO_TEXT, List.of(Boolean.TRUE, Boolean.FALSE), settings.isSpoofChannels())
-                .withTooltip(v -> Tooltip.create(Component.literal("Replace/block mod channels to appear as clean instance")))
-                    .create(0, 0, 210, 20, Component.translatable("opsec.option.spoofChannels"),
-                        (button, value) -> { 
-                            settings.setSpoofChannels(value); 
+
+        if (OpsecConfig.EXPLOIT_PREVENTER_LOADED) {
+            widgets.add(createSectionHeader("\u00A77Managed by Exploit Preventer"));
+            widgets.add(createEPManagedToggle(Component.translatable("opsec.option.spoofBrand")));
+        } else {
+            widgets.add(cycleBuilder(COLORED_BOOL_TO_TEXT, List.of(Boolean.TRUE, Boolean.FALSE), settings.isSpoofBrand())
+                    .withTooltip(v -> Tooltip.create(Component.literal("Replace your client brand with a spoofed value")))
+                    .create(0, 0, 210, 20, Component.translatable("opsec.option.spoofBrand"),
+                        (button, value) -> {
+                            settings.setSpoofBrand(value);
                             config.save();
                             refreshScreen();
                     }));
-            
-            if (settings.isSpoofChannels() && settings.getWhitelistMode() != SpoofSettings.WhitelistMode.AUTO) {
-                widgets.add(createSectionHeader("\u00A7e\u26A0 May break mods if not whitelisted"));
+
+            if (settings.isSpoofBrand()) {
+                // When whitelist is enabled, show greyed-out forced Fabric indicator
+                if (settings.isWhitelistEnabled()) {
+                    widgets.add(createSectionHeader("\u00A77Brand: Fabric (forced by whitelist)"));
+                } else {
+                    widgets.add(cycleBuilder(BrandType::getDisplayName, List.of(BrandType.values()), BrandType.fromString(settings.getCustomBrand()))
+                            .withTooltip(v -> Tooltip.create(Component.literal("Select the brand to appear as")))
+                            .create(0, 0, 210, 20, Component.translatable("opsec.option.brandType"),
+                            (button, value) -> { settings.setCustomBrand(value.getValue()); config.save(); }));
+                }
+
+                widgets.add(cycleBuilder(COLORED_BOOL_TO_TEXT, List.of(Boolean.TRUE, Boolean.FALSE), settings.isSpoofChannels())
+                    .withTooltip(v -> Tooltip.create(Component.literal("Replace/block mod channels to appear as clean instance")))
+                        .create(0, 0, 210, 20, Component.translatable("opsec.option.spoofChannels"),
+                            (button, value) -> {
+                                settings.setSpoofChannels(value);
+                                config.save();
+                                refreshScreen();
+                        }));
+
+                if (settings.isSpoofChannels() && settings.getWhitelistMode() != SpoofSettings.WhitelistMode.AUTO) {
+                    widgets.add(createSectionHeader("\u00A7e\u26A0 May break mods if not whitelisted"));
+                }
             }
         }
-        
+
         return new WidgetTab(Component.translatable("opsec.tab.identity"), widgets);
     }
     
     private Tab createProtectionTab(SpoofSettings settings) {
         List<AbstractWidget> widgets = new ArrayList<>();
-        
+
         // Resource Pack Protection Section
         widgets.add(createSectionHeader("\u00A7f\u00A7lResource Pack Protection"));
-        
-        widgets.add(cycleBuilder(COLORED_BOOL_TO_TEXT, List.of(Boolean.TRUE, Boolean.FALSE), settings.isIsolatePackCache())
-                .withTooltip(v -> Tooltip.create(Component.literal("Store packs per-account to prevent fingerprinting")))
-                .create(0, 0, 210, 20, Component.translatable("opsec.option.isolatePackCache"),
-                (button, value) -> { settings.setIsolatePackCache(value); config.save(); }));
-        
-        widgets.add(cycleBuilder(COLORED_BOOL_TO_TEXT, List.of(Boolean.TRUE, Boolean.FALSE), settings.isBlockLocalPackUrls())
-            .withTooltip(v -> Tooltip.create(Component.literal("Block local URL resource pack requests")))
-                .create(0, 0, 210, 20, Component.translatable("opsec.option.blockLocalPackUrls"),
-                (button, value) -> { settings.setBlockLocalPackUrls(value); config.save(); }));
-        
+
+        if (OpsecConfig.EXPLOIT_PREVENTER_LOADED) {
+            widgets.add(createSectionHeader("\u00A77Managed by Exploit Preventer"));
+            widgets.add(createEPManagedToggle(Component.translatable("opsec.option.isolatePackCache")));
+            widgets.add(createEPManagedToggle(Component.translatable("opsec.option.blockLocalPackUrls")));
+        } else {
+            widgets.add(cycleBuilder(COLORED_BOOL_TO_TEXT, List.of(Boolean.TRUE, Boolean.FALSE), settings.isIsolatePackCache())
+                    .withTooltip(v -> Tooltip.create(Component.literal("Store packs per-account to prevent fingerprinting")))
+                    .create(0, 0, 210, 20, Component.translatable("opsec.option.isolatePackCache"),
+                    (button, value) -> { settings.setIsolatePackCache(value); config.save(); }));
+
+            widgets.add(cycleBuilder(COLORED_BOOL_TO_TEXT, List.of(Boolean.TRUE, Boolean.FALSE), settings.isBlockLocalPackUrls())
+                .withTooltip(v -> Tooltip.create(Component.literal("Block local URL resource pack requests")))
+                    .create(0, 0, 210, 20, Component.translatable("opsec.option.blockLocalPackUrls"),
+                    (button, value) -> { settings.setBlockLocalPackUrls(value); config.save(); }));
+        }
+
         widgets.add(Button.builder(Component.translatable("opsec.option.clearCache"), button -> {
                 ResourcePackGuard.clearAllCaches();
             }).size(210, 20)
           .tooltip(Tooltip.create(Component.literal("Deletes all cached server resource packs\nAlso resets download queue state")))
           .build());
-        
+
         // Key Resolution Protection Section
         widgets.add(createSectionHeader("\u00A7f\u00A7lKey Resolution Protection"));
-        
-        widgets.add(cycleBuilder(COLORED_BOOL_TO_TEXT, List.of(Boolean.TRUE, Boolean.FALSE), settings.isTranslationProtectionEnabled())
-            .withTooltip(v -> Tooltip.create(Component.literal("Mask translation key values to appear as default vanilla client")))
-                .create(0, 0, 210, 20, Component.translatable("opsec.option.keyResolutionSpoofing"),
-                    (button, value) -> { 
-                        settings.setTranslationProtection(value); 
-                        config.save();
-                        refreshScreen();
-                }));
-        
-        // Only show sub-options when translation protection is enabled
-        if (settings.isTranslationProtectionEnabled()) {
-            widgets.add(cycleBuilder(COLORED_BOOL_TO_TEXT, List.of(Boolean.TRUE, Boolean.FALSE), settings.isFakeDefaultKeybinds())
-                .withTooltip(v -> Tooltip.create(Component.literal(
-                    "Spoof vanilla keybinds to default values when enabled")))
-                    .create(0, 0, 210, 20, Component.translatable("opsec.option.fakeDefaultKeybinds"),
-                        (button, value) -> { 
-                            settings.setFakeDefaultKeybinds(value); 
-                            config.save();
-                    }));
-            
-            widgets.add(cycleBuilder(COLORED_BOOL_TO_TEXT, List.of(Boolean.TRUE, Boolean.FALSE), settings.isMeteorFix())
-                .withTooltip(v -> Tooltip.create(Component.literal(
-                    "Blacklist a Meteor Client mixin to allow OpSec's proper protection handling")))
-                    .create(0, 0, 210, 20, Component.translatable("opsec.option.meteorFix"),
-                        (button, value) -> { 
-                            settings.setMeteorFix(value); 
+
+        if (OpsecConfig.EXPLOIT_PREVENTER_LOADED) {
+            widgets.add(createSectionHeader("\u00A77Managed by Exploit Preventer"));
+            widgets.add(createEPManagedToggle(Component.translatable("opsec.option.keyResolutionSpoofing")));
+        } else {
+            widgets.add(cycleBuilder(COLORED_BOOL_TO_TEXT, List.of(Boolean.TRUE, Boolean.FALSE), settings.isTranslationProtectionEnabled())
+                .withTooltip(v -> Tooltip.create(Component.literal("Mask translation key values to appear as default vanilla client")))
+                    .create(0, 0, 210, 20, Component.translatable("opsec.option.keyResolutionSpoofing"),
+                        (button, value) -> {
+                            settings.setTranslationProtection(value);
                             config.save();
                             refreshScreen();
                     }));
-            
-            // Show warning only when setting differs from what was applied at startup
-            if (MeteorMixinCanceller.needsRestart(settings.isMeteorFix())) {
-                widgets.add(createSectionHeader("\u00A7e\u26A0 Requires game restart to take effect"));
+
+            // Only show sub-options when translation protection is enabled
+            if (settings.isTranslationProtectionEnabled()) {
+                widgets.add(cycleBuilder(COLORED_BOOL_TO_TEXT, List.of(Boolean.TRUE, Boolean.FALSE), settings.isFakeDefaultKeybinds())
+                    .withTooltip(v -> Tooltip.create(Component.literal(
+                        "Spoof vanilla keybinds to default values when enabled")))
+                        .create(0, 0, 210, 20, Component.translatable("opsec.option.fakeDefaultKeybinds"),
+                            (button, value) -> {
+                                settings.setFakeDefaultKeybinds(value);
+                                config.save();
+                        }));
+
+                widgets.add(cycleBuilder(COLORED_BOOL_TO_TEXT, List.of(Boolean.TRUE, Boolean.FALSE), settings.isMeteorFix())
+                    .withTooltip(v -> Tooltip.create(Component.literal(
+                        "Blacklist a Meteor Client mixin to allow OpSec's proper protection handling")))
+                        .create(0, 0, 210, 20, Component.translatable("opsec.option.meteorFix"),
+                            (button, value) -> {
+                                settings.setMeteorFix(value);
+                                config.save();
+                                refreshScreen();
+                        }));
+
+                // Show warning only when setting differs from what was applied at startup
+                if (MeteorMixinCanceller.needsRestart(settings.isMeteorFix())) {
+                    widgets.add(createSectionHeader("\u00A7e\u26A0 Requires game restart to take effect"));
+                }
             }
         }
-        
+
         // Privacy & Security Section
         widgets.add(createSectionHeader("\u00A7f\u00A7lPrivacy & Security"));
         
@@ -842,66 +858,75 @@ public class OpsecConfigScreen extends Screen {
         // Section header
         widgets.add(createSectionHeader("\u00A7f\u00A7lMod Whitelist"));
 
-        // Tri-state mode selector: OFF → AUTO → ON
-        widgets.add(cycleBuilder(WhitelistModeDisplay::getDisplayName, List.of(SpoofSettings.WhitelistMode.values()), settings.getWhitelistMode())
-                .withTooltip(v -> Tooltip.create(WhitelistModeDisplay.getTooltip(v)))
-                .create(0, 0, 210, 20, Component.translatable("opsec.option.whitelistMode"),
-                    (button, value) -> {
-                        settings.setWhitelistMode(value);
+        if (OpsecConfig.EXPLOIT_PREVENTER_LOADED) {
+            widgets.add(createSectionHeader("\u00A77Managed by Exploit Preventer"));
+            CycleButton<SpoofSettings.WhitelistMode> modeButton = cycleBuilder(WhitelistModeDisplay::getDisplayName, List.of(SpoofSettings.WhitelistMode.values()), SpoofSettings.WhitelistMode.OFF)
+                    .withTooltip(v -> Tooltip.create(Component.literal("Managed by Exploit Preventer")))
+                    .create(0, 0, 210, 20, Component.translatable("opsec.option.whitelistMode"), (b, v) -> {});
+            modeButton.active = false;
+            widgets.add(modeButton);
+        } else {
+            // Tri-state mode selector: OFF → AUTO → ON
+            widgets.add(cycleBuilder(WhitelistModeDisplay::getDisplayName, List.of(SpoofSettings.WhitelistMode.values()), settings.getWhitelistMode())
+                    .withTooltip(v -> Tooltip.create(WhitelistModeDisplay.getTooltip(v)))
+                    .create(0, 0, 210, 20, Component.translatable("opsec.option.whitelistMode"),
+                        (button, value) -> {
+                            settings.setWhitelistMode(value);
+                            config.save();
+                            refreshScreen();
+                    }));
+
+            if (settings.getWhitelistMode() == SpoofSettings.WhitelistMode.AUTO) {
+                // AUTO mode: read-only list of mods that have channels (auto-whitelisted)
+                List<ModContainer> whitelistableMods = getWhitelistableMods();
+                for (ModContainer mod : whitelistableMods) {
+                    String modId = mod.getMetadata().getId();
+                    String modName = mod.getMetadata().getName();
+                    ModRegistry.ModInfo info = ModRegistry.getModInfo(modId);
+                    if (info != null && info.hasChannels()) {
+                        widgets.add(createSectionHeader("\u00A7a" + modName + " \u00A77(" + info.getChannels().size() + " channels)"));
+                    }
+                }
+            } else if (settings.getWhitelistMode() == SpoofSettings.WhitelistMode.CUSTOM) {
+                // ON mode: existing manual toggle UI
+                widgets.add(createSectionHeader("\u00A7f\u00A7lInstalled Mods"));
+
+                List<ModContainer> whitelistableMods = getWhitelistableMods();
+                widgets.add(new ToggleAllRowWidget(
+                    () -> {
+                        for (ModContainer m : whitelistableMods) {
+                            settings.getWhitelistedMods().add(m.getMetadata().getId());
+                        }
                         config.save();
                         refreshScreen();
-                }));
-
-        if (settings.getWhitelistMode() == SpoofSettings.WhitelistMode.AUTO) {
-            // AUTO mode: read-only list of mods that have channels (auto-whitelisted)
-            List<ModContainer> whitelistableMods = getWhitelistableMods();
-            for (ModContainer mod : whitelistableMods) {
-                String modId = mod.getMetadata().getId();
-                String modName = mod.getMetadata().getName();
-                ModRegistry.ModInfo info = ModRegistry.getModInfo(modId);
-                if (info != null && info.hasChannels()) {
-                    widgets.add(createSectionHeader("\u00A7a" + modName + " \u00A77(" + info.getChannels().size() + " channels)"));
-                }
-            }
-        } else if (settings.getWhitelistMode() == SpoofSettings.WhitelistMode.CUSTOM) {
-            // ON mode: existing manual toggle UI
-            widgets.add(createSectionHeader("\u00A7f\u00A7lInstalled Mods"));
-
-            List<ModContainer> whitelistableMods = getWhitelistableMods();
-            widgets.add(new ToggleAllRowWidget(
-                () -> {
-                    for (ModContainer m : whitelistableMods) {
-                        settings.getWhitelistedMods().add(m.getMetadata().getId());
+                    },
+                    () -> {
+                        settings.getWhitelistedMods().clear();
+                        config.save();
+                        refreshScreen();
                     }
-                    config.save();
-                    refreshScreen();
-                },
-                () -> {
-                    settings.getWhitelistedMods().clear();
-                    config.save();
-                    refreshScreen();
+                ));
+
+                for (ModContainer mod : whitelistableMods) {
+                    String modId = mod.getMetadata().getId();
+                    String modName = mod.getMetadata().getName();
+
+                    boolean isWhitelisted = settings.getWhitelistedMods().contains(modId);
+                    final String finalModId = modId;
+                    CycleButton<Boolean> modButton = cycleBuilder(COLORED_BOOL_TO_TEXT, List.of(Boolean.TRUE, Boolean.FALSE), isWhitelisted)
+                        .withTooltip(v -> Tooltip.create(Component.literal(finalModId)))
+                        .create(0, 0, 210, 20, Component.literal(modName),
+                            (button, value) -> {
+                                if (value) {
+                                    settings.getWhitelistedMods().add(finalModId);
+                                } else {
+                                    settings.getWhitelistedMods().remove(finalModId);
+                                }
+                                config.save();
+                        });
+
+                    widgets.add(modButton);
                 }
-            ));
-
-            for (ModContainer mod : whitelistableMods) {
-                String modId = mod.getMetadata().getId();
-                String modName = mod.getMetadata().getName();
-
-                boolean isWhitelisted = settings.getWhitelistedMods().contains(modId);
-                final String finalModId = modId;
-                CycleButton<Boolean> modButton = cycleBuilder(COLORED_BOOL_TO_TEXT, List.of(Boolean.TRUE, Boolean.FALSE), isWhitelisted)
-                    .withTooltip(v -> Tooltip.create(Component.literal(finalModId)))
-                    .create(0, 0, 210, 20, Component.literal(modName),
-                        (button, value) -> {
-                            if (value) {
-                                settings.getWhitelistedMods().add(finalModId);
-                            } else {
-                                settings.getWhitelistedMods().remove(finalModId);
-                            }
-                            config.save();
-                    });
-
-                widgets.add(modButton);
             }
         }
 
@@ -995,6 +1020,14 @@ public class OpsecConfigScreen extends Screen {
         }
     }
     
+    private CycleButton<Boolean> createEPManagedToggle(Component label) {
+        CycleButton<Boolean> button = cycleBuilder(COLORED_BOOL_TO_TEXT, List.of(Boolean.TRUE, Boolean.FALSE), false)
+                .withTooltip(v -> Tooltip.create(Component.literal("Managed by Exploit Preventer")))
+                .create(0, 0, 210, 20, label, (b, v) -> {});
+        button.active = false;
+        return button;
+    }
+
     private StringWidget createSectionHeader(String text) {
         //? if >=1.21.6 {
         Component component = Component.literal(text);

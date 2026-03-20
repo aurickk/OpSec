@@ -35,6 +35,10 @@
 	"conflicts": {
 		"exploitpreventer": "*"
 	},
+	"breaks": {
+		"ichor": "*",
+		"labymod": "*"
+	},
 	"depends": {
 		"fabricloader": ">=0.16.0",
 		"minecraft": "${minecraft_version_range}",

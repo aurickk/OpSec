@@ -24,7 +24,7 @@ import java.util.UUID;
  * Represents a Minecraft account authenticated via session (access) token.
  * Handles token validation and account switching with proper chat signature support.
  */
-public class SessionAccount {
+public class SessionAccount implements Account {
     
     /**
      * Result of a validation attempt.
@@ -263,6 +263,7 @@ public class SessionAccount {
      * Includes retry logic for rate limiting and connection errors.
      * @return true if login was successful
      */
+    @Override
     public boolean login() {
         if (accessToken == null || accessToken.isBlank()) {
             this.lastError = "Missing token";
@@ -379,19 +380,25 @@ public class SessionAccount {
     // Getters
     public String getAccessToken() { return accessToken; }
     public String getRefreshToken() { return refreshToken; }
-    public String getUsername() { return username; }
-    public String getUuid() { return uuid; }
+    @Override public String getUsername() { return username; }
+    @Override public String getUuid() { return uuid; }
     public long getLastValidated() { return lastValidated; }
-    public boolean isValid() { return valid; }
-    public String getLastError() { return lastError; }
+    @Override public boolean isValid() { return valid; }
+    @Override public String getLastError() { return lastError; }
     public boolean hasRefreshToken() { return refreshToken != null && !refreshToken.isBlank(); }
     
     public void setValid(boolean valid) { this.valid = valid; }
     public void setRefreshToken(String refreshToken) { this.refreshToken = refreshToken; }
     public void clearError() { this.lastError = null; }
     
+    @Override
     public boolean hasValidInfo() {
         return username != null && !username.isBlank() && uuid != null && !uuid.isBlank();
+    }
+
+    @Override
+    public boolean isCracked() {
+        return false;
     }
     
     /**
@@ -809,8 +816,10 @@ public class SessionAccount {
     }
     
     // JSON serialization
+    @Override
     public JsonObject toJson() {
         JsonObject json = new JsonObject();
+        json.addProperty("type", "session");
         json.addProperty("accessToken", accessToken);
         if (refreshToken != null && !refreshToken.isBlank()) {
             json.addProperty("refreshToken", refreshToken);

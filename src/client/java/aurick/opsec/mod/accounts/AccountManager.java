@@ -34,11 +34,11 @@ public class AccountManager {
     private static volatile AccountManager INSTANCE;
     private static final Object LOCK = new Object();
     
-    private final List<SessionAccount> accounts = new ArrayList<>();
+    private final List<Account> accounts = new ArrayList<>();
     private String activeAccountUuid = null;
-    
+
     // Store the original session info for logout
-    private SessionAccount originalAccount = null;
+    private Account originalAccount = null;
 
     // Prevent concurrent refresh operations using atomic compare-and-set
     private final AtomicBoolean isRefreshing = new AtomicBoolean(false);
@@ -75,7 +75,7 @@ public class AccountManager {
      * Add a new account to the manager.
      * Will not add duplicates (based on UUID).
      */
-    public void add(SessionAccount account) {
+    public void add(Account account) {
         if (account == null || !account.hasValidInfo()) {
             Opsec.LOGGER.warn("[OpSec] Cannot add invalid account");
             return;
@@ -93,7 +93,7 @@ public class AccountManager {
      * Remove an account from the manager.
      * If the removed account was currently logged in, automatically logs out to original account.
      */
-    public void remove(SessionAccount account) {
+    public void remove(Account account) {
         if (account == null) return;
         
         boolean wasActive = account.getUuid().equals(activeAccountUuid);
@@ -111,14 +111,14 @@ public class AccountManager {
     /**
      * Get all saved accounts.
      */
-    public List<SessionAccount> getAccounts() {
+    public List<Account> getAccounts() {
         return Collections.unmodifiableList(accounts);
     }
     
     /**
      * Get account by UUID.
      */
-    public Optional<SessionAccount> getByUuid(String uuid) {
+    public Optional<Account> getByUuid(String uuid) {
         if (uuid == null) return Optional.empty();
         return accounts.stream()
                 .filter(a -> uuid.equals(a.getUuid()))
@@ -143,7 +143,7 @@ public class AccountManager {
     /**
      * Check if an account is the currently active one.
      */
-    public boolean isActive(SessionAccount account) {
+    public boolean isActive(Account account) {
         if (account == null || activeAccountUuid == null) return false;
         return activeAccountUuid.equals(account.getUuid());
     }
@@ -186,13 +186,13 @@ public class AccountManager {
     public String exportToJson() {
         JsonObject json = new JsonObject();
         JsonArray accountsArray = new JsonArray();
-        for (SessionAccount account : accounts) {
+        for (Account account : accounts) {
             accountsArray.add(account.toJson());
         }
         json.add("accounts", accountsArray);
         return GSON.toJson(json);
     }
-    
+
     /**
      * Import accounts from a JSON string.
      * @return number of accounts imported
@@ -206,7 +206,7 @@ public class AccountManager {
                 for (int i = 0; i < accountsArray.size(); i++) {
                     try {
                         JsonObject accountJson = accountsArray.get(i).getAsJsonObject();
-                        SessionAccount account = SessionAccount.fromJson(accountJson);
+                        Account account = Account.fromJson(accountJson);
                         if (account.hasValidInfo()) {
                             // Don't add duplicates
                             boolean exists = accounts.stream()
@@ -258,8 +258,14 @@ public class AccountManager {
                 int skipped = 0;
                 
                 for (int i = 0; i < accounts.size(); i++) {
-                    SessionAccount account = accounts.get(i);
-                    
+                    Account account = accounts.get(i);
+
+                    // Cracked accounts are always valid, skip validation
+                    if (account.isCracked()) {
+                        valid++;
+                        continue;
+                    }
+
                     // Add delay between requests to avoid rate limiting (except first)
                     if (i > 0) {
                         try {
@@ -269,8 +275,8 @@ public class AccountManager {
                             break;
                         }
                     }
-                    
-                    SessionAccount.ValidationResult result = account.revalidateWithResult();
+
+                    SessionAccount.ValidationResult result = ((SessionAccount) account).revalidateWithResult();
                     switch (result) {
                         case VALID -> valid++;
                         case INVALID -> invalid++;
@@ -326,7 +332,7 @@ public class AccountManager {
                 for (int i = 0; i < accountsArray.size(); i++) {
                     try {
                         JsonObject accountJson = accountsArray.get(i).getAsJsonObject();
-                        SessionAccount account = SessionAccount.fromJson(accountJson);
+                        Account account = Account.fromJson(accountJson);
                         if (account.hasValidInfo()) {
                             accounts.add(account);
                         }
@@ -360,11 +366,11 @@ public class AccountManager {
             JsonObject json = new JsonObject();
             
             JsonArray accountsArray = new JsonArray();
-            for (SessionAccount account : accounts) {
+            for (Account account : accounts) {
                 accountsArray.add(account.toJson());
             }
             json.add("accounts", accountsArray);
-            
+
             json.addProperty("activeAccountUuid", activeAccountUuid != null ? activeAccountUuid : "");
             
             // Write atomically using temp file

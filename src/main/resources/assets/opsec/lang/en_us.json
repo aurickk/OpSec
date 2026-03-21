@@ -36,6 +36,11 @@
   "opsec.brand.forge": "Forge",
   
   "opsec.translationMode.spoof": "Spoof",
-  "opsec.translationMode.block": "Block"
+  "opsec.translationMode.block": "Block",
+
+  "opsec.account.addSession": "Add Session Token",
+  "opsec.account.addSession.tooltip": "Add a new account using a session token",
+  "opsec.account.addOffline": "Add Offline Account",
+  "opsec.account.addOffline.tooltip": "Add an offline account (username only, no auth)"
 }
 

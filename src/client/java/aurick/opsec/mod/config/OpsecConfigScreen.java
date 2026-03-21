@@ -2,6 +2,7 @@ package aurick.opsec.mod.config;
 
 import aurick.opsec.mod.Opsec;
 import aurick.opsec.mod.accounts.AccountManager;
+import aurick.opsec.mod.accounts.Account;
 import aurick.opsec.mod.accounts.SessionAccount;
 import aurick.opsec.mod.mixin.MeteorMixinCanceller;
 import aurick.opsec.mod.protection.ResourcePackGuard;
@@ -338,8 +339,8 @@ public class OpsecConfigScreen extends Screen {
         if (!accountManager.getAccounts().isEmpty()) {
             widgets.add(createSectionHeader("\u00A7f\u00A7lSaved Accounts"));
             
-            for (SessionAccount account : accountManager.getAccounts()) {
-                String displayName = account.getUsername();
+            for (Account account : accountManager.getAccounts()) {
+                String displayName = account.getUsername() + (account.isCracked() ? " \u00A77(offline)" : "");
                 // Check if this account is actually the current logged-in user (not just stored as active)
                 boolean isLoggedIn = currentUser.equals(account.getUsername());
                 boolean isValid = account.isValid();
@@ -366,7 +367,7 @@ public class OpsecConfigScreen extends Screen {
                     buttonText = displayName;
                 }
                 
-                String refreshInfo = account.hasRefreshToken() ? "\n\u00A72Auto-refresh enabled" : "";
+                String refreshInfo = (account instanceof SessionAccount sa && sa.hasRefreshToken()) ? "\n\u00A72Auto-refresh enabled" : "";
                 String tooltip;
                 if (!isValid) {
                     String errorMsg = account.getLastError();
@@ -481,10 +482,16 @@ public class OpsecConfigScreen extends Screen {
         widgets.add(createSectionHeader("\u00A7f\u00A7lAdd Account"));
         
         // Add button to open add account dialog
-        widgets.add(Button.builder(Component.literal("Add Session Token"), button -> {
+        widgets.add(Button.builder(Component.translatable("opsec.account.addSession"), button -> {
             this.minecraft.setScreen(new AddAccountScreen(this));
         }).size(210, 20)
-          .tooltip(Tooltip.create(Component.literal("Add a new account using a session token")))
+          .tooltip(Tooltip.create(Component.translatable("opsec.account.addSession.tooltip")))
+          .build());
+
+        widgets.add(Button.builder(Component.translatable("opsec.account.addOffline"), button -> {
+            this.minecraft.setScreen(new AddCrackedAccountScreen(this));
+        }).size(210, 20)
+          .tooltip(Tooltip.create(Component.translatable("opsec.account.addOffline.tooltip")))
           .build());
         
         // Import/Export buttons

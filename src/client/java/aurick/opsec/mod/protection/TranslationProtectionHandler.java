@@ -17,12 +17,13 @@ import java.util.concurrent.ConcurrentHashMap;
  * Centralized handler for key resolution protection alerts.
  *
  * Alert format:
- * ⛔ [OpSec] Key resolution exploit detected!     (header with cooldown)
+ * [OpSec] Key resolution probe detected           (header with cooldown)
  * [key.meteor-client.open-gui] 'Right Shift'→'key.meteor-client.open-gui'  (detail, deduped)
  * [key.hotbar.6] 'Q'→'6'
  *
- * - Header: Sent once per 5 seconds (cooldown prevents spam)
+ * - Header: Deferred until a value change unless debug alerts are ON
  * - Details: Sent when values are changed (deduped per session)
+ * - Debug mode: Header fires immediately, details shown for ALL keys including unchanged
  * - Logging: Deduped to prevent spam from multiple render calls
  * - Detection works even if protection is OFF (alerts/logs still show)
  */
@@ -37,7 +38,7 @@ public class TranslationProtectionHandler {
         InterceptionType(String displayName) { this.displayName = displayName; }
         public String getDisplayName() { return displayName; }
     }
-    
+
     /** Dedup key for detail alerts — just key name, since same key produces same detail within a probe */
     private record AlertDedupeKey(String keyName) {}
 
@@ -50,16 +51,19 @@ public class TranslationProtectionHandler {
 
     // Size limits to prevent unbounded growth
     private static final int MAX_DEDUPE_ENTRIES = 500;
-    
+
     private static volatile long lastHeaderTime = 0;
+    private static volatile boolean headerPending = false;
 
     private static final long HEADER_COOLDOWN_MS = 5000;  // 5 seconds between headers
-    
+
     private TranslationProtectionHandler() {}
-    
+
     /**
-     * Notify that an exploit attempt was detected (header alert only).
-     * Shows header alert when in exploitable context, regardless of key changes.
+     * Notify that an exploit attempt was detected.
+     *
+     * In debug mode: emits header immediately (current behavior).
+     * In normal mode: defers header until {@link #sendDetail} confirms a value change.
      */
     public static void notifyExploitDetected() {
         if (!shouldProcess()) {
@@ -71,46 +75,72 @@ public class TranslationProtectionHandler {
 
         long now = System.currentTimeMillis();
 
-        // Header with cooldown: ⛔ [OpSec] Key resolution exploit detected!
-        if (now - lastHeaderTime >= HEADER_COOLDOWN_MS) {
-            lastHeaderTime = now;
-            
-            // Get source for logging only
-            PrivacyLogger.ExploitSource source = ExploitContext.getSource();
-            
-            // Alert without source (source is in logs)
-            if (OpsecConfig.getInstance().shouldShowAlerts()) {
-                PrivacyLogger.alert(PrivacyLogger.AlertType.DANGER, "Key resolution exploit detected!");
-            }
-            
-            // Toast notification (separate from chat alerts)
-            PrivacyLogger.toast(PrivacyLogger.AlertType.DANGER, "Key Resolution Exploit Detected");
-            
-            // Log with source
-            if (OpsecConfig.getInstance().isLogDetections()) {
-                Opsec.LOGGER.info("[OpSec] Key resolution exploit detected via {}",
-                    source.getDisplayName().toLowerCase());
-            }
+        // Cooldown check applies to both modes
+        if (now - lastHeaderTime < HEADER_COOLDOWN_MS) {
+            return;
+        }
 
-            // One-time hint about disabling alerts
-            SpoofSettings settings = OpsecConfig.getInstance().getSettings();
-            if (!settings.isAlertHintShown()) {
-                settings.setAlertHintShown(true);
-                OpsecConfig.getInstance().save();
-                Minecraft mc = Minecraft.getInstance();
-                if (mc.player != null) {
-                    mc.player.displayClientMessage(
-                        Component.literal("Chat and toast alerts can be disabled in OpSec > Misc settings.")
-                            .withStyle(ChatFormatting.DARK_GRAY), false);
-                }
+        if (OpsecConfig.getInstance().isDebugAlerts()) {
+            // Debug mode: emit header immediately
+            lastHeaderTime = now;
+            emitHeader();
+        } else {
+            // Normal mode: defer header until sendDetail confirms a value change
+            headerPending = true;
+        }
+    }
+
+    /**
+     * Emit the header alert, toast, log, and one-time hint.
+     * Called either immediately (debug mode) or deferred (normal mode, from sendDetail).
+     */
+    private static void emitHeader() {
+        // Get source for logging only
+        PrivacyLogger.ExploitSource source = ExploitContext.getSource();
+
+        // Chat alert: red, no emoji icon
+        if (OpsecConfig.getInstance().shouldShowAlerts()) {
+            Minecraft mc = Minecraft.getInstance();
+            if (mc.player != null) {
+                mc.player.displayClientMessage(
+                    Component.literal("[OpSec] ").withStyle(ChatFormatting.DARK_PURPLE)
+                        .append(Component.literal("Key resolution probe detected").withStyle(ChatFormatting.RED)),
+                    false);
+            }
+        }
+
+        // Toast notification: red, no emoji icon
+        if (OpsecConfig.getInstance().shouldShowToasts()) {
+            PrivacyLogger.showToastRaw(
+                Component.literal("Key Resolution Probe Detected").withStyle(ChatFormatting.RED),
+                null);
+        }
+
+        // Log with source
+        if (OpsecConfig.getInstance().isLogDetections()) {
+            Opsec.LOGGER.info("[OpSec] Key resolution exploit detected via {}",
+                source.getDisplayName().toLowerCase());
+        }
+
+        // One-time hint about disabling alerts
+        SpoofSettings settings = OpsecConfig.getInstance().getSettings();
+        if (!settings.isAlertHintShown()) {
+            settings.setAlertHintShown(true);
+            OpsecConfig.getInstance().save();
+            Minecraft mc = Minecraft.getInstance();
+            if (mc.player != null) {
+                mc.player.displayClientMessage(
+                    Component.literal("Chat and toast alerts can be disabled in OpSec > Misc settings.")
+                        .withStyle(ChatFormatting.DARK_GRAY), false);
             }
         }
     }
-    
+
     /**
-     * Send detail alert for a changed key.
-     * Only call when value actually changed.
+     * Send detail alert for a key interception.
      * Deduped per session to prevent spam.
+     *
+     * In normal mode, flushes the deferred header on the first detail.
      *
      * @param type The interception type (TRANSLATION or KEYBIND)
      * @param keyName The translation/keybind key name
@@ -135,11 +165,33 @@ public class TranslationProtectionHandler {
             return;
         }
 
+        // Flush deferred header on first detail
+        if (headerPending) {
+            headerPending = false;
+            lastHeaderTime = System.currentTimeMillis();
+            emitHeader();
+        }
+
         // Detail alert: [key.hotbar.6] 'Q'→'6'
         PrivacyLogger.sendKeybindDetail(
             "[" + keyName + "] '" + originalValue + "'→'" + spoofedValue + "'");
     }
-    
+
+    /**
+     * Send detail for debug mode only.
+     * Called from paths that don't normally send details (unchanged values,
+     * protection-disabled). Only fires when debug alerts are enabled.
+     *
+     * @param type The interception type (TRANSLATION or KEYBIND)
+     * @param keyName The translation/keybind key name
+     * @param originalValue What Minecraft would have resolved it to
+     * @param spoofedValue What we're returning (may be same as original)
+     */
+    public static void sendDetailDebug(InterceptionType type, String keyName, String originalValue, String spoofedValue) {
+        if (!OpsecConfig.getInstance().isDebugAlerts()) return;
+        sendDetail(type, keyName, originalValue, spoofedValue);
+    }
+
     /**
      * Log detection details.
      * Deduped to prevent spam from multiple render calls.
@@ -168,16 +220,16 @@ public class TranslationProtectionHandler {
         Opsec.LOGGER.info("[{}:{}] '{}' '{}' → '{}'",
             type.getDisplayName(), source.getDisplayName(), keyName, originalValue, spoofedValue);
     }
-    
+
     /**
      * Check if we should process alerts/logs.
      * When both alerts AND logging are disabled, skip everything.
      */
     private static boolean shouldProcess() {
-        return OpsecConfig.getInstance().shouldShowAlerts() 
+        return OpsecConfig.getInstance().shouldShowAlerts()
             || OpsecConfig.getInstance().isLogDetections();
     }
-    
+
     /**
      * Clear key-level dedup caches. Called when entering a new exploit context
      * so each sign/anvil probe gets fresh alerts and logs.
@@ -186,6 +238,7 @@ public class TranslationProtectionHandler {
     public static void clearDedup() {
         alertedKeys.clear();
         loggedKeys.clear();
+        headerPending = false;
     }
 
     /**
@@ -195,5 +248,6 @@ public class TranslationProtectionHandler {
         alertedKeys.clear();
         loggedKeys.clear();
         lastHeaderTime = 0;
+        headerPending = false;
     }
 }

@@ -320,7 +320,12 @@ public class OpsecConfigScreen extends Screen {
                 .withTooltip(v -> Tooltip.create(Component.literal("Log detection events to game log")))
                 .create(0, 0, 210, 20, Component.translatable("opsec.option.logDetections"),
                 (button, value) -> { settings.setLogDetections(value); config.save(); }));
-        
+
+        widgets.add(cycleBuilder(COLORED_BOOL_TO_TEXT, List.of(Boolean.TRUE, Boolean.FALSE), settings.isDebugAlerts())
+                .withTooltip(v -> Tooltip.create(Component.literal("Show alerts for all probed keys, even unchanged ones")))
+                .create(0, 0, 210, 20, Component.translatable("opsec.option.debugAlerts"),
+                (button, value) -> { settings.setDebugAlerts(value); config.save(); }));
+
         return new WidgetTab(Component.translatable("opsec.tab.misc"), widgets);
     }
     

@@ -57,6 +57,7 @@ public class SpoofSettings {
     private boolean showAlerts = true;
     private boolean showToasts = true;
     private boolean logDetections = true;
+    private boolean debugAlerts = false;
     
     // Chat Signing
     private SigningMode signingMode = SigningMode.ON_DEMAND;
@@ -122,6 +123,9 @@ public class SpoofSettings {
     
     public boolean isLogDetections() { return logDetections; }
     public void setLogDetections(boolean logDetections) { this.logDetections = logDetections; }
+
+    public boolean isDebugAlerts() { return debugAlerts; }
+    public void setDebugAlerts(boolean debugAlerts) { this.debugAlerts = debugAlerts; }
     
     // Signing mode methods
     public SigningMode getSigningMode() { return signingMode; }
@@ -217,6 +221,7 @@ public class SpoofSettings {
         json.addProperty("showAlerts", showAlerts);
         json.addProperty("showToasts", showToasts);
         json.addProperty("logDetections", logDetections);
+        json.addProperty("debugAlerts", debugAlerts);
         json.addProperty("signingMode", signingMode.name());
         json.addProperty("disableTelemetry", disableTelemetry);
         json.addProperty("buttonX", buttonX);
@@ -252,6 +257,7 @@ public class SpoofSettings {
         if (json.has("showAlerts")) s.showAlerts = json.get("showAlerts").getAsBoolean();
         if (json.has("showToasts")) s.showToasts = json.get("showToasts").getAsBoolean();
         if (json.has("logDetections")) s.logDetections = json.get("logDetections").getAsBoolean();
+        if (json.has("debugAlerts")) s.debugAlerts = json.get("debugAlerts").getAsBoolean();
         if (json.has("signingMode")) {
             String mode = json.get("signingMode").getAsString();
             if ("NO_KEY".equals(mode) || "NO_SIGN".equals(mode)) {
@@ -307,6 +313,7 @@ public class SpoofSettings {
         this.showAlerts = other.showAlerts;
         this.showToasts = other.showToasts;
         this.logDetections = other.logDetections;
+        this.debugAlerts = other.debugAlerts;
         this.signingMode = other.signingMode;
         this.disableTelemetry = other.disableTelemetry;
         this.buttonX = other.buttonX;

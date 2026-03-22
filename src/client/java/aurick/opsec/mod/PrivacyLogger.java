@@ -126,6 +126,31 @@ public class PrivacyLogger {
         }
     }
     
+    /**
+     * Show a toast with pre-built components (no icon prefix added).
+     */
+    public static void showToastRaw(Component titleComponent, Component messageComponent) {
+        try {
+            Minecraft client = Minecraft.getInstance();
+            if (client == null) return;
+
+            if (!client.isSameThread()) {
+                client.execute(() -> showToastRaw(titleComponent, messageComponent));
+                return;
+            }
+
+            //? if >=1.21.2
+            var toastComponent = client.getToastManager();
+            //? if <1.21.2
+            /*var toastComponent = client.getToasts();*/
+            if (toastComponent == null) return;
+
+            SystemToast.add(toastComponent, SystemToast.SystemToastId.PACK_LOAD_FAILURE, titleComponent, messageComponent);
+        } catch (RuntimeException e) {
+            Opsec.LOGGER.error("[OpSec] Exception showing toast: {}", e.getMessage());
+        }
+    }
+
     public static void sendMessage(AlertType type, String message) {
         Minecraft client = Minecraft.getInstance();
         if (client.player == null) {
@@ -150,8 +175,7 @@ public class PrivacyLogger {
         Minecraft client = Minecraft.getInstance();
         if (client.player == null) return;
         
-        // Simple format: just the keybind detail in red
-        MutableComponent component = Component.literal(detail).withStyle(ChatFormatting.RED);
+        MutableComponent component = Component.literal(detail).withStyle(ChatFormatting.DARK_GRAY);
         client.player.displayClientMessage(component, false);
     }
     

@@ -127,9 +127,9 @@ public abstract class TranslatableContentsMixin {
 
         // If protection is disabled, still log but allow resolution
         if (!config.isTranslationProtectionEnabled()) {
-            TranslationProtectionHandler.logDetection(InterceptionType.TRANSLATION, translationKey,
-                    opsec$getRealTranslation(translationKey, defaultValue),
-                    opsec$getRealTranslation(translationKey, defaultValue));
+            String realValue = opsec$getRealTranslation(translationKey, defaultValue);
+            TranslationProtectionHandler.sendDetailDebug(InterceptionType.TRANSLATION, translationKey, realValue, realValue);
+            TranslationProtectionHandler.logDetection(InterceptionType.TRANSLATION, translationKey, realValue, realValue);
             return OPSEC_ALLOW_ORIGINAL;
         }
 
@@ -181,6 +181,8 @@ public abstract class TranslatableContentsMixin {
 
         if (!originalValue.equals(defaultValue)) {
             TranslationProtectionHandler.sendDetail(InterceptionType.TRANSLATION, translationKey, originalValue, defaultValue);
+        } else {
+            TranslationProtectionHandler.sendDetailDebug(InterceptionType.TRANSLATION, translationKey, originalValue, defaultValue);
         }
         TranslationProtectionHandler.logDetection(InterceptionType.TRANSLATION, translationKey, originalValue, defaultValue);
     }

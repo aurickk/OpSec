@@ -84,6 +84,7 @@ public class KeybindContentsMixin {
         if (!config.isTranslationProtectionEnabled()) {
             Object originalResult = original.call(supplier);
             String originalValue = originalResult instanceof Component c ? c.getString() : originalResult.toString();
+            TranslationProtectionHandler.sendDetailDebug(InterceptionType.KEYBIND, name, originalValue, originalValue);
             TranslationProtectionHandler.logDetection(InterceptionType.KEYBIND, name, originalValue, originalValue);
             return originalResult;
         }
@@ -93,6 +94,7 @@ public class KeybindContentsMixin {
             if (!settings.isFakeDefaultKeybinds()) {
                 Object originalResult = original.call(supplier);
                 String originalValue = originalResult instanceof Component c ? c.getString() : originalResult.toString();
+                TranslationProtectionHandler.sendDetailDebug(InterceptionType.KEYBIND, name, originalValue, originalValue);
                 TranslationProtectionHandler.logDetection(InterceptionType.KEYBIND, name, originalValue, originalValue);
                 return originalResult;
             }
@@ -119,6 +121,8 @@ public class KeybindContentsMixin {
 
         if (!realValue.equals(spoofedValue)) {
             TranslationProtectionHandler.sendDetail(InterceptionType.KEYBIND, keybindName, realValue, spoofedValue);
+        } else {
+            TranslationProtectionHandler.sendDetailDebug(InterceptionType.KEYBIND, keybindName, realValue, spoofedValue);
         }
         TranslationProtectionHandler.logDetection(InterceptionType.KEYBIND, keybindName, realValue, spoofedValue);
     }

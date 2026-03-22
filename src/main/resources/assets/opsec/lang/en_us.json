@@ -26,6 +26,7 @@
   "opsec.option.showAlerts": "Chat Alerts",
   "opsec.option.showToasts": "Toast Popups",
   "opsec.option.logDetections": "Log Events",
+  "opsec.option.debugAlerts": "Debug Alerts",
   "opsec.option.hideInsecureIndicators": "Hide 'Not Secure'",
   "opsec.option.hideModifiedIndicators": "Hide 'Modified'",
   "opsec.option.hideSystemMsgIndicators": "Hide System Bar",

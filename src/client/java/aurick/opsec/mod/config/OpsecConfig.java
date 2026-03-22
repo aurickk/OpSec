@@ -182,6 +182,7 @@ public class OpsecConfig {
     public boolean shouldShowAlerts() { return settings.isShowAlerts(); }
     public boolean shouldShowToasts() { return settings.isShowToasts(); }
     public boolean isLogDetections() { return settings.isLogDetections(); }
+    public boolean isDebugAlerts() { return settings.isDebugAlerts(); }
     
     // Chat signing
     public SpoofSettings.SigningMode getSigningMode() { return settings.getSigningMode(); }

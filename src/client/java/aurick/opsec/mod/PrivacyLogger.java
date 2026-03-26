@@ -157,12 +157,19 @@ public class PrivacyLogger {
             Opsec.LOGGER.info("[{}] {}", type.name(), message);
             return;
         }
-        
+
+        // displayClientMessage triggers chat layout (Font width calculations) which
+        // touches RenderSystem in 1.21.11+. Must run on the render/main thread.
+        if (!client.isSameThread()) {
+            client.execute(() -> sendMessage(type, message));
+            return;
+        }
+
         MutableComponent component = Component.literal(type.getIcon() + " ")
                 .withStyle(type.getColor())
                 .append(Component.literal("[OpSec] ").withStyle(ChatFormatting.DARK_PURPLE))
                 .append(Component.literal(message).withStyle(type.getColor()));
-        
+
         client.player.displayClientMessage(component, false);
     }
     
@@ -171,10 +178,15 @@ public class PrivacyLogger {
      */
     public static void sendKeybindDetail(String detail) {
         if (!OpsecConfig.getInstance().shouldShowAlerts()) return;
-        
+
         Minecraft client = Minecraft.getInstance();
         if (client.player == null) return;
-        
+
+        if (!client.isSameThread()) {
+            client.execute(() -> sendKeybindDetail(detail));
+            return;
+        }
+
         MutableComponent component = Component.literal(detail).withStyle(ChatFormatting.DARK_GRAY);
         client.player.displayClientMessage(component, false);
     }

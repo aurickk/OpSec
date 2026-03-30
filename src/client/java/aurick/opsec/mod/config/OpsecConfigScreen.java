@@ -9,7 +9,11 @@ import aurick.opsec.mod.protection.ResourcePackGuard;
 import aurick.opsec.mod.tracking.ModRegistry;
 import net.fabricmc.loader.api.FabricLoader;
 import net.fabricmc.loader.api.ModContainer;
+//? if >=26.1 {
+/*import net.minecraft.client.gui.GuiGraphicsExtractor;*/
+//?} else {
 import net.minecraft.client.gui.GuiGraphics;
+//?}
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.Button;
@@ -628,17 +632,17 @@ public class OpsecConfigScreen extends Screen {
             removeButton.setY(getY());
         }
         
-        @Override
-        protected void renderWidget(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
+        //? if >=26.1 {
+        /*@Override
+        protected void extractWidgetRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick) {
             updateButtonPositions();
-            accountButton.render(graphics, mouseX, mouseY, partialTick);
-            removeButton.render(graphics, mouseX, mouseY, partialTick);
-            
-            //? if >=1.21.9 {
-            /*// Poll mouse state for click detection since mouseClicked API changed
+            accountButton.extractRenderState(graphics, mouseX, mouseY, partialTick);
+            removeButton.extractRenderState(graphics, mouseX, mouseY, partialTick);
+
+            // Poll mouse state for click detection since mouseClicked API changed
             long windowHandle = org.lwjgl.glfw.GLFW.glfwGetCurrentContext();
             boolean isMouseDown = org.lwjgl.glfw.GLFW.glfwGetMouseButton(windowHandle, org.lwjgl.glfw.GLFW.GLFW_MOUSE_BUTTON_LEFT) == org.lwjgl.glfw.GLFW.GLFW_PRESS;
-            
+
             if (!isMouseDown && wasMouseDown) {
                 // Mouse was just released
                 if (accountButton.isMouseOver(mouseX, mouseY)) {
@@ -647,9 +651,37 @@ public class OpsecConfigScreen extends Screen {
                     onRemoveClick.run();
                 }
             }
-            wasMouseDown = isMouseDown;*/
-            //?}
+            wasMouseDown = isMouseDown;
+        }*/
+        //?} elif >=1.21.9 {
+        /*@Override
+        protected void renderWidget(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
+            updateButtonPositions();
+            accountButton.render(graphics, mouseX, mouseY, partialTick);
+            removeButton.render(graphics, mouseX, mouseY, partialTick);
+
+            // Poll mouse state for click detection since mouseClicked API changed
+            long windowHandle = org.lwjgl.glfw.GLFW.glfwGetCurrentContext();
+            boolean isMouseDown = org.lwjgl.glfw.GLFW.glfwGetMouseButton(windowHandle, org.lwjgl.glfw.GLFW.GLFW_MOUSE_BUTTON_LEFT) == org.lwjgl.glfw.GLFW.GLFW_PRESS;
+
+            if (!isMouseDown && wasMouseDown) {
+                // Mouse was just released
+                if (accountButton.isMouseOver(mouseX, mouseY)) {
+                    onAccountClick.run();
+                } else if (removeButton.isMouseOver(mouseX, mouseY)) {
+                    onRemoveClick.run();
+                }
+            }
+            wasMouseDown = isMouseDown;
+        }*/
+        //?} else {
+        @Override
+        protected void renderWidget(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
+            updateButtonPositions();
+            accountButton.render(graphics, mouseX, mouseY, partialTick);
+            removeButton.render(graphics, mouseX, mouseY, partialTick);
         }
+        //?}
         
         // Forward mouse clicks to child buttons
         //? if <1.21.9 {
@@ -721,17 +753,17 @@ public class OpsecConfigScreen extends Screen {
             exportButton.setY(getY());
         }
         
-        @Override
-        protected void renderWidget(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
+        //? if >=26.1 {
+        /*@Override
+        protected void extractWidgetRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick) {
             updateButtonPositions();
-            importButton.render(graphics, mouseX, mouseY, partialTick);
-            exportButton.render(graphics, mouseX, mouseY, partialTick);
-            
-            //? if >=1.21.9 {
-            /*// Poll mouse state for click detection since mouseClicked API changed
+            importButton.extractRenderState(graphics, mouseX, mouseY, partialTick);
+            exportButton.extractRenderState(graphics, mouseX, mouseY, partialTick);
+
+            // Poll mouse state for click detection since mouseClicked API changed
             long windowHandle = org.lwjgl.glfw.GLFW.glfwGetCurrentContext();
             boolean isMouseDown = org.lwjgl.glfw.GLFW.glfwGetMouseButton(windowHandle, org.lwjgl.glfw.GLFW.GLFW_MOUSE_BUTTON_LEFT) == org.lwjgl.glfw.GLFW.GLFW_PRESS;
-            
+
             if (!isMouseDown && wasMouseDown) {
                 // Mouse was just released
                 if (importButton.isMouseOver(mouseX, mouseY)) {
@@ -741,7 +773,33 @@ public class OpsecConfigScreen extends Screen {
                 }
             }
             wasMouseDown = isMouseDown;*/
-            //?}
+        //?} elif >=1.21.9 {
+        /*@Override
+        protected void renderWidget(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
+            updateButtonPositions();
+            importButton.render(graphics, mouseX, mouseY, partialTick);
+            exportButton.render(graphics, mouseX, mouseY, partialTick);
+
+            // Poll mouse state for click detection since mouseClicked API changed
+            long windowHandle = org.lwjgl.glfw.GLFW.glfwGetCurrentContext();
+            boolean isMouseDown = org.lwjgl.glfw.GLFW.glfwGetMouseButton(windowHandle, org.lwjgl.glfw.GLFW.GLFW_MOUSE_BUTTON_LEFT) == org.lwjgl.glfw.GLFW.GLFW_PRESS;
+
+            if (!isMouseDown && wasMouseDown) {
+                // Mouse was just released
+                if (importButton.isMouseOver(mouseX, mouseY)) {
+                    onImportAction.run();
+                } else if (exportButton.isMouseOver(mouseX, mouseY)) {
+                    onExportAction.run();
+                }
+            }
+            wasMouseDown = isMouseDown;*/
+        //?} else {
+        @Override
+        protected void renderWidget(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
+            updateButtonPositions();
+            importButton.render(graphics, mouseX, mouseY, partialTick);
+            exportButton.render(graphics, mouseX, mouseY, partialTick);
+        //?}
         }
         
         // Forward mouse clicks to child buttons
@@ -814,14 +872,14 @@ public class OpsecConfigScreen extends Screen {
             disableAllButton.setY(getY());
         }
 
-        @Override
-        protected void renderWidget(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
+        //? if >=26.1 {
+        /*@Override
+        protected void extractWidgetRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick) {
             updateButtonPositions();
-            enableAllButton.render(graphics, mouseX, mouseY, partialTick);
-            disableAllButton.render(graphics, mouseX, mouseY, partialTick);
+            enableAllButton.extractRenderState(graphics, mouseX, mouseY, partialTick);
+            disableAllButton.extractRenderState(graphics, mouseX, mouseY, partialTick);
 
-            //? if >=1.21.9 {
-            /*// Poll mouse state for click detection since mouseClicked API changed
+            // Poll mouse state for click detection since mouseClicked API changed
             long windowHandle = org.lwjgl.glfw.GLFW.glfwGetCurrentContext();
             boolean isMouseDown = org.lwjgl.glfw.GLFW.glfwGetMouseButton(windowHandle, org.lwjgl.glfw.GLFW.GLFW_MOUSE_BUTTON_LEFT) == org.lwjgl.glfw.GLFW.GLFW_PRESS;
 
@@ -835,9 +893,39 @@ public class OpsecConfigScreen extends Screen {
                     onDisableAll.run();
                 }
             }
-            wasMouseDown = isMouseDown;*/
-            //?}
+            wasMouseDown = isMouseDown;
+        }*/
+        //?} elif >=1.21.9 {
+        /*@Override
+        protected void renderWidget(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
+            updateButtonPositions();
+            enableAllButton.render(graphics, mouseX, mouseY, partialTick);
+            disableAllButton.render(graphics, mouseX, mouseY, partialTick);
+
+            // Poll mouse state for click detection since mouseClicked API changed
+            long windowHandle = org.lwjgl.glfw.GLFW.glfwGetCurrentContext();
+            boolean isMouseDown = org.lwjgl.glfw.GLFW.glfwGetMouseButton(windowHandle, org.lwjgl.glfw.GLFW.GLFW_MOUSE_BUTTON_LEFT) == org.lwjgl.glfw.GLFW.GLFW_PRESS;
+
+            if (!isMouseDown && wasMouseDown) {
+                // Mouse was just released
+                if (enableAllButton.isMouseOver(mouseX, mouseY)) {
+                    enableAllButton.playDownSound(Minecraft.getInstance().getSoundManager());
+                    onEnableAll.run();
+                } else if (disableAllButton.isMouseOver(mouseX, mouseY)) {
+                    disableAllButton.playDownSound(Minecraft.getInstance().getSoundManager());
+                    onDisableAll.run();
+                }
+            }
+            wasMouseDown = isMouseDown;
+        }*/
+        //?} else {
+        @Override
+        protected void renderWidget(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
+            updateButtonPositions();
+            enableAllButton.render(graphics, mouseX, mouseY, partialTick);
+            disableAllButton.render(graphics, mouseX, mouseY, partialTick);
         }
+        //?}
 
         // Forward mouse clicks to child buttons
         //? if <1.21.9 {
@@ -1083,7 +1171,11 @@ public class OpsecConfigScreen extends Screen {
     @Override
     protected void repositionElements() {
         if (this.tabWidget != null) {
+            //? if >=26.1 {
+            /*this.tabWidget.updateWidth(this.width);*/
+            //?} else {
             this.tabWidget.setWidth(this.width);
+            //?}
             this.tabWidget.arrangeElements();
             int tabBottom = this.tabWidget.getRectangle().bottom();
             ScreenRectangle screenRect = new ScreenRectangle(0, tabBottom, this.width, this.height - 36 - tabBottom);
@@ -1235,7 +1327,17 @@ public class OpsecConfigScreen extends Screen {
             }*/
             //?}
 
-            //? if >=1.21.9 {
+            //? if >=26.1 {
+            /*@Override
+            public void extractContent(GuiGraphicsExtractor graphics, int mouseX, int mouseY, boolean hovered, float partialTick) {
+                // Center the widget horizontally on the screen
+                int screenWidth = Minecraft.getInstance().getWindow().getGuiScaledWidth();
+                int centerX = (screenWidth - widget.getWidth()) / 2;
+                widget.setX(centerX);
+                widget.setY(this.getContentY());
+                widget.extractRenderState(graphics, mouseX, mouseY, partialTick);
+            }*/
+            //?} elif >=1.21.9 {
             /*@Override
             public void renderContent(GuiGraphics graphics, int mouseX, int mouseY, boolean hovered, float partialTick) {
                 // Center the widget horizontally on the screen

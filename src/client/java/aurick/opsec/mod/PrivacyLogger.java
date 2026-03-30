@@ -170,9 +170,13 @@ public class PrivacyLogger {
                 .append(Component.literal("[OpSec] ").withStyle(ChatFormatting.DARK_PURPLE))
                 .append(Component.literal(message).withStyle(type.getColor()));
 
+        //? if >=26.1 {
+        /*client.player.sendSystemMessage(component);*/
+        //?} else {
         client.player.displayClientMessage(component, false);
+        //?}
     }
-    
+
     /**
      * Send keybind detail message without header prefix (just the keybind info).
      */
@@ -188,7 +192,11 @@ public class PrivacyLogger {
         }
 
         MutableComponent component = Component.literal(detail).withStyle(ChatFormatting.DARK_GRAY);
+        //? if >=26.1 {
+        /*client.player.sendSystemMessage(component);*/
+        //?} else {
         client.player.displayClientMessage(component, false);
+        //?}
     }
     
     public static void logDetection(String category, String details) {

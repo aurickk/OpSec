@@ -8,7 +8,12 @@ import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.suggestion.Suggestions;
 import com.mojang.brigadier.suggestion.SuggestionsBuilder;
+//? if >=26.1 {
+/*import net.fabricmc.fabric.api.client.command.v2.ClientCommands;
+*/
+//?} else {
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandManager;
+//?}
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallback;
 import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource;
 import net.minecraft.ChatFormatting;
@@ -33,6 +38,7 @@ import java.util.concurrent.CompletableFuture;
  * Debug command for OpSec mod.
  * Usage: /opsec info [mod name]
  */
+@SuppressWarnings("null")
 public class OpsecCommand {
     
     public static void register() {
@@ -42,14 +48,33 @@ public class OpsecCommand {
     private static void registerCommands(CommandDispatcher<FabricClientCommandSource> dispatcher, 
                                           CommandBuildContext context) {
         dispatcher.register(
+            //? if >=26.1 {
+            /*ClientCommands.literal("opsec")*/
+            //?} else {
             ClientCommandManager.literal("opsec")
+            //?}
                 .executes(OpsecCommand::showHelp)
-                .then(ClientCommandManager.literal("info")
-                    .then(ClientCommandManager.argument("modName", StringArgumentType.greedyString())
+                .then(
+                    //? if >=26.1 {
+                    /*ClientCommands.literal("info")*/
+                    //?} else {
+                    ClientCommandManager.literal("info")
+                    //?}
+                    .then(
+                        //? if >=26.1 {
+                        /*ClientCommands.argument("modName", StringArgumentType.greedyString())*/
+                        //?} else {
+                        ClientCommandManager.argument("modName", StringArgumentType.greedyString())
+                        //?}
                         .suggests(OpsecCommand::suggestModNames)
                         .executes(ctx -> showModInfo(ctx, StringArgumentType.getString(ctx, "modName"))))
                     .executes(ctx -> showOverview(ctx)))
-                .then(ClientCommandManager.literal("channels")
+                .then(
+                    //? if >=26.1 {
+                    /*ClientCommands.literal("channels")*/
+                    //?} else {
+                    ClientCommandManager.literal("channels")
+                    //?}
                     .executes(OpsecCommand::showAllChannels))
         );
     }

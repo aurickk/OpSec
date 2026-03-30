@@ -3,7 +3,12 @@ package aurick.opsec.mod.mixin.client;
 import aurick.opsec.mod.Opsec;
 import aurick.opsec.mod.tracking.ModIdResolver;
 import aurick.opsec.mod.tracking.ModRegistry;
+//? if >=26.1 {
+/*import net.fabricmc.fabric.impl.client.keymapping.KeyMappingRegistryImpl;
+*/
+//?} else {
 import net.fabricmc.fabric.impl.client.keybinding.KeyBindingRegistryImpl;
+//?}
 import net.minecraft.client.KeyMapping;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
@@ -15,7 +20,11 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
  * Mixin to track keybinds registered by mods via Fabric API.
  * Records which mod registered each keybind for whitelist support.
  */
+//? if >=26.1 {
+/*@Mixin(value = KeyMappingRegistryImpl.class, remap = false)*/
+//?} else {
 @Mixin(value = KeyBindingRegistryImpl.class, remap = false)
+//?}
 public class KeyBindingRegistryImplMixin {
     
     @Unique
@@ -24,7 +33,11 @@ public class KeyBindingRegistryImplMixin {
     /**
      * Track mod keybind registration with mod ID.
      */
+    //? if >=26.1 {
+    /*@Inject(method = "registerKeyMapping", at = @At("RETURN"), require = 0)*/
+    //?} else {
     @Inject(method = "registerKeyBinding", at = @At("RETURN"), require = 0)
+    //?}
     private static void opsec$onKeybindRegister(KeyMapping keyBinding, CallbackInfoReturnable<KeyMapping> cir) {
         if (keyBinding == null) return;
         

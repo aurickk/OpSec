@@ -102,10 +102,16 @@ public class TranslationProtectionHandler {
         if (OpsecConfig.getInstance().shouldShowAlerts()) {
             Minecraft mc = Minecraft.getInstance();
             if (mc.player != null) {
+                //? if >=26.1 {
+                /*mc.player.sendSystemMessage(
+                    Component.literal("[OpSec] ").withStyle(ChatFormatting.DARK_PURPLE)
+                        .append(Component.literal("Key resolution probe detected").withStyle(ChatFormatting.RED)));*/
+                //?} else {
                 mc.player.displayClientMessage(
                     Component.literal("[OpSec] ").withStyle(ChatFormatting.DARK_PURPLE)
                         .append(Component.literal("Key resolution probe detected").withStyle(ChatFormatting.RED)),
                     false);
+                //?}
             }
         }
 
@@ -129,9 +135,15 @@ public class TranslationProtectionHandler {
             OpsecConfig.getInstance().save();
             Minecraft mc = Minecraft.getInstance();
             if (mc.player != null) {
+                //? if >=26.1 {
+                /*mc.player.sendSystemMessage(
+                    Component.literal("Chat and toast alerts can be disabled in OpSec > Misc settings.")
+                        .withStyle(ChatFormatting.DARK_GRAY));*/
+                //?} else {
                 mc.player.displayClientMessage(
                     Component.literal("Chat and toast alerts can be disabled in OpSec > Misc settings.")
                         .withStyle(ChatFormatting.DARK_GRAY), false);
+                //?}
             }
         }
     }

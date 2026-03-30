@@ -542,10 +542,18 @@ public class ClientConnectionMixin {
                 if (constructor.getParameterCount() == 2) {
                     constructor.setAccessible(true);
                     try {
+                        //? if >=26.1 {
+                        /*return (RegistrationPayload) constructor.newInstance(original.type(), channels);*/
+                        //?} else {
                         return (RegistrationPayload) constructor.newInstance(original.id(), channels);
+                        //?}
                     } catch (Exception e1) {
                         try {
+                            //? if >=26.1 {
+                            /*return (RegistrationPayload) constructor.newInstance(channels, original.type());*/
+                            //?} else {
                             return (RegistrationPayload) constructor.newInstance(channels, original.id());
+                            //?}
                         } catch (Exception e2) {
                             Opsec.LOGGER.debug("[OpSec] Failed parameter order attempt: {}", e2.getMessage());
                         }

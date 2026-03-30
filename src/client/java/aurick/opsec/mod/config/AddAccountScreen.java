@@ -3,7 +3,11 @@ package aurick.opsec.mod.config;
 import aurick.opsec.mod.accounts.AccountManager;
 import aurick.opsec.mod.accounts.SessionAccount;
 import net.minecraft.client.Minecraft;
+//? if >=26.1 {
+/*import net.minecraft.client.gui.GuiGraphicsExtractor;*/
+//?} else {
 import net.minecraft.client.gui.GuiGraphics;
+//?}
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.components.StringWidget;
@@ -156,12 +160,42 @@ public class AddAccountScreen extends Screen {
         });
     }
     
+    //? if >=26.1 {
+    /*@Override
+    public void extractRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick) {
+        super.extractRenderState(graphics, mouseX, mouseY, partialTick);
+
+        // Update status label position to keep it centered
+        if (statusLabel != null && statusMessage != null && !statusMessage.getString().isEmpty()) {
+            int centerX = this.width / 2;
+            int centerY = this.height / 2;
+            int statusWidth = this.font.width(statusMessage);
+            statusLabel.setX(centerX - statusWidth / 2);
+            statusLabel.setY(centerY + 45);
+            statusLabel.setWidth(statusWidth);
+        }
+    }*/
+    //?} elif <1.21.6 {
+    /*@Override
+    public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
+        this.renderBackground(graphics, mouseX, mouseY, partialTick);
+        super.render(graphics, mouseX, mouseY, partialTick);
+
+        // Update status label position to keep it centered
+        if (statusLabel != null && statusMessage != null && !statusMessage.getString().isEmpty()) {
+            int centerX = this.width / 2;
+            int centerY = this.height / 2;
+            int statusWidth = this.font.width(statusMessage);
+            statusLabel.setX(centerX - statusWidth / 2);
+            statusLabel.setY(centerY + 45);
+            statusLabel.setWidth(statusWidth);
+        }
+    }*/
+    //?} else {
     @Override
     public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
-        //? if <1.21.6
-        /*this.renderBackground(graphics, mouseX, mouseY, partialTick);*/
         super.render(graphics, mouseX, mouseY, partialTick);
-        
+
         // Update status label position to keep it centered
         if (statusLabel != null && statusMessage != null && !statusMessage.getString().isEmpty()) {
             int centerX = this.width / 2;
@@ -172,6 +206,7 @@ public class AddAccountScreen extends Screen {
             statusLabel.setWidth(statusWidth);
         }
     }
+    //?}
     
     @Override
     public void onClose() {

@@ -25,8 +25,8 @@
 
 ## Requirements
 
-- **Minecraft** 1.21.1 – 1.21.11
-- **Fabric Loader** 0.16.0+
+- **Minecraft** 1.21.1 – 26.1
+- **Fabric Loader** 0.16.0+ (0.18.4+ for MC 26.1)
 - **Fabric API** (matching your Minecraft version)
 
 ### Installation
@@ -224,7 +224,7 @@ OpSec's bandaid fix for Meteor is to blacklist the `AbstractSignEditScreenMixin`
 
 ### ExploitPreventer Compatibility
 
-Although not recommended and frankly quite redundant, for users that prefers [ExploitPreventer](https://github.com/NikOverflow/ExploitPreventer)'s core protection implementation but still need OpSec's additional features, both can be installed alongside each other, overlapping features are automatically disabled to let EP handle them. The following OpSec features are deferred to EP:
+For users that prefers [ExploitPreventer](https://github.com/NikOverflow/ExploitPreventer)'s core protection implementation but still need OpSec's additional features, both can be installed alongside each other. Overlapping features are automatically disabled to let EP handle them, note that you would lose OpSec features such as channels spoofing. The following OpSec features are deferred to EP:
 
 - [Brand Spoofing](#brand-spoofing)
 - [Channel Spoofing](#channel-spoofing)
@@ -301,6 +301,7 @@ Add Minecraft accounts with session tokens and switch between them without resta
 
 - **Session Token Login** - Add accounts using access tokens 
 - **Refresh Token** - Fetch new session tokens for expired accounts
+- **Offline Account** - Add username-only accounts without authentication
 - **Account Switching** - Click an account to login, click again to logout to original account
 - **Token Validation** - Refresh to check if tokens are still valid (expired tokens marked red)
 - **Import/Export** - Backup and restore accounts via JSON files
@@ -329,7 +330,7 @@ OpSec blocks telemetry sending to Mojang when telemetry blocking is enabled. Doe
 
 ### Prerequisites
 
-- **Java 21** or higher
+- **Java 25**
 - **Gradle** (included via wrapper)
 
 ### Building the Minecraft Mod
@@ -354,15 +355,18 @@ OpSec blocks telemetry sending to Mojang when telemetry blocking is enabled. Doe
    # Build for a specific version
    ./gradlew :1.21.4:build
    ./gradlew :1.21.11:build
+   ./gradlew :26.1:build
    ```
 
 Output JARs are located in `versions/<minecraft_version>/build/libs/`:
 | Build Version | Supports |
 |---------------|----------|
-| 1.21.4 | 1.21.1 – 1.21.5 |
+| 1.21.1 | 1.21 – 1.21.1 |
+| 1.21.4 | 1.21.2 – 1.21.5 |
 | 1.21.6 | 1.21.6 – 1.21.8 |
 | 1.21.9 | 1.21.9 – 1.21.10 |
 | 1.21.11 | 1.21.11 |
+| 26.1 | 26.1 |
 
 
 ## References

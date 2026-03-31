@@ -33,11 +33,8 @@ public class KeyBindingRegistryImplMixin {
     /**
      * Track mod keybind registration with mod ID.
      */
-    //? if >=26.1 {
-    /*@Inject(method = "registerKeyMapping", at = @At("RETURN"), require = 0)*/
-    //?} else {
-    @Inject(method = "registerKeyBinding", at = @At("RETURN"), require = 0)
-    //?}
+    @SuppressWarnings("UnresolvedMixinReference")
+    @Inject(method = {"registerKeyMapping", "registerKeyBinding"}, at = @At("RETURN"), require = 0)
     private static void opsec$onKeybindRegister(KeyMapping keyBinding, CallbackInfoReturnable<KeyMapping> cir) {
         if (keyBinding == null) return;
         

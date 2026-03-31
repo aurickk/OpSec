@@ -32,8 +32,9 @@ public class DownloadQueueMixin {
     @Final
     private Path cacheDir;
 
+    @SuppressWarnings("UnresolvedMixinReference")
     @ModifyExpressionValue(
-        method = "method_55485",
+        method = {"lambda$runDownload$0", "method_55485"},
         at = @At(value = "INVOKE", target = "Ljava/nio/file/Path;resolve(Ljava/lang/String;)Ljava/nio/file/Path;"),
         require = 0, expect = 0
     )

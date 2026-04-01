@@ -7,18 +7,14 @@ import com.llamalad7.mixinextras.sugar.ref.LocalRef;
 import aurick.opsec.mod.Opsec;
 import aurick.opsec.mod.PrivacyLogger;
 import aurick.opsec.mod.config.OpsecConfig;
+import aurick.opsec.mod.util.HttpURLConnectionAccessor;
 import aurick.opsec.mod.util.LocalAddressUtil;
 import net.minecraft.util.HttpUtil;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
-import sun.misc.Unsafe;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.lang.invoke.MethodHandle;
-import java.lang.invoke.MethodHandles;
-import java.lang.invoke.MethodType;
-import java.lang.reflect.Field;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.ProtocolException;
@@ -32,7 +28,7 @@ import java.util.Objects;
  * Aligned with ExploitPreventer's HttpUtilMixin implementation.
  *
  * <p>Handles redirect codes 300-303, 305, and 307 with manual redirect following,
- * per-hop local address checking, and Unsafe Host header injection for 305 responses.
+ * per-hop local address checking, and OpenSeSame-based Host header injection for 305 responses.
  *
  * @see <a href="https://github.com/NikOverflow/ExploitPreventer">ExploitPreventer</a>
  */
@@ -100,28 +96,7 @@ public class HttpUtilMixin {
             requestProperties.forEach(instance::setRequestProperty);
 
             if (status == 305) {
-                try {
-                    Field theUnsafeField = Unsafe.class.getDeclaredField("theUnsafe");
-                    theUnsafeField.setAccessible(true);
-                    Unsafe unsafe = (Unsafe) theUnsafeField.get(null);
-
-                    Class<?> httpUrlConnectionClass = Class.forName(
-                        "sun.net.www.protocol.http.HttpURLConnection");
-                    Class<?> messageHeaderClass = Class.forName("sun.net.www.MessageHeader");
-
-                    long requestsOffset = unsafe.objectFieldOffset(
-                        httpUrlConnectionClass.getDeclaredField("requests"));
-                    long lookupOffset = unsafe.staticFieldOffset(
-                        MethodHandles.Lookup.class.getDeclaredField("IMPL_LOOKUP"));
-
-                    MethodHandles.Lookup lookup = (MethodHandles.Lookup) unsafe.getObject(
-                        MethodHandles.Lookup.class, lookupOffset);
-                    MethodHandle addHandle = lookup.findVirtual(messageHeaderClass, "add",
-                        MethodType.methodType(void.class, String.class, String.class));
-                    addHandle.invoke(unsafe.getObject(instance, requestsOffset), "Host", host);
-                } catch (Throwable e) {
-                    throw new RuntimeException(e);
-                }
+                HttpURLConnectionAccessor.add(HttpURLConnectionAccessor.getRequests(instance), "Host", host);
             }
 
             if (!LocalAddressUtil.isLocalAddress(LocalAddressUtil.serverAddress)

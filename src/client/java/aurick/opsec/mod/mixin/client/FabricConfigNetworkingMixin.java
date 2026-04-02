@@ -41,7 +41,7 @@ public class FabricConfigNetworkingMixin {
         }
     }
     
-    @Inject(method = "getReceived", at = @At("RETURN"), cancellable = true, remap = false, require = 0)
+    @Inject(method = "getReceived", at = @At("RETURN"), cancellable = true, remap = false)
     //? if >=1.21.11 {
     /*private static void opsec$filterReceived(CallbackInfoReturnable<Set<Identifier>> cir) {
         Set<Identifier> original = cir.getReturnValue();
@@ -60,7 +60,7 @@ public class FabricConfigNetworkingMixin {
         }
     }
     
-    @Inject(method = "getSendable", at = @At("RETURN"), cancellable = true, remap = false, require = 0)
+    @Inject(method = "getSendable", at = @At("RETURN"), cancellable = true, remap = false)
     //? if >=1.21.11 {
     /*private static void opsec$filterSendable(CallbackInfoReturnable<Set<Identifier>> cir) {
         Set<Identifier> original = cir.getReturnValue();

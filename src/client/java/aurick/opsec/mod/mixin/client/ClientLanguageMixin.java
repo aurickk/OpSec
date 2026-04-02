@@ -6,6 +6,7 @@ import com.llamalad7.mixinextras.sugar.Local;
 import aurick.opsec.mod.Opsec;
 import aurick.opsec.mod.tracking.ModIdResolver;
 import aurick.opsec.mod.tracking.ModRegistry;
+import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.resources.language.ClientLanguage;
 import net.minecraft.server.packs.CompositePackResources;
 import net.minecraft.server.packs.FilePackResources;
@@ -46,7 +47,7 @@ public class ClientLanguageMixin {
     /**
      * Reset logging flag before loading new language.
      * NOTE: We no longer clear translation keys here because the WrapOperation may fail
-     * silently (require=0) and our fallback scanner runs before this, so we'd wipe out
+     * silently and our fallback scanner runs before this, so we'd wipe out
      * all the fallback's work without being able to re-add it.
      */
     @Inject(method = "loadFrom", at = @At("HEAD"))
@@ -79,9 +80,7 @@ public class ClientLanguageMixin {
      */
     @WrapOperation(
         method = "appendFrom",
-        at = @At(value = "INVOKE", target = "Lnet/minecraft/locale/Language;loadFromJson(Ljava/io/InputStream;Ljava/util/function/BiConsumer;)V"),
-        require = 0
-    )
+        at = @At(value = "INVOKE", target = "Lnet/minecraft/locale/Language;loadFromJson(Ljava/io/InputStream;Ljava/util/function/BiConsumer;)V"))
     private static void opsec$trackTranslationKeys(
             InputStream stream, 
             BiConsumer<String, String> output, 
@@ -103,14 +102,7 @@ public class ClientLanguageMixin {
         // Works with both old ModNioResourcePack and new ModResourcePack implementations
         // Must check this before PathPackResources since mod packs may extend it
         String modId = opsec$getModIdFromPack(pack);
-        
-        // Skip Fabric API modules - they handle resources for other mods
-        // and their channels are already whitelisted when whitelist is enabled
-        if (modId != null && opsec$isFabricApiModule(modId)) {
-            original.call(stream, output);
-            return;
-        }
-        
+
         if (modId != null) {
             Set<String> modKeys = new HashSet<>();
             original.call(stream, (BiConsumer<String, String>) (key, value) -> {
@@ -146,7 +138,7 @@ public class ClientLanguageMixin {
             if (packId != null && !packId.isEmpty() && !packId.equals("vanilla") && !packId.startsWith("file/")) {
                 // Clean up pack ID - remove common prefixes/suffixes
                 String extractedModId = packId.replace("fabric/", "").replace("mod/", "");
-                if (!extractedModId.isEmpty() && !extractedModId.startsWith("fabric-")) {
+                if (!extractedModId.isEmpty()) {
                     Set<String> modKeys = new HashSet<>();
                     final String finalModId = extractedModId;
                     original.call(stream, (BiConsumer<String, String>) (key, value) -> {
@@ -170,17 +162,6 @@ public class ClientLanguageMixin {
         original.call(stream, output);
     }
     
-    /**
-     * Check if a mod ID is a Fabric API module that handles resources for other mods.
-     */
-    @Unique
-    private static boolean opsec$isFabricApiModule(String modId) {
-        if (modId == null) return false;
-        return modId.startsWith("fabric-") || 
-               modId.equals("fabricloader") ||
-               modId.equals("fabric") ||
-               modId.startsWith("fabric_");
-    }
     
     /**
      * Try to get mod ID from a pack using multiple detection methods.
@@ -188,7 +169,7 @@ public class ClientLanguageMixin {
     @Unique
     private static String opsec$getModIdFromPack(PackResources pack) {
         if (pack == null) return null;
-        
+
         // Method 1: Try reflection for Fabric's mod resource packs (getFabricModMetadata)
         try {
             var method = pack.getClass().getMethod("getFabricModMetadata");
@@ -201,7 +182,7 @@ public class ClientLanguageMixin {
         } catch (Exception e) {
             // Not a Fabric mod pack or reflection failed
         }
-        
+
         // Method 2: Try getModMetadata (different Fabric versions)
         try {
             var method = pack.getClass().getMethod("getModMetadata");
@@ -214,18 +195,15 @@ public class ClientLanguageMixin {
         } catch (Exception e) {
             // Not available
         }
-        
-        // Method 3: Try getId directly on the pack
-        try {
-            var method = pack.getClass().getMethod("getId");
-            Object result = method.invoke(pack);
-            if (result instanceof String id && !id.isEmpty()) {
-                return id;
+
+        // Method 3: Use pack ID directly - Fabric creates one pack per mod with the mod ID as pack ID
+        String packId = pack.packId();
+        if (packId != null && !packId.isEmpty() && !packId.equals("vanilla") && !packId.startsWith("file/") && !packId.startsWith("server/")) {
+            if (FabricLoader.getInstance().getModContainer(packId).isPresent()) {
+                return packId;
             }
-        } catch (Exception e) {
-            // Not available
         }
-        
+
         // Method 4: Fall back to class-based detection
         return ModIdResolver.getModIdFromClass(pack.getClass());
     }

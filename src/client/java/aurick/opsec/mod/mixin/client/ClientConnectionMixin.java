@@ -39,7 +39,6 @@ import static aurick.opsec.mod.config.OpsecConstants.Channels.*;
 /**
  * Intercepts and filters outgoing custom payloads for brand spoofing and channel filtering.
  * Also tracks server address for LAN detection.
- * Uses require=0 on several injections for multi-version support (Connection method signatures vary across 1.21.x).
  */
 @Mixin(Connection.class)
 public class ClientConnectionMixin {
@@ -47,7 +46,7 @@ public class ClientConnectionMixin {
     @Shadow
     private Channel channel;
     
-    @Inject(method = "channelActive", at = @At("HEAD"), require = 0)
+    @Inject(method = "channelActive", at = @At("HEAD"))
     private void opsec$onChannelActive(ChannelHandlerContext context, CallbackInfo ci) {
         try {
             if (context.channel() != null && context.channel().remoteAddress() != null) {
@@ -65,7 +64,7 @@ public class ClientConnectionMixin {
         }
     }
     
-    @Inject(method = "channelInactive", at = @At("HEAD"), require = 0)
+    @Inject(method = "channelInactive", at = @At("HEAD"))
     private void opsec$onChannelInactive(ChannelHandlerContext context, CallbackInfo ci) {
         Opsec.LOGGER.debug("[OpSec] Disconnected from server");
         LocalAddressUtil.serverAddress = null;
@@ -265,7 +264,7 @@ public class ClientConnectionMixin {
     }
     
     
-    @Inject(method = "configurePacketHandler", at = @At("TAIL"), require = 0)
+    @Inject(method = "configurePacketHandler", at = @At("TAIL"))
     private void onConfigurePacketHandler(CallbackInfo ci) {
         opsec$ensurePipelineHandler();
     }

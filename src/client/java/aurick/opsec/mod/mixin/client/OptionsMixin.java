@@ -51,7 +51,7 @@ public class OptionsMixin {
     /**
      * Track vanilla keybinds after Options is loaded.
      */
-    @Inject(method = "load()V", at = @At("RETURN"), require = 0)
+    @Inject(method = "load()V", at = @At("RETURN"))
     private void opsec$trackVanillaKeybinds(CallbackInfo ci) {
         if (opsec$trackedVanillaKeybinds) return;
         opsec$trackedVanillaKeybinds = true;

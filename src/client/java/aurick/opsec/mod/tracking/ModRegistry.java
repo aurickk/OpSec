@@ -48,6 +48,17 @@ public class ModRegistry {
     /** Maps channel namespaces to their owning Fabric mod IDs (e.g., "jm" -> "journeymap") */
     private static final Map<String, Set<String>> namespaceToModIds = new ConcurrentHashMap<>();
 
+    /** Fabric API modules with production translation keys - auto-whitelisted in Fabric mode */
+    public static final Set<String> DEFAULT_FABRIC_MODS = Set.of(
+        "fabric-resource-loader-v0",
+        "fabric-resource-loader-v1",
+        "fabric-item-group-api-v1",
+        "fabric-creative-tab-api-v1",
+        "fabric-registry-sync-v0",
+        "fabric-convention-tags-v2",
+        "fabric-data-attachment-api-v1"
+    );
+
     private static volatile boolean initialized = false;
     
     private ModRegistry() {}
@@ -183,11 +194,6 @@ public class ModRegistry {
         if (key == null) return null;
         
         for (ModInfo info : registry.values()) {
-            // Skip fabric-resource-loader-v0 - it incorrectly captures all mod keys
-            if ("fabric-resource-loader-v0".equals(info.modId)) {
-                continue;
-            }
-            
             if (info.translationKeys.contains(key)) {
                 return info.modId;
             }
@@ -228,9 +234,9 @@ public class ModRegistry {
         OpsecConfig config = OpsecConfig.getInstance();
         SpoofSettings settings = config.getSettings();
         
-        // Fabric loader keys always allowed in Fabric mode
-        if (settings.isFabricMode() && isFabricKey(key)) {
-            Opsec.LOGGER.debug("[Whitelist] ALLOWED {} '{}' - Fabric key in Fabric mode", source, key);
+        // Default Fabric API module keys always allowed in Fabric mode
+        if (settings.isFabricMode() && isDefaultFabricModKey(key)) {
+            Opsec.LOGGER.debug("[Whitelist] ALLOWED {} '{}' - default Fabric API mod in Fabric mode", source, key);
             return true;
         }
 
@@ -282,23 +288,14 @@ public class ModRegistry {
     }
     
     /**
-     * Check if a key is from Fabric or Fabric API.
-     * Unified check for both translation keys and keybinds.
+     * Check if a key belongs to one of the default-whitelisted Fabric API modules.
+     * Used in Fabric mode to auto-allow Fabric API keys without manual whitelisting.
      */
-    private static boolean isFabricKey(String key) {
+    private static boolean isDefaultFabricModKey(String key) {
         if (key == null) return false;
-        
-        return key.startsWith("fabric.") ||           // fabric.gui.creativeTabPage
-               key.startsWith("fabric-") ||           // fabric-registry-sync-v0.*, fabric-data-attachment-api-v1.*
-               key.startsWith("fabricloader.") ||     // Fabric Loader keys
-               key.startsWith("key.fabric") ||        // Fabric keybinds
-               key.startsWith("category.fabric") ||   // Fabric keybind categories
-               key.startsWith("pack.source.fabric") || // pack.source.fabricmod
-               key.startsWith("pack.source.builtin") || // pack.source.builtinMod
-               key.startsWith("pack.name.fabric") ||  // pack.name.fabricMod
-               key.startsWith("pack.description.mod") || // pack.description.modResources
-               key.startsWith("commands.datapack.fabric") || // commands.datapack.fabric.internal
-               key.startsWith("tag.");                // Convention tags (tag.block.c.*, tag.item.c.*, etc.)
+        String modId = getModForTranslationKey(key);
+        if (modId == null) modId = getModForKeybind(key);
+        return modId != null && DEFAULT_FABRIC_MODS.contains(modId);
     }
     
     /**

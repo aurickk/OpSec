@@ -222,20 +222,27 @@ public class OpsecCommand {
 
         String statusText;
         boolean isAllowed;
-        switch (whitelistMode) {
-            case AUTO:
-                boolean hasChannels = info.hasChannels();
-                isAllowed = hasChannels;
-                statusText = isAllowed ? "Whitelist Status: ALLOWED (AUTO mode)" : "Whitelist Status: BLOCKED (AUTO mode - no channels)";
-                break;
-            case CUSTOM:
-                isAllowed = opsecSettings.isModWhitelisted(info.getModId());
-                statusText = isAllowed ? "Whitelist Status: ALLOWED (CUSTOM mode)" : "Whitelist Status: BLOCKED (CUSTOM mode)";
-                break;
-            default: // OFF
-                isAllowed = false;
-                statusText = "Whitelist Status: BLOCKED (OFF)";
-                break;
+
+        // Check if this is a default Fabric API mod (always allowed in Fabric mode)
+        if (opsecSettings.isFabricMode() && ModRegistry.DEFAULT_FABRIC_MODS.contains(info.getModId())) {
+            isAllowed = true;
+            statusText = "Whitelist Status: ALLOWED (default Fabric API mod)";
+        } else {
+            switch (whitelistMode) {
+                case AUTO:
+                    boolean hasChannels = info.hasChannels();
+                    isAllowed = hasChannels;
+                    statusText = isAllowed ? "Whitelist Status: ALLOWED (AUTO mode)" : "Whitelist Status: BLOCKED (AUTO mode - no channels)";
+                    break;
+                case CUSTOM:
+                    isAllowed = opsecSettings.isModWhitelisted(info.getModId());
+                    statusText = isAllowed ? "Whitelist Status: ALLOWED (CUSTOM mode)" : "Whitelist Status: BLOCKED (CUSTOM mode)";
+                    break;
+                default: // OFF
+                    isAllowed = false;
+                    statusText = "Whitelist Status: BLOCKED (OFF)";
+                    break;
+            }
         }
         source.sendFeedback(isAllowed ? success(statusText) : warning(statusText));
         

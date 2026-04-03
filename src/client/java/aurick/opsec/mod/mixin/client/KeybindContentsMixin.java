@@ -51,17 +51,9 @@ public class KeybindContentsMixin {
     @Shadow @Final
     private String name;
 
-    /**
-     * True if this KeybindContents was constructed during packet processing.
-     * Set in constructor inject by reading PacketContext ThreadLocal.
-     */
     @Unique
     private boolean opsec$fromPacket = false;
 
-    /**
-     * Tag this instance if it was created during packet deserialization or handling.
-     * Reads the PacketContext ThreadLocal set by PacketDecoderMixin/PacketProcessorMixin.
-     */
     @Inject(method = "<init>(Ljava/lang/String;)V", at = @At("TAIL"))
     private void opsec$tagFromPacket(String name, CallbackInfo ci) {
         this.opsec$fromPacket = PacketContext.isProcessingPacket();

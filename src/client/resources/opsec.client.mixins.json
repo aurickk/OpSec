@@ -28,7 +28,8 @@
 		"KeybindContentsMixin",
 		"TranslatableContentsMixin",
 		"PacketDecoderMixin",
-		"PacketProcessorMixin"
+		"PacketProcessorMixin",
+		"PacketUtilsMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1

@@ -41,17 +41,9 @@ public abstract class TranslatableContentsMixin {
     @Shadow @Final private String key;
     @Shadow @Final private String fallback;
 
-    /**
-     * True if this TranslatableContents was constructed during packet processing.
-     * Set in constructor inject by reading PacketContext ThreadLocal.
-     */
     @Unique
     private boolean opsec$fromPacket = false;
 
-    /**
-     * Tag this instance if it was created during packet deserialization or handling.
-     * Reads the PacketContext ThreadLocal set by PacketDecoderMixin/PacketProcessorMixin.
-     */
     @Inject(method = "<init>(Ljava/lang/String;Ljava/lang/String;[Ljava/lang/Object;)V", at = @At("TAIL"))
     private void opsec$tagFromPacket(String key, String fallback, Object[] args, CallbackInfo ci) {
         this.opsec$fromPacket = PacketContext.isProcessingPacket();

@@ -8,11 +8,6 @@ import net.minecraft.network.codec.StreamCodec;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 
-/**
- * Wraps packet deserialization to set the PacketContext ThreadLocal.
- * Components constructed during StreamCodec.decode() will read this flag
- * in their constructors and tag themselves as packet-origin.
- */
 @Mixin(PacketDecoder.class)
 public class PacketDecoderMixin {
 

@@ -1,25 +1,26 @@
 package aurick.opsec.mod.mixin.client;
 
-//? if >=1.21.9 {
+//? if <1.21.9 {
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import aurick.opsec.mod.detection.PacketContext;
 import aurick.opsec.mod.protection.TranslationProtectionHandler;
 import net.minecraft.network.PacketListener;
 import net.minecraft.network.protocol.Packet;
+import net.minecraft.network.protocol.PacketUtils;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 
-@Mixin(targets = "net.minecraft.network.PacketProcessor$ListenerAndPacket")
-public class PacketProcessorMixin {
+@Mixin(PacketUtils.class)
+public class PacketUtilsMixin {
 
     @WrapOperation(
-        method = "handle",
+        method = "method_11072",
         at = @At(value = "INVOKE",
             target = "Lnet/minecraft/network/protocol/Packet;handle(Lnet/minecraft/network/PacketListener;)V")
     )
-    private <T extends PacketListener> void opsec$wrapHandle(Packet<?> instance, T listener,
-            Operation<Void> original) {
+    private static <T extends PacketListener> void opsec$wrapHandleOnGameThread(
+            Packet<?> instance, T listener, Operation<Void> original) {
         TranslationProtectionHandler.clearDedup();
         PacketContext.setProcessingPacket(true);
         try {
@@ -32,9 +33,8 @@ public class PacketProcessorMixin {
 //?} else {
 /*
 import org.spongepowered.asm.mixin.Mixin;
-import net.minecraft.network.protocol.PacketUtils;
 
-@Mixin(PacketUtils.class)
-public class PacketProcessorMixin {
+@Mixin(net.minecraft.network.protocol.PacketUtils.class)
+public class PacketUtilsMixin {
 }
 *///?}

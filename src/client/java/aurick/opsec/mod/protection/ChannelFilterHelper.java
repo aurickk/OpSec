@@ -133,7 +133,7 @@ public final class ChannelFilterHelper {
         for (ResourceLocation channel : channels) {
     //?}
             String namespace = channel.getNamespace();
-            if ("minecraft".equals(namespace)) continue;
+            if ("minecraft".equals(namespace) || "c".equals(namespace)) continue;
 
             // Try to resolve namespace to actual mod ID
             Set<String> resolvedModIds = ModRegistry.resolveModIdsForNamespace(namespace);

@@ -27,8 +27,8 @@
 		"OptionsMixin",
 		"KeybindContentsMixin",
 		"TranslatableContentsMixin",
-		"SignEditScreenMixin",
-		"AnvilScreenMixin"
+		"PacketDecoderMixin",
+		"PacketProcessorMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1

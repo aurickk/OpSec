@@ -289,14 +289,6 @@ public class PrivacyLogger {
         }
     }
     
-    public enum ExploitSource {
-        SIGN("Sign"), ANVIL("Anvil"), UNKNOWN("Unknown source");
-        
-        private final String displayName;
-        ExploitSource(String displayName) { this.displayName = displayName; }
-        public String getDisplayName() { return displayName; }
-    }
-    
     public static void alertClientBrandSpoofed(String originalBrand, String spoofedBrand) {
         logDetection("Spoof", "Brand spoofed from '" + originalBrand + "' to '" + spoofedBrand + "'");
     }

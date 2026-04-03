@@ -5,13 +5,14 @@ import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import aurick.opsec.mod.Opsec;
 import aurick.opsec.mod.config.OpsecConfig;
 import aurick.opsec.mod.config.SpoofSettings;
-import aurick.opsec.mod.detection.ExploitContext;
+import aurick.opsec.mod.detection.PacketContext;
 import aurick.opsec.mod.protection.ForgeTranslations;
 import aurick.opsec.mod.protection.TranslationProtectionHandler;
 import aurick.opsec.mod.protection.TranslationProtectionHandler.InterceptionType;
 import aurick.opsec.mod.tracking.ModRegistry;
 import aurick.opsec.mod.util.KeybindDefaults;
 import net.minecraft.client.KeyMapping;
+import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.contents.KeybindContents;
 import org.spongepowered.asm.mixin.Final;
@@ -19,6 +20,8 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.function.Supplier;
 
@@ -47,7 +50,23 @@ public class KeybindContentsMixin {
     
     @Shadow @Final
     private String name;
-    
+
+    /**
+     * True if this KeybindContents was constructed during packet processing.
+     * Set in constructor inject by reading PacketContext ThreadLocal.
+     */
+    @Unique
+    private boolean opsec$fromPacket = false;
+
+    /**
+     * Tag this instance if it was created during packet deserialization or handling.
+     * Reads the PacketContext ThreadLocal set by PacketDecoderMixin/PacketProcessorMixin.
+     */
+    @Inject(method = "<init>(Ljava/lang/String;)V", at = @At("TAIL"))
+    private void opsec$tagFromPacket(String name, CallbackInfo ci) {
+        this.opsec$fromPacket = PacketContext.isProcessingPacket();
+    }
+
     /**
      * Context-aware keybind interception. Never resolves what we're going to block —
      * only calls original.call() for passthrough cases. Blocked keybinds read the
@@ -58,7 +77,7 @@ public class KeybindContentsMixin {
         at = @At(value = "INVOKE", target = "Ljava/util/function/Supplier;get()Ljava/lang/Object;")
     )
     private Object opsec$interceptKeybind(Supplier<?> supplier, Operation<Object> original) {
-        if (!ExploitContext.isInExploitableContext()) {
+        if (!this.opsec$fromPacket || Minecraft.getInstance().hasSingleplayerServer()) {
             return original.call(supplier);
         }
 

@@ -145,6 +145,7 @@ public class OpsecConfigScreen extends Screen {
             settings.copyFrom(defaults);
             config.save();
             UpdateChecker.resetShown();
+            JarIntegrityChecker.resetShown();
             refreshScreen();
         }).width(150)
           .tooltip(Tooltip.create(Component.literal(isAccountsTab 
@@ -1280,7 +1281,11 @@ public class OpsecConfigScreen extends Screen {
 
     private void openReleaseUrl() {
         try {
-            java.awt.Desktop.getDesktop().browse(java.net.URI.create(UpdateChecker.getReleaseUrl()));
+            //? if >=1.21.11 {
+            /*net.minecraft.util.Util.getPlatform().openUri(UpdateChecker.getReleaseUrl());*/
+            //?} else {
+            net.minecraft.Util.getPlatform().openUri(UpdateChecker.getReleaseUrl());
+            //?}
         } catch (Exception e) {
             Opsec.LOGGER.warn("[OpSec] Failed to open release URL: {}", e.getMessage());
         }

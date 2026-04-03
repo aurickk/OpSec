@@ -1,13 +1,15 @@
 package aurick.opsec.mod.config;
 
-import aurick.opsec.mod.Opsec;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.StringWidget;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 
-import java.awt.Desktop;
-import java.net.URI;
+//? if >=1.21.11 {
+/*import net.minecraft.util.Util;*/
+//?} else {
+import net.minecraft.Util;
+//?}
 
 /**
  * Native Minecraft-style screen that notifies the user when a new version of OpSec is available.
@@ -21,7 +23,7 @@ public class UpdateScreen extends Screen {
     private final Screen parent;
 
     public UpdateScreen(Screen parent) {
-        super(Component.literal("OpSec Update Available"));
+        super(Component.translatable("opsec.update.title"));
         this.parent = parent;
     }
 
@@ -32,9 +34,9 @@ public class UpdateScreen extends Screen {
 
         // Text labels (using StringWidget for cross-version rendering compatibility)
         addCenteredStringWidget(this.title, centerX, centerY - 50);
-        addCenteredStringWidget(Component.literal("A new version of OpSec is available!"), centerX, centerY - 28);
-        addCenteredStringWidget(Component.literal("\u00A7cCurrent: " + UpdateChecker.getCurrentVersion()), centerX, centerY - 14);
-        addCenteredStringWidget(Component.literal("\u00A7aLatest: " + UpdateChecker.getLatestVersion()), centerX, centerY);
+        addCenteredStringWidget(Component.translatable("opsec.update.message"), centerX, centerY - 28);
+        addCenteredStringWidget(Component.translatable("opsec.update.current", UpdateChecker.getCurrentVersion()), centerX, centerY - 14);
+        addCenteredStringWidget(Component.translatable("opsec.update.latest", UpdateChecker.getLatestVersion()), centerX, centerY);
 
         // Buttons stacked vertically, centered horizontally
         int buttonWidth = 200;
@@ -43,24 +45,20 @@ public class UpdateScreen extends Screen {
         int firstButtonY = centerY + 15;
 
         // Download button (green text)
-        this.addRenderableWidget(Button.builder(Component.literal("\u00A7aDownload"), button -> {
-            try {
-                Desktop.getDesktop().browse(URI.create(UpdateChecker.getReleaseUrl()));
-            } catch (Exception e) {
-                Opsec.LOGGER.warn("[OpSec] Failed to open release URL: {}", e.getMessage());
-            }
+        this.addRenderableWidget(Button.builder(Component.translatable("opsec.update.download"), button -> {
+            Util.getPlatform().openUri(UpdateChecker.getReleaseUrl());
             this.onClose();
         }).bounds(centerX - buttonWidth / 2, firstButtonY, buttonWidth, buttonHeight).build());
 
         // Skip This Version button
-        this.addRenderableWidget(Button.builder(Component.literal("Skip This Version"), button -> {
+        this.addRenderableWidget(Button.builder(Component.translatable("opsec.update.skip"), button -> {
             OpsecConfig.getInstance().getSettings().setSkippedUpdateVersion(UpdateChecker.getLatestVersion());
             OpsecConfig.getInstance().save();
             this.onClose();
         }).bounds(centerX - buttonWidth / 2, firstButtonY + buttonSpacing, buttonWidth, buttonHeight).build());
 
         // Cancel button
-        this.addRenderableWidget(Button.builder(Component.literal("Cancel"), button -> {
+        this.addRenderableWidget(Button.builder(Component.translatable("opsec.update.cancel"), button -> {
             this.onClose();
         }).bounds(centerX - buttonWidth / 2, firstButtonY + buttonSpacing * 2, buttonWidth, buttonHeight).build());
     }

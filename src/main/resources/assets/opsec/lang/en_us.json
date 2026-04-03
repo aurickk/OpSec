@@ -42,6 +42,26 @@
   "opsec.account.addSession": "Add Session Token",
   "opsec.account.addSession.tooltip": "Add a new account using a session token",
   "opsec.account.addOffline": "Add Offline Account",
-  "opsec.account.addOffline.tooltip": "Add an offline account (username only, no auth)"
+  "opsec.account.addOffline.tooltip": "Add an offline account (username only, no auth)",
+
+  "opsec.update.title": "OpSec Update Available",
+  "opsec.update.message": "A new version of OpSec is available!",
+  "opsec.update.current": "\u00A7cCurrent: %s",
+  "opsec.update.latest": "\u00A7aLatest: %s",
+  "opsec.update.download": "\u00A7aDownload",
+  "opsec.update.skip": "Skip This Version",
+  "opsec.update.cancel": "Cancel",
+
+  "opsec.tamper.title": "OpSec Integrity Warning",
+  "opsec.tamper.warning": "\u00A7c\u00A7lWARNING: Jar integrity check failed!",
+  "opsec.tamper.mismatch": "The running jar does not match the official release.",
+  "opsec.tamper.malicious": "This may indicate the file has been modified with malicious code.",
+  "opsec.tamper.compromised": "\u00A7cYour computer may have already been compromised.",
+  "opsec.tamper.action": "\u00A7cIf you did not modify this file yourself, take immediate action.",
+  "opsec.tamper.expected": "\u00A78Expected: %s...",
+  "opsec.tamper.actual": "\u00A78Actual: %s...",
+  "opsec.tamper.download": "\u00A7aDownload Official Release",
+  "opsec.tamper.dismiss_permanent": "I Know What I'm Doing",
+  "opsec.tamper.dismiss": "Dismiss"
 }
 

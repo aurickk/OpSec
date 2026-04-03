@@ -29,7 +29,8 @@
 		"TranslatableContentsMixin",
 		"PacketDecoderMixin",
 		"PacketProcessorMixin",
-		"PacketUtilsMixin"
+		"PacketUtilsMixin",
+		"TitleScreenMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1

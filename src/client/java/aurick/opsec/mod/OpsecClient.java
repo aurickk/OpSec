@@ -3,6 +3,7 @@ package aurick.opsec.mod;
 import aurick.opsec.mod.accounts.AccountManager;
 import aurick.opsec.mod.command.OpsecCommand;
 import aurick.opsec.mod.config.OpsecConfig;
+import aurick.opsec.mod.config.JarIntegrityChecker;
 import aurick.opsec.mod.config.UpdateChecker;
 import aurick.opsec.mod.tracking.ModRegistry;
 import net.fabricmc.api.ClientModInitializer;
@@ -43,6 +44,9 @@ public class OpsecClient implements ClientModInitializer {
 
 		// Check for mod updates (non-blocking)
 		UpdateChecker.checkForUpdate();
+
+		// Check jar integrity against GitHub release (non-blocking)
+		JarIntegrityChecker.checkIntegrity();
 
 		// Scan for registered channels after all mods have initialized
 		ClientLifecycleEvents.CLIENT_STARTED.register(client -> {

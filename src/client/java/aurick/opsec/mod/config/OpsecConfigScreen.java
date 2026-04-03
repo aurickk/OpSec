@@ -92,29 +92,22 @@ public class OpsecConfigScreen extends Screen {
     private StringWidget versionLabel;
     private boolean versionOutdated;
     private int currentTab = 0;
-    //? if >=1.21.6
     private double scrollOffset = 0;
     private List<Tab> tabs;
     
     public OpsecConfigScreen(Screen parent) {
-        //? if >=1.21.6 {
         this(parent, 0, 0);
-        //?} else
-        /*this(parent, 0);*/
     }
-    
+
     public OpsecConfigScreen(Screen parent, int initialTab) {
-        //? if >=1.21.6 {
         this(parent, initialTab, 0);
     }
-    
+
     public OpsecConfigScreen(Screen parent, int initialTab, double scrollOffset) {
-        //?}
         super(Component.translatable("opsec.config.title"));
         this.parent = parent;
         this.config = OpsecConfig.getInstance();
         this.currentTab = initialTab;
-        //? if >=1.21.6
         this.scrollOffset = scrollOffset;
     }
     
@@ -1175,7 +1168,6 @@ public class OpsecConfigScreen extends Screen {
         return this.currentTab;
     }
     
-    //? if >=1.21.6 {
     private double getCurrentScrollOffset() {
         Tab currentTab = this.tabManager.getCurrentTab();
         if (currentTab instanceof WidgetTab widgetTab) {
@@ -1183,15 +1175,11 @@ public class OpsecConfigScreen extends Screen {
         }
         return 0;
     }
-    //?}
-    
+
     private void refreshScreen() {
         int tabIndex = getCurrentTabIndex();
-        //? if >=1.21.6 {
         double scroll = getCurrentScrollOffset();
         this.minecraft.setScreen(new OpsecConfigScreen(this.parent, tabIndex, scroll));
-        //?} else
-        /*this.minecraft.setScreen(new OpsecConfigScreen(this.parent, tabIndex));*/
     }
     
     @Override
@@ -1335,7 +1323,7 @@ public class OpsecConfigScreen extends Screen {
         }
         
         public double getScrollAmount() {
-            return scrollableList.scrollAmount();
+            return scrollableList.currentScrollAmount();
         }
     }
     //?} else {
@@ -1346,22 +1334,23 @@ public class OpsecConfigScreen extends Screen {
 
         public WidgetTab(Component title, List<AbstractWidget> widgets) {
             super(title);
-            // Create the scrollable list immediately with the widgets
-            // Initial dimensions will be set by doLayout
             this.scrollableList = new ScrollableWidgetList(Minecraft.getInstance(), 300, 200, 0, widgets);
         }
 
         @Override
         public void visitChildren(java.util.function.Consumer<AbstractWidget> consumer) {
-            // Use our scrollable list instead of the parent's GridLayout
             consumer.accept(scrollableList);
         }
 
         @Override
         public void doLayout(ScreenRectangle rectangle) {
-            // Update the scrollable list's size and position
             scrollableList.setSize(rectangle.width(), rectangle.height());
             scrollableList.setPosition(rectangle.left(), rectangle.top());
+            scrollableList.setScrollAmount(scrollOffset);
+        }
+
+        public double getScrollAmount() {
+            return scrollableList.currentScrollAmount();
         }
     }*/
     //?}
@@ -1378,6 +1367,23 @@ public class OpsecConfigScreen extends Screen {
                 //? if <1.21.6
                 /*this.addEntry(new WidgetEntry(widget));*/
             }
+        }
+
+        //? if <1.21.6 {
+        /*private double trackedScroll = 0;
+
+        @Override
+        public void setScrollAmount(double scrollAmount) {
+            super.setScrollAmount(scrollAmount);
+            this.trackedScroll = scrollAmount;
+        }*/
+        //?}
+
+        public double currentScrollAmount() {
+            //? if >=1.21.6
+            return this.scrollAmount();
+            //? if <1.21.6
+            /*return this.trackedScroll;*/
         }
 
         @Override

@@ -14,7 +14,7 @@
 - **[Channel Spoofing](#channel-spoofing)** - Hide or fake mod channels to prevent mod detection
 - **[Isolate Pack Cache](#isolate-pack-cache)** - Isolate resource packs per-account to prevent tracking
 - **[Block Local URLs](#block-local-urls)** - Block resource pack redirects to local/private addresses
-- **[Key Resolution Protection](#key-resolution-protection)** - Protect against key resolution mod detection in signs and anvils
+- **[Key Resolution Protection](#key-resolution-protection)** - Protect against key resolution mod detection in any server packet
 - **[Meteor Fix](#meteor-fix)** - Disable Meteor Client's broken key resolution protection
 - **[Mod Whitelist](#mod-whitelist)** - Automatically or manually exempt mods from channel spoofing and key resolution protection
 - **[Chat Signing Control](#chat-signing-control)** - Configure chat message signing behavior
@@ -151,11 +151,11 @@ OpSec manually follows HTTP redirects (300-303, 305, 307) and checks each hop fo
 
 ### Key Resolution Protection
 
-Servers can send translatable text in signs and anvils containing keys like `key.attack` or `key.hide_icons` to probe which keys you have bound or mod UI elements your client can resolve. This can reveal the client's installed mods.
+Servers can send translatable text containing keys like `key.attack` or `key.hide_icons` in any server packet to probe which keys you have bound or mod UI elements your client can resolve. This can reveal the client's installed mods.
 
 https://wurst.wiki/sign_translation_vulnerability
 
-OpSec intercepts resolvable keys and blocks Minecraft from resolving them based on your selected brand mode:
+OpSec tracks when translation keys are being resolved during server packet processing and blocks Minecraft from resolving them based on your selected brand mode:
 
 #### Mode-Specific Behavior
 

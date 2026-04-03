@@ -3,8 +3,6 @@ package aurick.opsec.mod.protection;
 import aurick.opsec.mod.Opsec;
 import aurick.opsec.mod.PrivacyLogger;
 import aurick.opsec.mod.config.OpsecConfig;
-import aurick.opsec.mod.detection.ExploitContext;
-
 import aurick.opsec.mod.config.SpoofSettings;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
@@ -69,9 +67,6 @@ public class TranslationProtectionHandler {
         if (!shouldProcess()) {
             return;
         }
-        if (ExploitContext.shouldSuppressAlerts()) {
-            return;
-        }
 
         long now = System.currentTimeMillis();
 
@@ -95,8 +90,8 @@ public class TranslationProtectionHandler {
      * Called either immediately (debug mode) or deferred (normal mode, from sendDetail).
      */
     private static void emitHeader() {
-        // Get source for logging only
-        PrivacyLogger.ExploitSource source = ExploitContext.getSource();
+        // Source is always "packet" -- detection is now packet-level via PacketContext
+        String source = "packet";
 
         // Chat alert: red, no emoji icon
         if (OpsecConfig.getInstance().shouldShowAlerts()) {
@@ -124,8 +119,7 @@ public class TranslationProtectionHandler {
 
         // Log with source
         if (OpsecConfig.getInstance().isLogDetections()) {
-            Opsec.LOGGER.info("[OpSec] Key resolution exploit detected via {}",
-                source.getDisplayName().toLowerCase());
+            Opsec.LOGGER.info("[OpSec] Key resolution exploit detected via {}", source);
         }
 
         // One-time hint about disabling alerts
@@ -160,9 +154,6 @@ public class TranslationProtectionHandler {
      * @param spoofedValue What we're returning instead
      */
     public static void sendDetail(InterceptionType type, String keyName, String originalValue, String spoofedValue) {
-        if (ExploitContext.shouldSuppressAlerts()) {
-            return;
-        }
         if (!OpsecConfig.getInstance().shouldShowAlerts()) {
             return;
         }
@@ -228,9 +219,8 @@ public class TranslationProtectionHandler {
             return;
         }
 
-        PrivacyLogger.ExploitSource source = ExploitContext.getSource();
-        Opsec.LOGGER.info("[{}:{}] '{}' '{}' → '{}'",
-            type.getDisplayName(), source.getDisplayName(), keyName, originalValue, spoofedValue);
+        Opsec.LOGGER.info("[{}:packet] '{}' '{}' -> '{}'",
+            type.getDisplayName(), keyName, originalValue, spoofedValue);
     }
 
     /**

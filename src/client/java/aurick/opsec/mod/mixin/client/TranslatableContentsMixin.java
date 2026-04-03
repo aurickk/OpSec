@@ -5,11 +5,12 @@ import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import aurick.opsec.mod.Opsec;
 import aurick.opsec.mod.config.OpsecConfig;
 import aurick.opsec.mod.config.SpoofSettings;
-import aurick.opsec.mod.detection.ExploitContext;
+import aurick.opsec.mod.detection.PacketContext;
 import aurick.opsec.mod.protection.ForgeTranslations;
 import aurick.opsec.mod.protection.TranslationProtectionHandler;
 import aurick.opsec.mod.protection.TranslationProtectionHandler.InterceptionType;
 import aurick.opsec.mod.tracking.ModRegistry;
+import net.minecraft.client.Minecraft;
 import net.minecraft.locale.Language;
 import net.minecraft.network.chat.contents.TranslatableContents;
 import org.spongepowered.asm.mixin.Final;
@@ -39,25 +40,13 @@ public abstract class TranslatableContentsMixin {
 
     @Shadow @Final private String key;
     @Shadow @Final private String fallback;
-    @Shadow private Language decomposedWith;
 
-    /**
-     * Invalidate the decompose cache when entering an exploit context.
-     *
-     * decompose() has a cache check: if (language == this.decomposedWith) return;
-     * If a TranslatableContents was already decomposed in normal context (e.g., item
-     * rendered in inventory), the cached result would be reused in the exploit context
-     * (e.g., same item shown in anvil screen), and our @WrapOperation on getOrDefault
-     * would never fire. Clearing the cache forces re-decomposition so the @WrapOperation
-     * can intercept and block the translation lookup.
-     */
-    @Inject(method = "decompose", at = @At("HEAD"))
-    private void opsec$invalidateCacheInExploitContext(CallbackInfo ci) {
-        if (!ExploitContext.isInExploitableContext()) return;
+    @Unique
+    private boolean opsec$fromPacket = false;
 
-        // Only invalidate for keys that need protection
-        if (ModRegistry.isVanillaTranslationKey(key)) return;
-        this.decomposedWith = null;
+    @Inject(method = "<init>(Ljava/lang/String;Ljava/lang/String;[Ljava/lang/Object;)V", at = @At("TAIL"))
+    private void opsec$tagFromPacket(String key, String fallback, Object[] args, CallbackInfo ci) {
+        this.opsec$fromPacket = PacketContext.isProcessingPacket();
     }
 
     /** Sentinel value indicating the original call should proceed. */
@@ -109,8 +98,8 @@ public abstract class TranslatableContentsMixin {
      */
     @Unique
     private String opsec$handleTranslationLookup(String translationKey, String defaultValue) {
-        // Not in exploit context — allow normal resolution
-        if (!ExploitContext.isInExploitableContext()) {
+        // Not from a packet or in singleplayer — allow normal resolution
+        if (!this.opsec$fromPacket || Minecraft.getInstance().hasSingleplayerServer()) {
             return OPSEC_ALLOW_ORIGINAL;
         }
 

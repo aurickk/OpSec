@@ -45,14 +45,13 @@ public class ClientLanguageMixin {
     private static boolean opsec$loggedOnce = false;
     
     /**
-     * Reset logging flag before loading new language.
-     * NOTE: We no longer clear translation keys here because the WrapOperation may fail
-     * silently and our fallback scanner runs before this, so we'd wipe out
-     * all the fallback's work without being able to re-add it.
+     * Clear translation key caches and reset logging flag before loading new language.
+     * The WrapOperation on appendFrom (require=1) will repopulate all keys from each pack.
      */
     @Inject(method = "loadFrom", at = @At("HEAD"))
-    private static void opsec$onLoadStart(ResourceManager resourceManager, List<String> filenames, 
+    private static void opsec$onLoadStart(ResourceManager resourceManager, List<String> filenames,
             boolean defaultRightToLeft, CallbackInfoReturnable<ClientLanguage> cir) {
+        ModRegistry.clearTranslationKeys();
         Opsec.LOGGER.debug("[OpSec] ClientLanguageMixin: Starting language load");
         opsec$loggedOnce = false;
     }

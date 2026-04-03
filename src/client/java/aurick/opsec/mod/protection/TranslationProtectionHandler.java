@@ -9,6 +9,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
 
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -122,23 +123,27 @@ public class TranslationProtectionHandler {
             Opsec.LOGGER.info("[OpSec] Key resolution exploit detected via {}", source);
         }
 
-        // One-time hint about disabling alerts
+        // One-time hint about disabling alerts (delayed so it appears after the first alert)
         SpoofSettings settings = OpsecConfig.getInstance().getSettings();
         if (!settings.isAlertHintShown()) {
             settings.setAlertHintShown(true);
             OpsecConfig.getInstance().save();
-            Minecraft mc = Minecraft.getInstance();
-            if (mc.player != null) {
-                //? if >=26.1 {
-                /*mc.player.sendSystemMessage(
-                    Component.literal("Chat and toast alerts can be disabled in OpSec > Misc settings.")
-                        .withStyle(ChatFormatting.DARK_GRAY));*/
-                //?} else {
-                mc.player.displayClientMessage(
-                    Component.literal("Chat and toast alerts can be disabled in OpSec > Misc settings.")
-                        .withStyle(ChatFormatting.DARK_GRAY), false);
-                //?}
-            }
+            CompletableFuture.delayedExecutor(2, java.util.concurrent.TimeUnit.SECONDS).execute(() -> {
+                Minecraft mc = Minecraft.getInstance();
+                mc.execute(() -> {
+                    if (mc.player != null) {
+                        //? if >=26.1 {
+                        /*mc.player.sendSystemMessage(
+                            Component.literal("Chat and toast alerts can be disabled in OpSec > Misc settings.")
+                                .withStyle(ChatFormatting.AQUA));*/
+                        //?} else {
+                        mc.player.displayClientMessage(
+                            Component.literal("Chat and toast alerts can be disabled in OpSec > Misc settings.")
+                                .withStyle(ChatFormatting.AQUA), false);
+                        //?}
+                    }
+                });
+            });
         }
     }
 

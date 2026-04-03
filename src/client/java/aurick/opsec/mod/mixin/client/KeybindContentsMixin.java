@@ -88,13 +88,18 @@ public class KeybindContentsMixin {
         }
 
         if (ModRegistry.isWhitelistedKeybind(name)) {
+            if (OpsecConfig.getInstance().isDebugAlerts()) {
+                String displayValue = opsec$readKeybindDisplay();
+                TranslationProtectionHandler.sendDetailDebug(InterceptionType.KEYBIND, name, displayValue, displayValue);
+            }
             return original.call(supplier);
         }
 
         // Protection disabled — passthrough with logging
         if (!config.isTranslationProtectionEnabled()) {
             Object originalResult = original.call(supplier);
-            String originalValue = originalResult instanceof Component c ? c.getString() : originalResult.toString();
+            String originalValue = originalResult instanceof Component c ? c.getString()
+                : originalResult != null ? originalResult.toString() : name;
             TranslationProtectionHandler.sendDetailDebug(InterceptionType.KEYBIND, name, originalValue, originalValue);
             TranslationProtectionHandler.logDetection(InterceptionType.KEYBIND, name, originalValue, originalValue);
             return originalResult;
@@ -104,7 +109,8 @@ public class KeybindContentsMixin {
         if (KeybindDefaults.hasDefault(name)) {
             if (!settings.isFakeDefaultKeybinds()) {
                 Object originalResult = original.call(supplier);
-                String originalValue = originalResult instanceof Component c ? c.getString() : originalResult.toString();
+                String originalValue = originalResult instanceof Component c ? c.getString()
+                    : originalResult != null ? originalResult.toString() : name;
                 TranslationProtectionHandler.sendDetailDebug(InterceptionType.KEYBIND, name, originalValue, originalValue);
                 TranslationProtectionHandler.logDetection(InterceptionType.KEYBIND, name, originalValue, originalValue);
                 return originalResult;

@@ -106,8 +106,12 @@ public abstract class TranslatableContentsMixin {
         // In exploit context — always notify header (cooldown prevents spam)
         TranslationProtectionHandler.notifyExploitDetected();
 
-        // Always allow vanilla keys (no value change, no detail)
+        // Always allow vanilla keys — but still send debug detail if enabled
         if (ModRegistry.isVanillaTranslationKey(translationKey)) {
+            if (OpsecConfig.getInstance().isDebugAlerts()) {
+                String realValue = opsec$getRealTranslation(translationKey, defaultValue);
+                TranslationProtectionHandler.sendDetailDebug(InterceptionType.TRANSLATION, translationKey, realValue, realValue);
+            }
             return OPSEC_ALLOW_ORIGINAL;
         }
 

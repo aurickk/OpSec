@@ -4,6 +4,7 @@ import aurick.opsec.mod.Opsec;
 import aurick.opsec.mod.PrivacyLogger;
 import aurick.opsec.mod.config.OpsecConfig;
 import aurick.opsec.mod.config.SpoofSettings;
+import aurick.opsec.mod.detection.PacketContext;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
@@ -42,7 +43,7 @@ public class TranslationProtectionHandler {
     private record AlertDedupeKey(InterceptionType type, String keyName) {}
 
     /** Dedup key for logs — full tuple to preserve log accuracy */
-    private record LogDedupeKey(InterceptionType type, String keyName, String originalValue, String spoofedValue) {}
+    private record LogDedupeKey(InterceptionType type, String packetName, String keyName, String originalValue, String spoofedValue) {}
 
     // Separate deduplication sets for alerts and logging
     private static final Set<AlertDedupeKey> alertedKeys = ConcurrentHashMap.newKeySet();
@@ -91,23 +92,29 @@ public class TranslationProtectionHandler {
      * Called either immediately (debug mode) or deferred (normal mode, from sendDetail).
      */
     private static void emitHeader() {
-        // Source is always "packet" -- detection is now packet-level via PacketContext
-        String source = "packet";
+        String source = PacketContext.getPacketName();
 
         // Chat alert: red, no emoji icon
         if (OpsecConfig.getInstance().shouldShowAlerts()) {
             Minecraft mc = Minecraft.getInstance();
-            if (mc.player != null) {
-                //? if >=26.1 {
-                /*mc.player.sendSystemMessage(
-                    Component.literal("[OpSec] ").withStyle(ChatFormatting.DARK_PURPLE)
-                        .append(Component.literal("Key resolution probe detected").withStyle(ChatFormatting.RED)));*/
-                //?} else {
-                mc.player.displayClientMessage(
-                    Component.literal("[OpSec] ").withStyle(ChatFormatting.DARK_PURPLE)
-                        .append(Component.literal("Key resolution probe detected").withStyle(ChatFormatting.RED)),
-                    false);
-                //?}
+            Runnable sendAlert = () -> {
+                if (mc.player != null) {
+                    //? if >=26.1 {
+                    /*mc.player.sendSystemMessage(
+                        Component.literal("[OpSec] ").withStyle(ChatFormatting.DARK_PURPLE)
+                            .append(Component.literal("Key resolution probe detected").withStyle(ChatFormatting.RED)));*/
+                    //?} else {
+                    mc.player.displayClientMessage(
+                        Component.literal("[OpSec] ").withStyle(ChatFormatting.DARK_PURPLE)
+                            .append(Component.literal("Key resolution probe detected").withStyle(ChatFormatting.RED)),
+                        false);
+                    //?}
+                }
+            };
+            if (mc.isSameThread()) {
+                sendAlert.run();
+            } else {
+                mc.execute(sendAlert);
             }
         }
 
@@ -214,18 +221,20 @@ public class TranslationProtectionHandler {
             return;
         }
 
+        String packetName = PacketContext.getPacketName();
+
         // Clear if too large to prevent unbounded growth
         if (loggedKeys.size() >= MAX_DEDUPE_ENTRIES) {
             loggedKeys.clear();
         }
 
         // Dedupe by full tuple to preserve log accuracy
-        if (!loggedKeys.add(new LogDedupeKey(type, keyName, originalValue, spoofedValue))) {
+        if (!loggedKeys.add(new LogDedupeKey(type, packetName, keyName, originalValue, spoofedValue))) {
             return;
         }
 
-        Opsec.LOGGER.info("[{}:packet] '{}' '{}' -> '{}'",
-            type.getDisplayName(), keyName, originalValue, spoofedValue);
+        Opsec.LOGGER.info("[{}:{}] '{}' '{}' -> '{}'",
+            type.getDisplayName(), packetName, keyName, originalValue, spoofedValue);
     }
 
     /**

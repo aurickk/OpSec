@@ -119,6 +119,14 @@ public final class UpdateChecker {
     }
 
     /**
+     * Resets the session-shown flag so the update screen can appear again.
+     * Called when the user resets all settings from the config screen.
+     */
+    public static void resetShown() {
+        shownThisSession = false;
+    }
+
+    /**
      * Returns the current mod version. Delegates to {@link Opsec#getVersion()}.
      */
     public static String getCurrentVersion() {

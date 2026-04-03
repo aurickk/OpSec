@@ -153,9 +153,7 @@ public class ClientConnectionMixin {
                     if (payload instanceof RegistrationPayload registrationPayload) {
                         // Use ModRegistry.isWhitelistedChannel which handles:
                         // - minecraft:* channels
-                        // - fabric:* and fabric-*:* channels
-                        // - c:* channels
-                        // - Whitelisted mod channels
+                        // - Whitelisted mod channels (including fabric API modules via DEFAULT_FABRIC_MODS)
                         //? if >=1.21.11 {
                         /*List<Identifier> filtered = registrationPayload.channels().stream()*/
                         //?} else {
@@ -182,17 +180,12 @@ public class ClientConnectionMixin {
                     return;
                 }
                 
-                if (FABRIC_NAMESPACE.equals(payloadId.getNamespace()) || payloadId.getNamespace().startsWith(FABRIC_NAMESPACE + "-")) {
-                    ctx.write(msg, promise);
-                    return;
-                }
-                
                 if (MINECRAFT.equals(payloadId.getNamespace())) {
                     ctx.write(msg, promise);
                     return;
                 }
                 
-                // Allow whitelisted mod channels
+                // Allow whitelisted mod channels (includes fabric API modules via DEFAULT_FABRIC_MODS)
                 if (ModRegistry.isWhitelistedChannel(payloadId)) {
                     ctx.write(msg, promise);
                     return;
@@ -354,15 +347,7 @@ public class ClientConnectionMixin {
                 return;
             }
             
-            if (FABRIC_NAMESPACE.equals(namespace) || namespace.startsWith(FABRIC_NAMESPACE + "-")) {
-                return;
-            }
-            
-            if (COMMON.equals(namespace)) {
-                return;
-            }
-            
-            // Allow whitelisted mod channels
+            // Allow whitelisted mod channels (includes fabric API modules via DEFAULT_FABRIC_MODS)
             if (ModRegistry.isWhitelistedChannel(payloadId)) {
                 return;
             }
@@ -419,9 +404,7 @@ public class ClientConnectionMixin {
         
         // Use ModRegistry.isWhitelistedChannel which handles:
         // - minecraft:* channels
-        // - fabric:* and fabric-*:* channels
-        // - c:* channels
-        // - Whitelisted mod channels
+        // - Whitelisted mod channels (including fabric API modules via DEFAULT_FABRIC_MODS)
         //? if >=1.21.11 {
         /*List<Identifier> filteredChannels = originalChannels.stream()*/
         //?} else {
@@ -485,7 +468,7 @@ public class ClientConnectionMixin {
             String namespace = channel.getNamespace();
             
             // Skip core channels
-            if (ChannelFilterHelper.isCoreNamespace(namespace)) {
+            if ("minecraft".equals(namespace)) {
                 continue;
             }
             

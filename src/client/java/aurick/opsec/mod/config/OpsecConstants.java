@@ -48,9 +48,7 @@ public final class OpsecConstants {
     /** Channel namespaces for filtering */
     public static final class Channels {
         public static final String MINECRAFT = "minecraft";
-        public static final String FABRIC_NAMESPACE = "fabric";
         public static final String FORGE_NAMESPACE = "forge";
-        public static final String COMMON = "c";
         
         // Minecraft channel paths
         public static final String REGISTER = "register";

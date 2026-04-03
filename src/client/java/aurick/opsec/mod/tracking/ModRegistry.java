@@ -50,13 +50,15 @@ public class ModRegistry {
 
     /** Fabric API modules with production translation keys - auto-whitelisted in Fabric mode */
     public static final Set<String> DEFAULT_FABRIC_MODS = Set.of(
+        "fabric",
         "fabric-resource-loader-v0",
         "fabric-resource-loader-v1",
         "fabric-item-group-api-v1",
         "fabric-creative-tab-api-v1",
         "fabric-registry-sync-v0",
         "fabric-convention-tags-v2",
-        "fabric-data-attachment-api-v1"
+        "fabric-data-attachment-api-v1",
+        "fabric-screen-handler-api-v1"
     );
 
     private static volatile boolean initialized = false;
@@ -207,10 +209,14 @@ public class ModRegistry {
     /**
      * Check if a mod is effectively whitelisted, considering AUTO mode.
      * In AUTO mode, any mod with registered network channels is whitelisted.
-     * In ON mode, delegates to manual whitelist check.
+     * In CUSTOM mode, delegates to manual whitelist check.
+     * Default Fabric API mods are always whitelisted in Fabric mode.
      */
     private static boolean isModEffectivelyWhitelisted(String modId, SpoofSettings settings) {
         if (modId == null) return false;
+        if (settings.isFabricMode() && DEFAULT_FABRIC_MODS.contains(modId)) {
+            return true;
+        }
         if (settings.getWhitelistMode() == SpoofSettings.WhitelistMode.AUTO) {
             ModInfo info = getModInfo(modId);
             return info != null && info.hasChannels();
@@ -459,32 +465,55 @@ public class ModRegistry {
 
         String namespace = channel.getNamespace();
 
-        // Always allow core channels
-        if (ChannelFilterHelper.isCoreNamespace(namespace)) {
+        // Always allow core channels (minecraft)
+        if ("minecraft".equals(namespace)) {
             return true;
         }
 
         OpsecConfig config = OpsecConfig.getInstance();
-        if (!config.getSettings().isWhitelistEnabled()) {
+        SpoofSettings settings = config.getSettings();
+
+        // Default Fabric API module channels always allowed in Fabric mode
+        // This check MUST come before the whitelist-enabled guard, so that
+        // Fabric's own channels pass through even when whitelist mode is OFF or CUSTOM.
+        if (settings.isFabricMode()) {
+            // Check 1a: Does any DEFAULT_FABRIC_MODS mod own this channel via tracking data?
+            for (ModInfo info : registry.values()) {
+                if (info.channels.contains(channel) && DEFAULT_FABRIC_MODS.contains(info.modId)) {
+                    return true;
+                }
+            }
+            // Check 1b: Is the namespace itself a DEFAULT_FABRIC_MODS entry? (e.g., "fabric")
+            if (DEFAULT_FABRIC_MODS.contains(namespace)) {
+                return true;
+            }
+            // Check 1c: Resolve namespace to mod ID(s) — handles aliases
+            Set<String> resolvedIds = resolveModIdsForNamespace(namespace);
+            for (String resolvedId : resolvedIds) {
+                if (DEFAULT_FABRIC_MODS.contains(resolvedId)) {
+                    return true;
+                }
+            }
+        }
+
+        if (!settings.isWhitelistEnabled()) {
             return false;
         }
 
-        SpoofSettings settings = config.getSettings();
-
-        // Check 1: Does any whitelisted mod own this channel via tracking data? (exact)
+        // Check 2: Does any whitelisted mod own this channel via tracking data? (exact)
         for (ModInfo info : registry.values()) {
             if (info.channels.contains(channel) && isModEffectivelyWhitelisted(info.modId, settings)) {
                 return true;
             }
         }
 
-        // Check 2: Is the namespace itself whitelisted? (exact match, backwards compat)
+        // Check 3: Is the namespace itself whitelisted? (exact match, backwards compat)
         // Handles users who whitelisted "jm" directly instead of "journeymap"
         if (isModEffectivelyWhitelisted(namespace, settings)) {
             return true;
         }
 
-        // Check 3: Resolve namespace to mod ID(s) via alias table (exact match)
+        // Check 4: Resolve namespace to mod ID(s) via alias table (exact match)
         // Handles: user whitelisted "journeymap" but channel namespace is "jm"
         Set<String> resolvedModIds = resolveModIdsForNamespace(namespace);
         for (String resolvedModId : resolvedModIds) {

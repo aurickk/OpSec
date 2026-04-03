@@ -96,7 +96,7 @@ public class ClientSpoofer {
         }
         
         if (FABRIC.equals(brand)) {
-            if (ChannelFilterHelper.isCoreNamespace(namespace)) {
+            if ("minecraft".equals(namespace)) {
                 return false;
             }
 

@@ -4,7 +4,6 @@ import aurick.opsec.mod.Opsec;
 import aurick.opsec.mod.config.OpsecConfig;
 import aurick.opsec.mod.tracking.ModIdResolver;
 import aurick.opsec.mod.tracking.ModRegistry;
-import static aurick.opsec.mod.config.OpsecConstants.Channels.*;
 //? if >=1.21.11 {
 /*import net.minecraft.resources.Identifier;
 */
@@ -106,9 +105,7 @@ public final class ChannelFilterHelper {
      * Check if a channel is allowed in Fabric mode.
      * Uses ModRegistry.isWhitelistedChannel which handles:
      * - minecraft:* channels
-     * - fabric:* and fabric-*:* channels
-     * - c:* channels
-     * - Whitelisted mod channels
+     * - Whitelisted mod channels (including fabric API modules via DEFAULT_FABRIC_MODS)
      */
     //? if >=1.21.11 {
     /*public static boolean isAllowedFabricChannel(Identifier id) {*/
@@ -119,30 +116,12 @@ public final class ChannelFilterHelper {
     }
 
     /**
-     * Check if a channel namespace belongs to the core set that is always allowed through filtering.
-     * Core namespaces: minecraft, fabric, fabric-* (prefix), c
-     *
-     * <p>This is the single canonical implementation of the core namespace allow-list.
-     * All filtering code must call this method instead of re-implementing the four-clause check.</p>
-     */
-    public static boolean isCoreNamespace(String namespace) {
-        if (namespace == null) return false;
-        return MINECRAFT.equals(namespace)
-            || FABRIC_NAMESPACE.equals(namespace)
-            || namespace.startsWith(FABRIC_NAMESPACE + "-")
-            || COMMON.equals(namespace);
-    }
-
-    /**
-     * Record channels from a set into ModRegistry, skipping core namespace channels.
+     * Record channels from a set into ModRegistry, skipping minecraft namespace channels.
      * Called from mixin injection points that intercept Fabric's channel advertisement.
      *
      * <p>Resolves channel namespaces to actual mod IDs before recording, so that
      * channels with non-modId namespaces (e.g., "jm" for JourneyMap) are correctly
      * attributed to their owning mod.</p>
-     *
-     * <p>Only channels whose namespace is NOT a core namespace (minecraft, fabric, fabric-*, c)
-     * are recorded. Core channels are always allowed and do not need tracking.</p>
      */
     //? if >=1.21.11 {
     /*public static void trackChannels(Set<Identifier> channels) {
@@ -154,7 +133,7 @@ public final class ChannelFilterHelper {
         for (ResourceLocation channel : channels) {
     //?}
             String namespace = channel.getNamespace();
-            if (isCoreNamespace(namespace)) continue;
+            if ("minecraft".equals(namespace)) continue;
 
             // Try to resolve namespace to actual mod ID
             Set<String> resolvedModIds = ModRegistry.resolveModIdsForNamespace(namespace);

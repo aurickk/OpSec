@@ -42,7 +42,7 @@ public abstract class ChannelRegistrationMixin {
             PrivacyLogger.alert(PrivacyLogger.AlertType.SUCCESS, 
                 "Privacy active: vanilla mode (all channels blocked)");
         } else if (ClientSpoofer.isFabricMode()) {
-            Opsec.LOGGER.debug("[OpSec] FABRIC MODE - mod channels blocked, fabric allowed");
+            Opsec.LOGGER.debug("[OpSec] FABRIC MODE - non-whitelisted mod channels blocked");
             PrivacyLogger.alert(PrivacyLogger.AlertType.SUCCESS, 
                 "Privacy active: fabric mode (mod channels blocked)");
         } else if (ClientSpoofer.isForgeMode()) {

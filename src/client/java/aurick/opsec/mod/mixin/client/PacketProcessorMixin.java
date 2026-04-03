@@ -21,6 +21,7 @@ public class PacketProcessorMixin {
     private <T extends PacketListener> void opsec$wrapHandle(Packet<?> instance, T listener,
             Operation<Void> original) {
         TranslationProtectionHandler.clearDedup();
+        PacketContext.setPacketName(instance);
         PacketContext.setProcessingPacket(true);
         try {
             original.call(instance, listener);

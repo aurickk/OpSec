@@ -28,9 +28,9 @@ import java.util.function.Supplier;
 /**
  * Intercepts keybind resolution to protect user privacy.
  * 
- * Uses ThreadLocal context detection to only protect in exploitable contexts:
- * - Normal mod UI: Allow normal resolution
- * - Sign/Anvil/Book screens: Protect by returning cached defaults or raw key names
+ * Uses packet-origin tagging to only protect content from network packets:
+ * - Normal mod UI / client-created content: Allow normal resolution
+ * - Server-sent packets (multiplayer): Protect by returning cached defaults or raw key names
  * 
  * Whitelist priority:
  * 1. Vanilla keybinds - Return cached default value

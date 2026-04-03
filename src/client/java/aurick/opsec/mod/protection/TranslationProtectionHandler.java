@@ -38,8 +38,8 @@ public class TranslationProtectionHandler {
         public String getDisplayName() { return displayName; }
     }
 
-    /** Dedup key for detail alerts — just key name, since same key produces same detail within a probe */
-    private record AlertDedupeKey(String keyName) {}
+    /** Dedup key for detail alerts — type + key name, since Translation and Keybind produce different details */
+    private record AlertDedupeKey(InterceptionType type, String keyName) {}
 
     /** Dedup key for logs — full tuple to preserve log accuracy */
     private record LogDedupeKey(InterceptionType type, String keyName, String originalValue, String spoofedValue) {}
@@ -168,8 +168,8 @@ public class TranslationProtectionHandler {
             alertedKeys.clear();
         }
 
-        // Dedupe by key name — same key won't produce different details within a probe
-        if (!alertedKeys.add(new AlertDedupeKey(keyName))) {
+        // Dedupe by type + key name — Translation and Keybind produce different details for the same key
+        if (!alertedKeys.add(new AlertDedupeKey(type, keyName))) {
             return;
         }
 

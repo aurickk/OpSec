@@ -24,7 +24,7 @@ import java.util.concurrent.CompletableFuture;
  */
 public final class JarIntegrityChecker {
 
-    private static final String RELEASES_URL = "https://api.github.com/repos/aurickk/OpSec/releases/latest";
+    private static final String RELEASES_BASE_URL = "https://api.github.com/repos/aurickk/OpSec/releases/tags/V";
 
     private static final HttpClient HTTP_CLIENT = HttpClient.newBuilder()
             .connectTimeout(Duration.ofSeconds(10))
@@ -81,10 +81,10 @@ public final class JarIntegrityChecker {
                     return;
                 }
 
-                // Step 4: Fetch GitHub release and find matching asset
+                // Step 4: Fetch the GitHub release matching the current mod version
                 String currentVersion = Opsec.getVersion();
                 HttpRequest request = HttpRequest.newBuilder()
-                        .uri(URI.create(RELEASES_URL))
+                        .uri(URI.create(RELEASES_BASE_URL + currentVersion))
                         .header("User-Agent", "OpSec-Mod/" + currentVersion)
                         .header("Accept", "application/vnd.github.v3+json")
                         .timeout(Duration.ofSeconds(10))
@@ -92,6 +92,12 @@ public final class JarIntegrityChecker {
                         .build();
 
                 HttpResponse<String> response = HTTP_CLIENT.send(request, HttpResponse.BodyHandlers.ofString());
+
+                if (response.statusCode() == 404) {
+                    // No release for this version — dev/unreleased build
+                    Opsec.LOGGER.debug("[OpSec] No release found for version {}, skipping integrity check", currentVersion);
+                    return;
+                }
 
                 if (response.statusCode() != 200) {
                     Opsec.LOGGER.debug("[OpSec] GitHub API returned status {}, skipping integrity check", response.statusCode());

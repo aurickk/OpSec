@@ -26,6 +26,7 @@ import java.io.InputStreamReader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Set;
+import java.util.function.Supplier;
 
 /**
  * Client-side initialization for the OpSec mod.
@@ -65,116 +66,36 @@ public class OpsecClient implements ClientModInitializer {
 	 */
 	private void scanRegisteredChannels() {
 		int channelCount = 0;
-		
-		try {
-			//? if >=1.21.11 {
-			/*Set<Identifier> playChannels = ClientPlayNetworking.getGlobalReceivers();
-			for (Identifier channel : playChannels) {*/
-			//?} else {
-			Set<ResourceLocation> playChannels = ClientPlayNetworking.getGlobalReceivers();
-			for (ResourceLocation channel : playChannels) {
-			//?}
-				String namespace = channel.getNamespace();
-				if (!"minecraft".equals(namespace)) {
-					ModRegistry.recordChannel(namespace, channel);
-					channelCount++;
-				}
-			}
-		} catch (Exception e) {
-			Opsec.LOGGER.debug("[OpSec] Could not scan play channels: {}", e.getMessage());
-		}
-		
-		try {
-			//? if >=1.21.11 {
-			/*Set<Identifier> configChannels = ClientConfigurationNetworking.getGlobalReceivers();
-			for (Identifier channel : configChannels) {*/
-			//?} else {
-			Set<ResourceLocation> configChannels = ClientConfigurationNetworking.getGlobalReceivers();
-			for (ResourceLocation channel : configChannels) {
-			//?}
-				String namespace = channel.getNamespace();
-				if (!"minecraft".equals(namespace)) {
-					ModRegistry.recordChannel(namespace, channel);
-					channelCount++;
-				}
-			}
-		} catch (Exception e) {
-			Opsec.LOGGER.debug("[OpSec] Could not scan config channels: {}", e.getMessage());
-		}
-		
-		try {
-			//? if >=1.21.11 {
-			/*Set<Identifier> playReceived = ClientPlayNetworking.getReceived();
-			for (Identifier channel : playReceived) {*/
-			//?} else {
-			Set<ResourceLocation> playReceived = ClientPlayNetworking.getReceived();
-			for (ResourceLocation channel : playReceived) {
-			//?}
-				String namespace = channel.getNamespace();
-				if (!"minecraft".equals(namespace)) {
-					ModRegistry.recordChannel(namespace, channel);
-					channelCount++;
-				}
-			}
-		} catch (Exception e) {
-			Opsec.LOGGER.debug("[OpSec] Could not scan play received channels: {}", e.getMessage());
-		}
 
-		try {
-			//? if >=1.21.11 {
-			/*Set<Identifier> playSendable = ClientPlayNetworking.getSendable();
-			for (Identifier channel : playSendable) {*/
-			//?} else {
-			Set<ResourceLocation> playSendable = ClientPlayNetworking.getSendable();
-			for (ResourceLocation channel : playSendable) {
-			//?}
-				String namespace = channel.getNamespace();
-				if (!"minecraft".equals(namespace)) {
-					ModRegistry.recordChannel(namespace, channel);
-					channelCount++;
-				}
-			}
-		} catch (Exception e) {
-			Opsec.LOGGER.debug("[OpSec] Could not scan play sendable channels: {}", e.getMessage());
-		}
-
-		try {
-			//? if >=1.21.11 {
-			/*Set<Identifier> configReceived = ClientConfigurationNetworking.getReceived();
-			for (Identifier channel : configReceived) {*/
-			//?} else {
-			Set<ResourceLocation> configReceived = ClientConfigurationNetworking.getReceived();
-			for (ResourceLocation channel : configReceived) {
-			//?}
-				String namespace = channel.getNamespace();
-				if (!"minecraft".equals(namespace)) {
-					ModRegistry.recordChannel(namespace, channel);
-					channelCount++;
-				}
-			}
-		} catch (Exception e) {
-			Opsec.LOGGER.debug("[OpSec] Could not scan config received channels: {}", e.getMessage());
-		}
-
-		try {
-			//? if >=1.21.11 {
-			/*Set<Identifier> configSendable = ClientConfigurationNetworking.getSendable();
-			for (Identifier channel : configSendable) {*/
-			//?} else {
-			Set<ResourceLocation> configSendable = ClientConfigurationNetworking.getSendable();
-			for (ResourceLocation channel : configSendable) {
-			//?}
-				String namespace = channel.getNamespace();
-				if (!"minecraft".equals(namespace)) {
-					ModRegistry.recordChannel(namespace, channel);
-					channelCount++;
-				}
-			}
-		} catch (Exception e) {
-			Opsec.LOGGER.debug("[OpSec] Could not scan config sendable channels: {}", e.getMessage());
-		}
+		channelCount += scanChannelSource(ClientPlayNetworking::getGlobalReceivers, "play channels");
+		channelCount += scanChannelSource(ClientConfigurationNetworking::getGlobalReceivers, "config channels");
+		channelCount += scanChannelSource(ClientPlayNetworking::getReceived, "play received channels");
+		channelCount += scanChannelSource(ClientPlayNetworking::getSendable, "play sendable channels");
+		channelCount += scanChannelSource(ClientConfigurationNetworking::getReceived, "config received channels");
+		channelCount += scanChannelSource(ClientConfigurationNetworking::getSendable, "config sendable channels");
 
 		Opsec.LOGGER.debug("[OpSec] Scanned {} mod channels at startup", channelCount);
+	}
+
+	//? if >=1.21.11 {
+	/*private int scanChannelSource(Supplier<Set<Identifier>> source, String label) {*/
+	//?} else {
+	private int scanChannelSource(Supplier<Set<ResourceLocation>> source, String label) {
+	//?}
+		try {
+			int count = 0;
+			for (var channel : source.get()) {
+				String namespace = channel.getNamespace();
+				if (!"minecraft".equals(namespace)) {
+					ModRegistry.recordChannel(namespace, channel);
+					count++;
+				}
+			}
+			return count;
+		} catch (Exception e) {
+			Opsec.LOGGER.debug("[OpSec] Could not scan {}: {}", label, e.getMessage());
+			return 0;
+		}
 	}
 	
 	/**

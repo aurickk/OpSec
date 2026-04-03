@@ -14,10 +14,12 @@ import net.minecraft.client.User;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -33,8 +35,13 @@ public class AccountManager {
     
     private static volatile AccountManager INSTANCE;
     private static final Object LOCK = new Object();
-    
-    private final List<Account> accounts = new ArrayList<>();
+    private static final ExecutorService REFRESH_EXECUTOR = Executors.newSingleThreadExecutor(r -> {
+        Thread t = new Thread(r, "OpSec-Account-Refresh");
+        t.setDaemon(true);
+        return t;
+    });
+
+    private final List<Account> accounts = new CopyOnWriteArrayList<>();
     private String activeAccountUuid = null;
 
     // Store the original session info for logout
@@ -251,7 +258,7 @@ public class AccountManager {
             return;
         }
         
-        new Thread(() -> {
+        REFRESH_EXECUTOR.execute(() -> {
             try {
                 int valid = 0;
                 int invalid = 0;
@@ -305,7 +312,7 @@ public class AccountManager {
             } finally {
                 isRefreshing.set(false);
             }
-        }, "OpSec-Account-Refresh").start();
+        });
     }
     
     /**

@@ -48,6 +48,19 @@ public class ModRegistry {
     /** Maps channel namespaces to their owning Fabric mod IDs (e.g., "jm" -> "journeymap") */
     private static final Map<String, Set<String>> namespaceToModIds = new ConcurrentHashMap<>();
 
+    /** Reverse index: translation key -> mod ID for O(1) lookup (P1/A4/A11) */
+    private static final Map<String, String> translationKeyToModId = new ConcurrentHashMap<>();
+
+    /** Reverse index: keybind name -> mod ID for O(1) lookup (P1/A4/A11) */
+    private static final Map<String, String> keybindToModId = new ConcurrentHashMap<>();
+
+    /** Reverse index: channel -> mod ID for O(1) lookup (P7) */
+    //? if >=1.21.11 {
+    /*private static final Map<Identifier, String> channelToModId = new ConcurrentHashMap<>();*/
+    //?} else {
+    private static final Map<ResourceLocation, String> channelToModId = new ConcurrentHashMap<>();
+    //?}
+
     /** Fabric API modules with production translation keys - auto-whitelisted in Fabric mode */
     public static final Set<String> DEFAULT_FABRIC_MODS = Set.of(
         "fabric",
@@ -149,10 +162,11 @@ public class ModRegistry {
      */
     public static void recordTranslationKey(String modId, String key) {
         if (modId == null || key == null) return;
-        
+
         ModInfo info = getOrCreateModInfo(modId);
         info.translationKeys.add(key);
         allKnownTranslationKeys.add(key);
+        translationKeyToModId.put(key, modId);
     }
     
     /**
@@ -194,14 +208,7 @@ public class ModRegistry {
      */
     public static String getModForTranslationKey(String key) {
         if (key == null) return null;
-        
-        for (ModInfo info : registry.values()) {
-            if (info.translationKeys.contains(key)) {
-                return info.modId;
-            }
-        }
-        
-        return null;
+        return translationKeyToModId.get(key);
     }
     
     // ==================== AUTO MODE HELPER ====================
@@ -334,6 +341,7 @@ public class ModRegistry {
         }
         vanillaTranslationKeys.clear();
         allKnownTranslationKeys.clear();
+        translationKeyToModId.clear();
         Opsec.LOGGER.debug("[ModRegistry] Cleared translation key cache");
     }
     
@@ -352,11 +360,12 @@ public class ModRegistry {
      */
     public static void recordKeybind(String modId, String keybindName) {
         if (modId == null || keybindName == null) return;
-        
+
         ModInfo info = getOrCreateModInfo(modId);
         info.keybinds.add(keybindName);
         allKnownKeybinds.add(keybindName);
-        
+        keybindToModId.put(keybindName, modId);
+
         Opsec.LOGGER.debug("[ModRegistry] Recorded keybind '{}' from mod '{}'", keybindName, modId);
     }
     
@@ -382,13 +391,7 @@ public class ModRegistry {
      */
     public static String getModForKeybind(String keybindName) {
         if (keybindName == null) return null;
-        
-        for (ModInfo info : registry.values()) {
-            if (info.keybinds.contains(keybindName)) {
-                return info.modId;
-            }
-        }
-        return null;
+        return keybindToModId.get(keybindName);
     }
     
     
@@ -444,10 +447,11 @@ public class ModRegistry {
     public static void recordChannel(String modId, ResourceLocation channel) {
     //?}
         if (modId == null || channel == null) return;
-        
+
         ModInfo info = getOrCreateModInfo(modId);
         info.channels.add(channel);
-        
+        channelToModId.put(channel, modId);
+
         Opsec.LOGGER.debug("[ModRegistry] Recorded channel '{}' from mod '{}'", channel, modId);
     }
     
@@ -477,11 +481,10 @@ public class ModRegistry {
         // This check MUST come before the whitelist-enabled guard, so that
         // Fabric's own channels pass through even when whitelist mode is OFF or CUSTOM.
         if (settings.isFabricMode()) {
-            // Check 1a: Does any DEFAULT_FABRIC_MODS mod own this channel via tracking data?
-            for (ModInfo info : registry.values()) {
-                if (info.channels.contains(channel) && DEFAULT_FABRIC_MODS.contains(info.modId)) {
-                    return true;
-                }
+            // Check 1a: Does a DEFAULT_FABRIC_MODS mod own this channel? (O(1) reverse index)
+            String fabricOwner = channelToModId.get(channel);
+            if (fabricOwner != null && DEFAULT_FABRIC_MODS.contains(fabricOwner)) {
+                return true;
             }
             // Check 1b: Is the namespace itself a DEFAULT_FABRIC_MODS entry? (e.g., "fabric")
             if (DEFAULT_FABRIC_MODS.contains(namespace)) {
@@ -500,11 +503,10 @@ public class ModRegistry {
             return false;
         }
 
-        // Check 2: Does any whitelisted mod own this channel via tracking data? (exact)
-        for (ModInfo info : registry.values()) {
-            if (info.channels.contains(channel) && isModEffectivelyWhitelisted(info.modId, settings)) {
-                return true;
-            }
+        // Check 2: Does a whitelisted mod own this channel? (O(1) reverse index)
+        String channelOwner = channelToModId.get(channel);
+        if (channelOwner != null && isModEffectivelyWhitelisted(channelOwner, settings)) {
+            return true;
         }
 
         // Check 3: Is the namespace itself whitelisted? (exact match, backwards compat)

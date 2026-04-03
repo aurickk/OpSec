@@ -32,6 +32,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import java.lang.reflect.Constructor;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import static aurick.opsec.mod.config.OpsecConstants.Channels.*;
@@ -466,13 +467,25 @@ public class ClientConnectionMixin {
         for (ResourceLocation channel : channels) {
         //?}
             String namespace = channel.getNamespace();
-            
-            // Skip core channels
-            if ("minecraft".equals(namespace)) {
+
+            // Skip core channels (matches ChannelFilterHelper.trackChannels)
+            if ("minecraft".equals(namespace) || "c".equals(namespace)) {
                 continue;
             }
-            
-            ModRegistry.recordChannel(namespace, channel);
+
+            // Resolve namespace to actual mod ID(s) (mirrors ChannelFilterHelper.trackChannels)
+            // NOTE: Do NOT use ModIdResolver.getModIdFromStacktrace() here -- this runs during
+            // packet processing, not mod registration, so the stack trace would show Netty/MC/OpSec
+            // frames, not the registering mod's frames.
+            Set<String> resolvedModIds = ModRegistry.resolveModIdsForNamespace(namespace);
+            if (!resolvedModIds.isEmpty()) {
+                for (String modId : resolvedModIds) {
+                    ModRegistry.recordChannel(modId, channel);
+                }
+            } else {
+                // Fall back to namespace as mod ID (backwards compat)
+                ModRegistry.recordChannel(namespace, channel);
+            }
         }
     }
     

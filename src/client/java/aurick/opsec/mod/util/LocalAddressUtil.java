@@ -19,7 +19,7 @@ public class LocalAddressUtil {
      * Current server address, set on connect, cleared on disconnect.
      * Used to skip local address blocking when already connected to a local server.
      */
-    public static String serverAddress = null;
+    public static volatile String serverAddress = null;
 
     /**
      * Checks if a hostname resolves to a local/private address.

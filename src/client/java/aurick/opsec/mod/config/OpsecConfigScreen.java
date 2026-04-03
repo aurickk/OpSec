@@ -89,6 +89,8 @@ public class OpsecConfigScreen extends Screen {
     
     private Button doneButton;
     private Button resetButton;
+    private StringWidget versionLabel;
+    private boolean versionOutdated;
     private int currentTab = 0;
     //? if >=1.21.6
     private double scrollOffset = 0;
@@ -142,6 +144,7 @@ public class OpsecConfigScreen extends Screen {
             SpoofSettings defaults = new SpoofSettings();
             settings.copyFrom(defaults);
             config.save();
+            UpdateChecker.resetShown();
             refreshScreen();
         }).width(150)
           .tooltip(Tooltip.create(Component.literal(isAccountsTab 
@@ -164,8 +167,30 @@ public class OpsecConfigScreen extends Screen {
             widget.setTabOrderGroup(1);
             this.addRenderableWidget(widget);
         });
-        
+
         this.repositionElements();
+
+        // Version label in bottom-left corner, vertically centered in the 36px footer
+        String currentVersion = "v" + UpdateChecker.getCurrentVersion();
+        this.versionOutdated = UpdateChecker.getLatestVersion() != null
+                && !UpdateChecker.getLatestVersion().equals(UpdateChecker.getCurrentVersion());
+        String color = versionOutdated ? "\u00A7c" : "\u00A7a";
+        Component versionText = Component.literal(color + currentVersion);
+        int textWidth = this.font.width(currentVersion);
+        int labelHeight = 10;
+        int footerY = this.height - 36;
+        int labelY = footerY + (36 - labelHeight) / 2;
+
+        this.versionLabel = new StringWidget(textWidth, labelHeight, versionText, this.font);
+        this.versionLabel.setX(6);
+        this.versionLabel.setY(labelY + 2);
+        if (versionOutdated) {
+            this.versionLabel.setTooltip(Tooltip.create(Component.literal(
+                    "Latest: " + UpdateChecker.getLatestVersion() + "\nClick to download")));
+        } else {
+            this.versionLabel.setTooltip(Tooltip.create(Component.literal("Up to date")));
+        }
+        this.addRenderableWidget(this.versionLabel);
     }
     
     private Tab createIdentityTab(SpoofSettings settings) {
@@ -1183,8 +1208,16 @@ public class OpsecConfigScreen extends Screen {
             this.layout.setHeaderHeight(tabBottom);
             this.layout.arrangeElements();
         }
+        // Reposition version label to match current screen height
+        if (this.versionLabel != null) {
+            int labelHeight = 10;
+            int footerY = this.height - 36;
+            int labelY = footerY + (36 - labelHeight) / 2;
+            this.versionLabel.setX(6);
+            this.versionLabel.setY(labelY + 2);
+        }
     }
-    
+
     @Override
     public void tick() {
         super.tick();
@@ -1205,8 +1238,54 @@ public class OpsecConfigScreen extends Screen {
         } else {
             animationTicks = 0;
         }
+        //? if >=1.21.9
+        pollVersionLabelClick();
     }
-    
+
+    //? if <1.21.9 {
+    /*@Override
+    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        if (button == 0 && isOverVersionLabel(mouseX, mouseY)) {
+            openReleaseUrl();
+            return true;
+        }
+        return super.mouseClicked(mouseX, mouseY, button);
+    }*/
+    //?}
+
+    private boolean isOverVersionLabel(double mouseX, double mouseY) {
+        if (!versionOutdated || versionLabel == null) return false;
+        return mouseX >= versionLabel.getX() && mouseX < versionLabel.getX() + versionLabel.getWidth()
+                && mouseY >= versionLabel.getY() && mouseY < versionLabel.getY() + versionLabel.getHeight();
+    }
+
+    private boolean versionLabelMouseWasDown = false;
+
+    private void pollVersionLabelClick() {
+        if (!versionOutdated || versionLabel == null) return;
+        long window = org.lwjgl.glfw.GLFW.glfwGetCurrentContext();
+        boolean isDown = org.lwjgl.glfw.GLFW.glfwGetMouseButton(window, org.lwjgl.glfw.GLFW.GLFW_MOUSE_BUTTON_LEFT) == org.lwjgl.glfw.GLFW.GLFW_PRESS;
+        if (!isDown && versionLabelMouseWasDown) {
+            double[] mx = new double[1], my = new double[1];
+            org.lwjgl.glfw.GLFW.glfwGetCursorPos(window, mx, my);
+            double scale = this.minecraft.getWindow().getGuiScale();
+            double guiX = mx[0] / scale;
+            double guiY = my[0] / scale;
+            if (isOverVersionLabel(guiX, guiY)) {
+                openReleaseUrl();
+            }
+        }
+        versionLabelMouseWasDown = isDown;
+    }
+
+    private void openReleaseUrl() {
+        try {
+            java.awt.Desktop.getDesktop().browse(java.net.URI.create(UpdateChecker.getReleaseUrl()));
+        } catch (Exception e) {
+            Opsec.LOGGER.warn("[OpSec] Failed to open release URL: {}", e.getMessage());
+        }
+    }
+
     @Override
     public void onClose() {
         config.save();

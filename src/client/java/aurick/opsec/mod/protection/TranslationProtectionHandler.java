@@ -8,6 +8,7 @@ import aurick.opsec.mod.detection.PacketContext;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
 
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
@@ -188,8 +189,16 @@ public class TranslationProtectionHandler {
         }
 
         // Detail alert: [key.hotbar.6] 'Q'→'6'
-        PrivacyLogger.sendKeybindDetail(
-            "[" + keyName + "] '" + originalValue + "'→'" + spoofedValue + "'");
+        // In debug mode, prepend [Type:packetName] in purple
+        if (OpsecConfig.getInstance().isDebugAlerts()) {
+            String packetName = PacketContext.getPacketName();
+            MutableComponent detail = Component.literal("[" + type.getDisplayName() + ":" + packetName + "] ").withStyle(ChatFormatting.DARK_PURPLE)
+                .append(Component.literal("[" + keyName + "] '" + originalValue + "'→'" + spoofedValue + "'").withStyle(ChatFormatting.DARK_GRAY));
+            PrivacyLogger.sendKeybindDetail(detail);
+        } else {
+            PrivacyLogger.sendKeybindDetail(
+                "[" + keyName + "] '" + originalValue + "'→'" + spoofedValue + "'");
+        }
     }
 
     /**

@@ -6,13 +6,17 @@ import aurick.opsec.mod.Opsec;
 import aurick.opsec.mod.PrivacyLogger;
 import aurick.opsec.mod.config.OpsecConfig;
 import aurick.opsec.mod.config.SpoofSettings;
+import aurick.opsec.mod.detection.PacketContext;
+import aurick.opsec.mod.protection.TranslationProtectionHandler;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientPacketListener;
+import net.minecraft.network.PacketListener;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MessageSignature;
 import net.minecraft.network.chat.SignedMessageBody;
 import net.minecraft.network.chat.SignedMessageChain;
 import net.minecraft.network.chat.contents.TranslatableContents;
+import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.game.ClientboundLoginPacket;
 import net.minecraft.network.protocol.game.ClientboundSystemChatPacket;
 import org.spongepowered.asm.mixin.Mixin;
@@ -93,6 +97,23 @@ public abstract class ClientPacketListenerMixin {
             opsec$scheduler.shutdownNow();
             opsec$scheduler = null;
         }
+    }
+
+    /**
+     * Wrap sub-packet handle() calls inside handleBundlePacket so each sub-packet
+     * gets its own packet name context. Without this, all sub-packets inherit the
+     * bundle's name since they bypass PacketProcessor$ListenerAndPacket.
+     */
+    @WrapOperation(
+        method = "handleBundlePacket",
+        at = @At(value = "INVOKE",
+            target = "Lnet/minecraft/network/protocol/Packet;handle(Lnet/minecraft/network/PacketListener;)V")
+    )
+    private <T extends PacketListener> void opsec$wrapBundleSubPacketHandle(
+            Packet<T> instance, T listener, Operation<Void> original) {
+        TranslationProtectionHandler.clearDedup();
+        PacketContext.setPacketName(instance);
+        original.call(instance, listener);
     }
 
     @Inject(method = "handleLogin", at = @At("TAIL"))

@@ -90,7 +90,7 @@ public class KeybindContentsMixin {
         if (ModRegistry.isWhitelistedKeybind(name)) {
             if (OpsecConfig.getInstance().isDebugAlerts()) {
                 String displayValue = opsec$readKeybindDisplay();
-                TranslationProtectionHandler.sendDetailDebug(InterceptionType.KEYBIND, name, displayValue, displayValue);
+                TranslationProtectionHandler.logDetection(InterceptionType.KEYBIND, name, displayValue, displayValue);
             }
             return original.call(supplier);
         }

@@ -181,17 +181,20 @@ public class PrivacyLogger {
      * Send keybind detail message without header prefix (just the keybind info).
      */
     public static void sendKeybindDetail(String detail) {
+        sendKeybindDetail(Component.literal(detail).withStyle(ChatFormatting.DARK_GRAY));
+    }
+
+    public static void sendKeybindDetail(Component component) {
         if (!OpsecConfig.getInstance().shouldShowAlerts()) return;
 
         Minecraft client = Minecraft.getInstance();
         if (client.player == null) return;
 
         if (!client.isSameThread()) {
-            client.execute(() -> sendKeybindDetail(detail));
+            client.execute(() -> sendKeybindDetail(component));
             return;
         }
 
-        MutableComponent component = Component.literal(detail).withStyle(ChatFormatting.DARK_GRAY);
         //? if >=26.1 {
         /*client.player.sendSystemMessage(component);*/
         //?} else {

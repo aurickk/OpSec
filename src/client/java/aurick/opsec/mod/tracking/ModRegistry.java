@@ -36,8 +36,8 @@ public class ModRegistry {
     /** Vanilla keybinds (always whitelisted) */
     private static final Set<String> vanillaKeybinds = ConcurrentHashMap.newKeySet();
     
-    /** Server resource pack translations: key → value (for safe blocking) */
-    private static final Map<String, String> serverPackTranslations = new ConcurrentHashMap<>();
+    /** Server resource pack translation keys (whitelisted for vanilla resolution) */
+    private static final Set<String> serverPackKeys = ConcurrentHashMap.newKeySet();
     
     /** All known translation keys for fast lookup */
     private static final Set<String> allKnownTranslationKeys = ConcurrentHashMap.newKeySet();
@@ -190,12 +190,12 @@ public class ModRegistry {
     }
     
     /**
-     * Record a server resource pack translation key and its value.
+     * Record a server resource pack translation key.
      */
-    public static void recordServerPackTranslation(String key, String value) {
+    public static void recordServerPackKey(String key) {
         if (key == null) return;
 
-        serverPackTranslations.put(key, value);
+        serverPackKeys.add(key);
         allKnownTranslationKeys.add(key);
     }
     
@@ -204,13 +204,6 @@ public class ModRegistry {
      */
     public static boolean isVanillaTranslationKey(String key) {
         return key != null && vanillaTranslationKeys.contains(key);
-    }
-    
-    /**
-     * Get the server resource pack translation value for a key, or null if not present.
-     */
-    public static String getServerPackTranslation(String key) {
-        return key != null ? serverPackTranslations.get(key) : null;
     }
     
     /**
@@ -343,24 +336,26 @@ public class ModRegistry {
     
     
     /**
+     * Check if a translation key is from a server resource pack.
+     */
+    public static boolean isServerPackTranslationKey(String key) {
+        return key != null && serverPackKeys.contains(key);
+    }
+
+    /**
      * Clear translation key caches. Called on language reload.
+     * Also clears server pack translations so that keys from unloaded
+     * (popped) resource packs are no longer whitelisted.
      */
     public static void clearTranslationKeys() {
         for (ModInfo info : registry.values()) {
             info.translationKeys.clear();
         }
         vanillaTranslationKeys.clear();
+        serverPackKeys.clear();
         allKnownTranslationKeys.clear();
         translationKeyToModId.clear();
-        Opsec.LOGGER.debug("[ModRegistry] Cleared translation key cache");
-    }
-    
-    /**
-     * Clear server pack translation keys. Called on disconnect.
-     */
-    public static void clearServerPackKeys() {
-        serverPackTranslations.clear();
-        Opsec.LOGGER.debug("[ModRegistry] Cleared server pack translations");
+        Opsec.LOGGER.debug("[ModRegistry] Cleared translation key cache (including server pack keys)");
     }
     
     // ==================== KEYBIND TRACKING ====================
@@ -562,7 +557,7 @@ public class ModRegistry {
     }
     
     public static int getServerPackKeyCount() {
-        return serverPackTranslations.size();
+        return serverPackKeys.size();
     }
     
     public static int getTranslationKeyCount() {

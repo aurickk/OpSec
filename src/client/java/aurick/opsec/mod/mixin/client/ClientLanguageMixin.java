@@ -119,11 +119,11 @@ public class ClientLanguageMixin {
         if (pack instanceof FilePackResources || pack instanceof CompositePackResources) {
             Set<String> serverKeys = new HashSet<>();
             original.call(stream, (BiConsumer<String, String>) (key, value) -> {
-                ModRegistry.recordServerPackTranslation(key, value);
+                ModRegistry.recordServerPackKey(key);
                 serverKeys.add(key);
                 output.accept(key, value);
             });
-            
+
             if (!serverKeys.isEmpty()) {
                 Opsec.LOGGER.debug("[OpSec] Whitelisted {} server pack translation keys", serverKeys.size());
             }

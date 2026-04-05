@@ -33,7 +33,6 @@ public class ConnectScreenMixin {
         TrackPackDetector.reset();
         ResourcePackGuard.onServerJoin();
         TranslationProtectionHandler.clearCache();
-        ModRegistry.clearServerPackKeys();  // Clear server pack whitelist for new server
         ChannelFilterHelper.resetLogging();  // Reset channel filter debug logs for new connection
         ClientSpoofer.reset();  // Reset brand spoof logging for new connection
 

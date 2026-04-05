@@ -120,11 +120,10 @@ public class KeybindContentsMixin {
             return Component.literal(spoofedValue);
         }
 
-        // Mod/unknown keybind — return as translatable so server resource pack
-        // values resolve through TranslatableContentsMixin (safe: server gets its
-        // own value back). Matches vanilla behavior for unknown keybinds.
-        String serverPackValue = ModRegistry.getServerPackTranslation(name);
-        opsec$logBlocked(name, serverPackValue != null ? serverPackValue : name);
+        // Mod/unknown keybind — return as translatable so vanilla resolution
+        // handles it through TranslatableContentsMixin. Server resource pack
+        // values resolve naturally (and stop resolving when the pack is popped).
+        opsec$logBlocked(name, name);
         return Component.translatable(name);
     }
 

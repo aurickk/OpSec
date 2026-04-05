@@ -22,9 +22,9 @@ import java.util.concurrent.ConcurrentHashMap;
  * [key.meteor-client.open-gui] 'Right Shift'→'key.meteor-client.open-gui'  (detail, deduped)
  * [key.hotbar.6] 'Q'→'6'
  *
- * - Header: Deferred until a value change unless debug alerts are ON
+ * - Header: Always deferred until sendDetail confirms something to report
  * - Details: Sent when values are changed (deduped per session)
- * - Debug mode: Header fires immediately, details shown for ALL keys including unchanged
+ * - Debug mode: Details shown for ALL non-vanilla keys including unchanged; header deferred same as normal
  * - Logging: Deduped to prevent spam from multiple render calls
  * - Detection works even if protection is OFF (alerts/logs still show)
  */
@@ -63,8 +63,9 @@ public class TranslationProtectionHandler {
     /**
      * Notify that an exploit attempt was detected.
      *
-     * In debug mode: emits header immediately (current behavior).
-     * In normal mode: defers header until {@link #sendDetail} confirms a value change.
+     * Always defers the header until {@link #sendDetail} confirms there is
+     * something to report. This prevents the toast/header from firing for
+     * packets that only contain vanilla or whitelisted keys.
      */
     public static void notifyExploitDetected() {
         if (!shouldProcess()) {
@@ -73,19 +74,12 @@ public class TranslationProtectionHandler {
 
         long now = System.currentTimeMillis();
 
-        // Cooldown check applies to both modes
         if (now - lastHeaderTime < HEADER_COOLDOWN_MS) {
             return;
         }
 
-        if (OpsecConfig.getInstance().isDebugAlerts()) {
-            // Debug mode: emit header immediately
-            lastHeaderTime = now;
-            emitHeader();
-        } else {
-            // Normal mode: defer header until sendDetail confirms a value change
-            headerPending = true;
-        }
+        // Defer header until sendDetail confirms something to show
+        headerPending = true;
     }
 
     /**

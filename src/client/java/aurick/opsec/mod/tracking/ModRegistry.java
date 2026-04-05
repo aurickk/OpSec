@@ -174,9 +174,19 @@ public class ModRegistry {
      */
     public static void recordVanillaTranslationKey(String key) {
         if (key == null) return;
-        
+
         vanillaTranslationKeys.add(key);
         allKnownTranslationKeys.add(key);
+    }
+
+    /**
+     * Remove a vanilla translation key (e.g., when deprecated/renamed by Minecraft).
+     */
+    public static void removeVanillaTranslationKey(String key) {
+        if (key == null) return;
+        vanillaTranslationKeys.remove(key);
+        allKnownTranslationKeys.remove(key);
+        translationKeyToModId.remove(key);
     }
     
     /**

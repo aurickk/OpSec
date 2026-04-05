@@ -23,6 +23,7 @@
 		"HttpUtilMixin",
 		"ClientLanguageAccessor",
 		"ClientLanguageMixin",
+		"DeprecatedTranslationsInfoMixin",
 		"KeyBindingRegistryImplMixin",
 		"OptionsMixin",
 		"KeybindContentsMixin",

@@ -6,6 +6,7 @@ import com.llamalad7.mixinextras.sugar.Local;
 import aurick.opsec.mod.Opsec;
 import aurick.opsec.mod.tracking.ModIdResolver;
 import aurick.opsec.mod.tracking.ModRegistry;
+import aurick.opsec.mod.util.KeybindDefaults;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.resources.language.ClientLanguage;
 import net.minecraft.server.packs.CompositePackResources;
@@ -52,6 +53,7 @@ public class ClientLanguageMixin {
     private static void opsec$onLoadStart(ResourceManager resourceManager, List<String> filenames,
             boolean defaultRightToLeft, CallbackInfoReturnable<ClientLanguage> cir) {
         ModRegistry.clearTranslationKeys();
+        KeybindDefaults.reset();
         Opsec.LOGGER.debug("[OpSec] ClientLanguageMixin: Starting language load");
         opsec$loggedOnce = false;
     }

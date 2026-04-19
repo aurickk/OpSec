@@ -32,6 +32,7 @@
 		"OptionsMixin",
 		"KeybindContentsMixin",
 		"TranslatableContentsMixin",
+		"ComponentSerializationMixin",
 		"PacketDecoderMixin",
 		"PacketProcessorMixin",
 		"PacketUtilsMixin",

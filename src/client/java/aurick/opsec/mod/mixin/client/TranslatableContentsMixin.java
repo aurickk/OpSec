@@ -5,7 +5,7 @@ import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import aurick.opsec.mod.Opsec;
 import aurick.opsec.mod.config.OpsecConfig;
 import aurick.opsec.mod.config.SpoofSettings;
-import aurick.opsec.mod.detection.PacketContext;
+import aurick.opsec.mod.protection.OpsecFromPacketAccess;
 import aurick.opsec.mod.protection.TranslationProtectionHandler;
 import aurick.opsec.mod.protection.TranslationProtectionHandler.InterceptionType;
 import aurick.opsec.mod.tracking.ModRegistry;
@@ -17,8 +17,6 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.Map;
 
@@ -34,7 +32,7 @@ import java.util.Map;
  * - FABRIC: Block non-vanilla, non-resourcepack, non-whitelisted keys
  */
 @Mixin(TranslatableContents.class)
-public abstract class TranslatableContentsMixin {
+public abstract class TranslatableContentsMixin implements OpsecFromPacketAccess {
 
     @Shadow @Final private String key;
     @Shadow @Final private String fallback;
@@ -42,9 +40,20 @@ public abstract class TranslatableContentsMixin {
     @Unique
     private boolean opsec$fromPacket = false;
 
-    @Inject(method = "<init>(Ljava/lang/String;Ljava/lang/String;[Ljava/lang/Object;)V", at = @At("TAIL"))
-    private void opsec$tagFromPacket(String key, String fallback, Object[] args, CallbackInfo ci) {
-        this.opsec$fromPacket = PacketContext.isProcessingPacket();
+    @Unique
+    private boolean opsec$reported = false;
+
+    @Unique
+    private boolean opsec$silent = false;
+
+    @Override
+    public void opsec$setFromPacket() {
+        this.opsec$fromPacket = true;
+    }
+
+    @Override
+    public void opsec$setSilent() {
+        this.opsec$silent = true;
     }
 
     /** Sentinel value indicating the original call should proceed. */
@@ -169,6 +178,8 @@ public abstract class TranslatableContentsMixin {
      */
     @Unique
     private void opsec$logBlocked(String translationKey, String defaultValue) {
+        if (opsec$silent || opsec$reported) return;
+        opsec$reported = true;
         String originalValue = opsec$getRealTranslation(translationKey, defaultValue);
 
         if (!originalValue.equals(defaultValue)) {

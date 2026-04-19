@@ -5,7 +5,7 @@ import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import aurick.opsec.mod.Opsec;
 import aurick.opsec.mod.config.OpsecConfig;
 import aurick.opsec.mod.config.SpoofSettings;
-import aurick.opsec.mod.detection.PacketContext;
+import aurick.opsec.mod.protection.OpsecFromPacketAccess;
 import aurick.opsec.mod.protection.TranslationProtectionHandler;
 import aurick.opsec.mod.protection.TranslationProtectionHandler.InterceptionType;
 import aurick.opsec.mod.tracking.ModRegistry;
@@ -19,8 +19,6 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.function.Supplier;
 
@@ -45,17 +43,23 @@ import java.util.function.Supplier;
  * naming convention since anything in KeybindContents is a keybind by definition.
  */
 @Mixin(KeybindContents.class)
-public class KeybindContentsMixin {
-    
+public class KeybindContentsMixin implements OpsecFromPacketAccess {
+
     @Shadow @Final
     private String name;
 
     @Unique
     private boolean opsec$fromPacket = false;
 
-    @Inject(method = "<init>(Ljava/lang/String;)V", at = @At("TAIL"))
-    private void opsec$tagFromPacket(String name, CallbackInfo ci) {
-        this.opsec$fromPacket = PacketContext.isProcessingPacket();
+    @Unique
+    private Object opsec$cachedBlocked = null;
+
+    @Unique
+    private boolean opsec$reported = false;
+
+    @Override
+    public void opsec$setFromPacket() {
+        this.opsec$fromPacket = true;
     }
 
     /**
@@ -70,6 +74,9 @@ public class KeybindContentsMixin {
     private Object opsec$interceptKeybind(Supplier<?> supplier, Operation<Object> original) {
         if (!this.opsec$fromPacket || Minecraft.getInstance().hasSingleplayerServer()) {
             return original.call(supplier);
+        }
+        if (opsec$cachedBlocked != null) {
+            return opsec$cachedBlocked;
         }
 
         TranslationProtectionHandler.notifyExploitDetected();
@@ -107,15 +114,26 @@ public class KeybindContentsMixin {
             }
             String spoofedValue = KeybindDefaults.getDefault(name);
             opsec$logBlocked(name, spoofedValue);
-            return Component.literal(spoofedValue);
+            Component literal = Component.literal(spoofedValue);
+            opsec$cachedBlocked = literal;
+            return literal;
         }
 
-        // For server-pack keys the translatable re-resolves to the pack's value,
-        // so the client sends the pack value — not the key name.
+        // Return a marked Component.translatable so the translation pipeline
+        // runs: server-pack keys re-resolve to pack value (matches vanilla
+        // echo), mod keys block at the Language.getOrDefault call site.
+        // Mark silent so the downstream translation path doesn't double-log
+        // what we already reported here.
         String realValue = opsec$readKeybindDisplay();
         String spoofed = ModRegistry.isServerPackTranslationKey(name) ? realValue : name;
         opsec$reportBlocked(name, realValue, spoofed);
-        return Component.translatable(name);
+        Component replacement = Component.translatable(name);
+        if (replacement.getContents() instanceof OpsecFromPacketAccess access) {
+            access.opsec$setFromPacket();
+            access.opsec$setSilent();
+        }
+        opsec$cachedBlocked = replacement;
+        return replacement;
     }
 
     @Unique
@@ -125,6 +143,8 @@ public class KeybindContentsMixin {
 
     @Unique
     private void opsec$reportBlocked(String keybindName, String realValue, String spoofedValue) {
+        if (opsec$reported) return;
+        opsec$reported = true;
         if (!realValue.equals(spoofedValue)) {
             TranslationProtectionHandler.sendDetail(InterceptionType.KEYBIND, keybindName, realValue, spoofedValue);
         } else {

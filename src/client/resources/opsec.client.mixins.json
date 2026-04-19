@@ -16,8 +16,6 @@
 		"PackSelectionModelMixin",
 		"PackSelectionModelEntryBaseMixin",
 		"ChannelRegistrationMixin",
-		"FabricPlayNetworkingMixin",
-		"FabricConfigNetworkingMixin",
 		"JoinMultiplayerScreenMixin",
 		"MinecraftAccessor",
 		"MinecraftMixin",

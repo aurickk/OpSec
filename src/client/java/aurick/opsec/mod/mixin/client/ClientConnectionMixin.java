@@ -2,7 +2,6 @@ package aurick.opsec.mod.mixin.client;
 
 import aurick.opsec.mod.Opsec;
 import aurick.opsec.mod.config.OpsecConfig;
-import aurick.opsec.mod.protection.ChannelFilterHelper;
 import aurick.opsec.mod.tracking.ModRegistry;
 import aurick.opsec.mod.util.LocalAddressUtil;
 import io.netty.channel.Channel;
@@ -380,12 +379,12 @@ public class ClientConnectionMixin {
         //?}
             String namespace = channel.getNamespace();
 
-            // Skip core channels (matches ChannelFilterHelper.trackChannels)
+            // Skip core channels (minecraft + Forge "common" alias)
             if ("minecraft".equals(namespace) || "c".equals(namespace)) {
                 continue;
             }
 
-            // Resolve namespace to actual mod ID(s) (mirrors ChannelFilterHelper.trackChannels)
+            // Resolve namespace to actual mod ID(s).
             // NOTE: Do NOT use ModIdResolver.getModIdFromStacktrace() here -- this runs during
             // packet processing, not mod registration, so the stack trace would show Netty/MC/OpSec
             // frames, not the registering mod's frames.

@@ -5,14 +5,11 @@ import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.llamalad7.mixinextras.sugar.Local;
 import aurick.opsec.mod.Opsec;
 import aurick.opsec.mod.lang.OpsecLang;
-import aurick.opsec.mod.protection.LangOnlyPackResources;
 import aurick.opsec.mod.tracking.ModIdResolver;
 import aurick.opsec.mod.tracking.ModRegistry;
 import aurick.opsec.mod.util.KeybindDefaults;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.resources.language.ClientLanguage;
-import net.minecraft.server.packs.CompositePackResources;
-import net.minecraft.server.packs.FilePackResources;
 import net.minecraft.server.packs.PackResources;
 import net.minecraft.server.packs.PathPackResources;
 import net.minecraft.server.packs.VanillaPackResources;
@@ -36,10 +33,9 @@ import java.util.function.BiConsumer;
  * 
  * Pack types and handling:
  * - VanillaPackResources: Vanilla Minecraft → Always whitelisted
- * - FilePackResources: Downloaded server resource packs → Session whitelisted
- * - CompositePackResources: Combined packs (can include server) → Session whitelisted
+ * - Server-pushed packs (packId starts with "server/"): Session whitelisted
  * - Fabric mod packs (detected via reflection) → Tracked as mod (blocked in exploitable contexts)
- * - PathPackResources: File path packs → Passthrough (not tracked)
+ * - PathPackResources / user-installed file packs: Passthrough (not tracked)
  */
 @Mixin(ClientLanguage.class)
 public class ClientLanguageMixin {
@@ -121,21 +117,23 @@ public class ClientLanguageMixin {
             return;
         }
         
-        // Server resource pack (downloaded) or composite pack - session whitelist
-        // These are packs the server requires, clean clients resolve them normally.
-        // LangOnlyPackResources is OpSec's own wrapper around a FilePackResources
-        // used by the fake-accept feature — treat it as a server pack too.
+        // Server-pushed resource packs only — identified by the
+        // "server/<serial>/<uuid>" packId vanilla assigns in
+        // DownloadedPackSource.loadRequestedPacks. LangOnlyPackResources wraps
+        // FilePackResources and delegates packId(), so the wrapped server packs
+        // also pass this check.
+        //
+        // The previous instanceof check (FilePackResources / CompositePackResources)
+        // also matched user-installed .zip packs and any mod pack happening to use
+        // those types — leaking their lang keys to servers as session-whitelisted.
         //
         // IMPORTANT: apply ALL of the pack's lang entries, including overrides of
         // vanilla keys. Commit 0065b2e explicitly requires this: a vanilla client
         // with the pack loaded resolves poisoned keys (e.g. key.keyboard.w override)
         // to the pack-defined value, and OpSec must match that behavior — otherwise
         // translation-key probes that target vanilla keys expose us as non-vanilla.
-        // Some UI strings may look strange under exploit packs; that's the cost of
-        // blending in.
-        if (pack instanceof FilePackResources
-                || pack instanceof CompositePackResources
-                || pack instanceof LangOnlyPackResources) {
+        String serverPackId = pack.packId();
+        if (serverPackId != null && serverPackId.startsWith("server/")) {
             Set<String> serverKeys = new HashSet<>();
             original.call(stream, (BiConsumer<String, String>) (key, value) -> {
                 ModRegistry.recordServerPackKey(key);

@@ -4,7 +4,6 @@ import aurick.opsec.mod.Opsec;
 import aurick.opsec.mod.config.OpsecConfig;
 import aurick.opsec.mod.config.SpoofSettings;
 import aurick.opsec.mod.detection.TrackPackDetector;
-import aurick.opsec.mod.protection.ChannelFilterHelper;
 import aurick.opsec.mod.protection.ClientSpoofer;
 import aurick.opsec.mod.protection.ResourcePackGuard;
 import aurick.opsec.mod.protection.TranslationProtectionHandler;
@@ -33,7 +32,6 @@ public class ConnectScreenMixin {
         TrackPackDetector.reset();
         ResourcePackGuard.onServerJoin();
         TranslationProtectionHandler.clearCache();
-        ChannelFilterHelper.resetLogging();  // Reset channel filter debug logs for new connection
         ClientSpoofer.reset();  // Reset brand spoof logging for new connection
 
         // Ensure profile keys are available for ON_DEMAND mode

@@ -72,12 +72,6 @@ public abstract class ClientPacketListenerMixin {
     );
 
     @Unique
-    private static final String[] SIGNING_ERROR_KEYWORDS = {
-            "unsigned_chat", "chat signing", "secure chat", "chat_validation_failed",
-            "invalid signature", "missing profile key"
-    };
-
-    @Unique
     private static synchronized ScheduledExecutorService opsec$getScheduler() {
         if (opsec$scheduler == null || opsec$scheduler.isShutdown()) {
             opsec$scheduler = Executors.newSingleThreadScheduledExecutor(r -> {
@@ -227,18 +221,12 @@ public abstract class ClientPacketListenerMixin {
 
     @Unique
     private static boolean opsec$isSigningErrorMessage(Component component) {
-        if (opsec$hasSigningTranslationKey(component)) {
-            return true;
-        }
-
-        String text = component.getString().toLowerCase();
-        for (String keyword : SIGNING_ERROR_KEYWORDS) {
-            if (text.contains(keyword)) {
-                return true;
-            }
-        }
-
-        return false;
+        // Match only on TranslatableContents with a known signing-error key.
+        // The previous keyword-substring fallback let a hostile server force the
+        // client to resend its last unsigned chat as signed by sending any system
+        // chat containing "secure chat" / "unsigned_chat" / "invalid signature"
+        // within the awaitingSigningResponse window — defeating ON_DEMAND mode.
+        return opsec$hasSigningTranslationKey(component);
     }
 
     @Unique

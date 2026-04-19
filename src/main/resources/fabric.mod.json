@@ -37,7 +37,8 @@
 	},
 	"breaks": {
 		"ichor": "*",
-		"labymod": "*"
+		"labymod": "*",
+		"autismsexdefender": "*"
 	},
 	"depends": {
 		"fabricloader": ">=0.16.0",

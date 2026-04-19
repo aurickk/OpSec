@@ -3,7 +3,6 @@ package aurick.opsec.mod.tracking;
 import aurick.opsec.mod.Opsec;
 import aurick.opsec.mod.config.OpsecConfig;
 import aurick.opsec.mod.config.SpoofSettings;
-import aurick.opsec.mod.protection.ChannelFilterHelper;
 import net.fabricmc.loader.api.FabricLoader;
 import net.fabricmc.loader.api.ModContainer;
 //? if >=1.21.11 {

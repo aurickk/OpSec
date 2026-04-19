@@ -5,9 +5,11 @@ import aurick.opsec.mod.command.OpsecCommand;
 import aurick.opsec.mod.config.OpsecConfig;
 import aurick.opsec.mod.config.JarIntegrityChecker;
 import aurick.opsec.mod.config.UpdateChecker;
+import aurick.opsec.mod.protection.PackStripOverlay;
 import aurick.opsec.mod.tracking.ModRegistry;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientLifecycleEvents;
+import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientConfigurationNetworking;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.fabricmc.loader.api.FabricLoader;
@@ -55,6 +57,8 @@ public class OpsecClient implements ClientModInitializer {
 			// Fallback: scan mods for language files if mixin didn't catch them
 			scanModsForLanguageFiles();
 		});
+
+		ClientTickEvents.END_CLIENT_TICK.register(PackStripOverlay::tryShowNext);
 
 		Opsec.LOGGER.info("OpSec client protection initialized");
 	}

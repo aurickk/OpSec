@@ -6,7 +6,6 @@ import aurick.opsec.mod.Opsec;
 import aurick.opsec.mod.config.OpsecConfig;
 import aurick.opsec.mod.config.SpoofSettings;
 import aurick.opsec.mod.detection.PacketContext;
-import aurick.opsec.mod.protection.ForgeTranslations;
 import aurick.opsec.mod.protection.TranslationProtectionHandler;
 import aurick.opsec.mod.protection.TranslationProtectionHandler.InterceptionType;
 import aurick.opsec.mod.tracking.ModRegistry;
@@ -33,7 +32,6 @@ import java.util.Map;
  * Behavior by mode:
  * - VANILLA: Block all non-vanilla, non-resourcepack keys
  * - FABRIC: Block non-vanilla, non-resourcepack, non-whitelisted keys
- * - FORGE: Block non-vanilla, non-resourcepack keys; fabricate known Forge values
  */
 @Mixin(TranslatableContents.class)
 public abstract class TranslatableContentsMixin {
@@ -117,6 +115,9 @@ public abstract class TranslatableContentsMixin {
 
         // Allow server resource pack keys through vanilla resolution.
         // A vanilla client resolves these through Language.getOrDefault() at call time.
+        // Under fake-accept, the pack is still loaded (via LangOnlyPackResources), so
+        // the lang keys are in ClientLanguage's storage and vanilla resolution returns
+        // the pack-defined value. No side map needed.
         if (ModRegistry.isServerPackTranslationKey(translationKey)) {
             if (OpsecConfig.getInstance().isDebugAlerts()) {
                 String realValue = opsec$getRealTranslation(translationKey, defaultValue);
@@ -153,18 +154,6 @@ public abstract class TranslatableContentsMixin {
             return blockedValue;
         }
 
-        // FORGE MODE: Fabricate known Forge keys, block others
-        if (settings.isForgeMode()) {
-            String forgeValue = ForgeTranslations.getTranslation(translationKey);
-            if (forgeValue != null) {
-                opsec$logForgeFabrication(translationKey, defaultValue, forgeValue);
-                return forgeValue;
-            }
-            String blockedValue = opsec$getBlockedValue(translationKey, defaultValue);
-            opsec$logBlocked(translationKey, blockedValue);
-            return blockedValue;
-        }
-
         // Fallback: Use whitelist behavior
         if (ModRegistry.isWhitelistedTranslationKey(translationKey)) {
             return OPSEC_ALLOW_ORIGINAL;
@@ -188,15 +177,6 @@ public abstract class TranslatableContentsMixin {
             TranslationProtectionHandler.sendDetailDebug(InterceptionType.TRANSLATION, translationKey, originalValue, defaultValue);
         }
         TranslationProtectionHandler.logDetection(InterceptionType.TRANSLATION, translationKey, originalValue, defaultValue);
-    }
-
-    /**
-     * Log detection when a Forge key is being fabricated.
-     */
-    @Unique
-    private void opsec$logForgeFabrication(String translationKey, String defaultValue, String fabricatedValue) {
-        TranslationProtectionHandler.sendDetail(InterceptionType.TRANSLATION, translationKey, defaultValue, fabricatedValue);
-        TranslationProtectionHandler.logDetection(InterceptionType.TRANSLATION, translationKey, defaultValue, fabricatedValue);
     }
 
     /**

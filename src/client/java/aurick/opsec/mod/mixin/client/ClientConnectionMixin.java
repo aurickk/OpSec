@@ -197,62 +197,6 @@ public class ClientConnectionMixin {
                 return;
             }
             
-            if (config.getSettings().isForgeMode()) {
-                String namespace = payloadId.getNamespace();
-                String path = payloadId.getPath();
-                
-                if (MINECRAFT.equals(namespace) && (REGISTER.equals(path) || UNREGISTER.equals(path))) {
-                    if (payload instanceof RegistrationPayload registrationPayload) {
-                        //? if >=1.21.11 {
-                        /*List<Identifier> forgeChannels = List.of(*/
-                        //?} else {
-                        List<ResourceLocation> forgeChannels = List.of(
-                        //?}
-                            //? if >=1.21.11 {
-                            /*Identifier.parse(FORGE_NAMESPACE + ":" + LOGIN),*/
-                            //?} else {
-                            ResourceLocation.parse(FORGE_NAMESPACE + ":" + LOGIN),
-                            //?}
-                            //? if >=1.21.11 {
-                            /*Identifier.parse(FORGE_NAMESPACE + ":" + HANDSHAKE)*/
-                            //?} else {
-                            ResourceLocation.parse(FORGE_NAMESPACE + ":" + HANDSHAKE)
-                            //?}
-                        );
-                        
-                        Opsec.LOGGER.debug("[OpSec] FORGE MODE (pipeline) - Replacing {} channels with forge channels", 
-                            registrationPayload.channels().size());
-                        
-                        RegistrationPayload forgePayload = opsec$createRegistrationPayload(registrationPayload, new ArrayList<>(forgeChannels));
-                        if (forgePayload != null) {
-                            ctx.write(new ServerboundCustomPayloadPacket(forgePayload), promise);
-                            return;
-                        }
-                    }
-                    promise.setSuccess();
-                    return;
-                }
-                
-                if (FORGE_NAMESPACE.equals(namespace) && (LOGIN.equals(path) || HANDSHAKE.equals(path))) {
-                    ctx.write(msg, promise);
-                    return;
-                }
-                
-                if (MINECRAFT.equals(namespace)) {
-                    if (MCO.equals(path)) {
-                        Opsec.LOGGER.debug("[OpSec] FORGE MODE (pipeline) - Blocking minecraft:mco");
-                        promise.setSuccess();
-                        return;
-                    }
-                    ctx.write(msg, promise);
-                    return;
-                }
-                
-                Opsec.LOGGER.debug("[OpSec] FORGE MODE (pipeline) - Blocking non-forge channel: {}", payloadId);
-                promise.setSuccess();
-                return;
-            }
-            
             ctx.write(msg, promise);
         }
     }
@@ -358,38 +302,6 @@ public class ClientConnectionMixin {
             return;
         }
         
-        if (config.getSettings().isForgeMode()) {
-            String namespace = payloadId.getNamespace();
-            String path = payloadId.getPath();
-            
-            if (MINECRAFT.equals(namespace) && (REGISTER.equals(path) || UNREGISTER.equals(path))) {
-                if (payload instanceof RegistrationPayload registrationPayload) {
-                    opsec$handleMinecraftRegisterForForge(registrationPayload, ci, connection);
-                } else {
-                    Opsec.LOGGER.warn("[OpSec] FORGE MODE - Blocking unknown {}: {}", 
-                        payloadId, payload.getClass().getName());
-                    ci.cancel();
-                }
-                return;
-            }
-            
-            if (FORGE_NAMESPACE.equals(namespace) && (LOGIN.equals(path) || HANDSHAKE.equals(path))) {
-                return;
-            }
-            
-            if (MINECRAFT.equals(namespace) && MCO.equals(path)) {
-                Opsec.LOGGER.debug("[OpSec] FORGE MODE - Blocking minecraft:mco");
-                ci.cancel();
-                return;
-            }
-            
-            if (MINECRAFT.equals(namespace)) {
-                return;
-            }
-            
-            Opsec.LOGGER.debug("[OpSec] FORGE MODE - Blocking non-forge channel: {}", payloadId);
-            ci.cancel();
-        }
     }
     
     @Unique
@@ -486,43 +398,6 @@ public class ClientConnectionMixin {
                 // Fall back to namespace as mod ID (backwards compat)
                 ModRegistry.recordChannel(namespace, channel);
             }
-        }
-    }
-    
-    @Unique
-    private void opsec$handleMinecraftRegisterForForge(RegistrationPayload original, CallbackInfo ci, Connection connection) {
-        ci.cancel();
-        
-        //? if >=1.21.11 {
-        /*List<Identifier> forgeChannels = List.of(*/
-        //?} else {
-        List<ResourceLocation> forgeChannels = List.of(
-        //?}
-            //? if >=1.21.11 {
-            /*Identifier.parse(FORGE_NAMESPACE + ":" + LOGIN),*/
-            //?} else {
-            ResourceLocation.parse(FORGE_NAMESPACE + ":" + LOGIN),
-            //?}
-            //? if >=1.21.11 {
-            /*Identifier.parse(FORGE_NAMESPACE + ":" + HANDSHAKE)*/
-            //?} else {
-            ResourceLocation.parse(FORGE_NAMESPACE + ":" + HANDSHAKE)
-            //?}
-        );
-        
-        RegistrationPayload forgePayload = opsec$createRegistrationPayload(original, new ArrayList<>(forgeChannels));
-        if (forgePayload == null) {
-            Opsec.LOGGER.error("[OpSec] Could not create Forge RegistrationPayload");
-            return;
-        }
-        
-        Opsec.LOGGER.debug("[OpSec] FORGE MODE - Registering forge channels");
-        
-        opsec$sending.set(true);
-        try {
-            connection.send(new ServerboundCustomPayloadPacket(forgePayload));
-        } finally {
-            opsec$sending.set(false);
         }
     }
     

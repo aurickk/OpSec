@@ -7,6 +7,8 @@ import aurick.opsec.mod.PrivacyLogger;
 import aurick.opsec.mod.config.OpsecConfig;
 import aurick.opsec.mod.config.SpoofSettings;
 import aurick.opsec.mod.detection.PacketContext;
+import aurick.opsec.mod.protection.PackStripHandler;
+import aurick.opsec.mod.protection.PackStripOverlay;
 import aurick.opsec.mod.protection.TranslationProtectionHandler;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientPacketListener;
@@ -265,5 +267,7 @@ public abstract class ClientPacketListenerMixin {
         OpsecConfig.getInstance().getSettings().resetSessionState();
         opsec$lastUnsignedMessage = null;
         opsec$awaitingSigningResponse = false;
+        PackStripHandler.clearAll();
+        PackStripOverlay.clearQueue();
     }
 }

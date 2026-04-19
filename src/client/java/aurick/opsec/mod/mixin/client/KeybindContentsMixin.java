@@ -6,7 +6,6 @@ import aurick.opsec.mod.Opsec;
 import aurick.opsec.mod.config.OpsecConfig;
 import aurick.opsec.mod.config.SpoofSettings;
 import aurick.opsec.mod.detection.PacketContext;
-import aurick.opsec.mod.protection.ForgeTranslations;
 import aurick.opsec.mod.protection.TranslationProtectionHandler;
 import aurick.opsec.mod.protection.TranslationProtectionHandler.InterceptionType;
 import aurick.opsec.mod.tracking.ModRegistry;
@@ -78,15 +77,6 @@ public class KeybindContentsMixin {
         OpsecConfig config = OpsecConfig.getInstance();
         SpoofSettings settings = config.getSettings();
 
-        if (settings.isForgeMode() && ForgeTranslations.isForgeKey(name)) {
-            String fabricatedValue = ForgeTranslations.getTranslation(name);
-            if (fabricatedValue != null) {
-                TranslationProtectionHandler.sendDetail(InterceptionType.KEYBIND, name, name, fabricatedValue);
-                TranslationProtectionHandler.logDetection(InterceptionType.KEYBIND, name, name, fabricatedValue);
-                return Component.literal(fabricatedValue);
-            }
-        }
-
         if (ModRegistry.isWhitelistedKeybind(name)) {
             if (OpsecConfig.getInstance().isDebugAlerts()) {
                 String displayValue = opsec$readKeybindDisplay();
@@ -120,21 +110,21 @@ public class KeybindContentsMixin {
             return Component.literal(spoofedValue);
         }
 
-        // Mod/unknown keybind — return as translatable so vanilla resolution
-        // handles it through TranslatableContentsMixin. Server resource pack
-        // values resolve naturally (and stop resolving when the pack is popped).
-        opsec$logBlocked(name, name);
+        // For server-pack keys the translatable re-resolves to the pack's value,
+        // so the client sends the pack value — not the key name.
+        String realValue = opsec$readKeybindDisplay();
+        String spoofed = ModRegistry.isServerPackTranslationKey(name) ? realValue : name;
+        opsec$reportBlocked(name, realValue, spoofed);
         return Component.translatable(name);
     }
 
-    /**
-     * Log a blocked keybind. Reads the real value via {@link #opsec$readKeybindDisplay()}
-     * to avoid triggering the Supplier resolution chain.
-     */
     @Unique
     private void opsec$logBlocked(String keybindName, String spoofedValue) {
-        String realValue = opsec$readKeybindDisplay();
+        opsec$reportBlocked(keybindName, opsec$readKeybindDisplay(), spoofedValue);
+    }
 
+    @Unique
+    private void opsec$reportBlocked(String keybindName, String realValue, String spoofedValue) {
         if (!realValue.equals(spoofedValue)) {
             TranslationProtectionHandler.sendDetail(InterceptionType.KEYBIND, keybindName, realValue, spoofedValue);
         } else {

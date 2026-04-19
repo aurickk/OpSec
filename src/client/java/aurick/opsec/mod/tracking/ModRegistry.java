@@ -256,12 +256,6 @@ public class ModRegistry {
             return true;
         }
 
-        // Forge loader keys always allowed in Forge mode
-        if (settings.isForgeMode() && isForgeKey(key)) {
-            Opsec.LOGGER.debug("[Whitelist] ALLOWED {} '{}' - Forge key in Forge mode", source, key);
-            return true;
-        }
-
         // Whitelist must be enabled for mod-specific checks
         if (!settings.isWhitelistEnabled()) {
             Opsec.LOGGER.debug("[Whitelist] {} '{}' - whitelist NOT enabled", source, key);
@@ -313,27 +307,6 @@ public class ModRegistry {
         if (modId == null) modId = getModForKeybind(key);
         return modId != null && DEFAULT_FABRIC_MODS.contains(modId);
     }
-    
-    /**
-     * Check if a key is from Forge, FML, or NeoForge.
-     * Unified check for both translation keys and keybinds.
-     */
-    private static boolean isForgeKey(String key) {
-        if (key == null) return false;
-        
-        return key.startsWith("forge.") || 
-               key.startsWith("forgemod.") ||
-               key.startsWith("fml.") ||
-               key.startsWith("neoforge.") ||
-               key.startsWith("key.forge") ||
-               key.startsWith("key.neoforge") ||
-               key.startsWith("category.forge") ||
-               key.startsWith("category.neoforge") ||
-               key.startsWith("pack.source.forge") ||  // pack.source.forgemod
-               key.equals("pack.source.forgemod") ||
-               key.equals("pack.source.mod");  // Generic mod source used by Forge
-    }
-    
     
     /**
      * Check if a translation key is from a server resource pack.

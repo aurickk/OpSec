@@ -39,16 +39,12 @@ public abstract class ChannelRegistrationMixin {
         
         if (ClientSpoofer.isVanillaMode()) {
             Opsec.LOGGER.debug("[OpSec] VANILLA MODE - all custom payloads blocked");
-            PrivacyLogger.alert(PrivacyLogger.AlertType.SUCCESS, 
+            PrivacyLogger.alert(PrivacyLogger.AlertType.SUCCESS,
                 "Privacy active: vanilla mode (all channels blocked)");
         } else if (ClientSpoofer.isFabricMode()) {
             Opsec.LOGGER.debug("[OpSec] FABRIC MODE - non-whitelisted mod channels blocked");
-            PrivacyLogger.alert(PrivacyLogger.AlertType.SUCCESS, 
+            PrivacyLogger.alert(PrivacyLogger.AlertType.SUCCESS,
                 "Privacy active: fabric mode (mod channels blocked)");
-        } else if (ClientSpoofer.isForgeMode()) {
-            Opsec.LOGGER.debug("[OpSec] FORGE MODE - emulating clean Forge client");
-            PrivacyLogger.alert(PrivacyLogger.AlertType.SUCCESS, 
-                "Privacy active: forge mode (forge:login, forge:handshake)");
         }
     }
 }

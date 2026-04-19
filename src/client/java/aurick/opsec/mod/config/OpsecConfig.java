@@ -107,9 +107,8 @@ public class OpsecConfig {
         boolean modified = false;
         
         String brand = settings.getCustomBrand();
-        if (brand == null || (!OpsecConstants.Brands.VANILLA.equals(brand) 
-                && !OpsecConstants.Brands.FABRIC.equals(brand) 
-                && !OpsecConstants.Brands.FORGE.equals(brand))) {
+        if (brand == null || (!OpsecConstants.Brands.VANILLA.equals(brand)
+                && !OpsecConstants.Brands.FABRIC.equals(brand))) {
             Opsec.LOGGER.warn("[OpSec] Invalid brand value: {}, resetting to vanilla", brand);
             settings.setCustomBrand(OpsecConstants.Brands.VANILLA);
             modified = true;
@@ -177,6 +176,18 @@ public class OpsecConfig {
     // Key resolution protection
     public boolean isTranslationProtectionEnabled() { return !EXPLOIT_PREVENTER_LOADED && settings.isTranslationProtectionEnabled(); }
     public boolean isMeteorFix() { return settings.isMeteorFix(); }
+
+    // Bypass Server Pack Requirement
+    public SpoofSettings.StripMode getPackStripMode() {
+        return settings.getPackStripMode();
+    }
+    /** Bypass infrastructure (pack wrapping + pack-select UI unlock) is active.
+     *  True for all modes; only Exploit Preventer force-disables it. */
+    public boolean shouldStripPack()       { return !EXPLOIT_PREVENTER_LOADED; }
+    /** The consent overlay prompt should show for an incoming push. */
+    public boolean shouldShowPackOverlay() {
+        return !EXPLOIT_PREVENTER_LOADED && settings.getPackStripMode() == SpoofSettings.StripMode.ASK;
+    }
     
     // Alerts and logging
     public boolean shouldShowAlerts() { return settings.isShowAlerts(); }

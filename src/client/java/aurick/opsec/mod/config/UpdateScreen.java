@@ -1,5 +1,7 @@
 package aurick.opsec.mod.config;
 
+import aurick.opsec.mod.lang.OpsecLang;
+import aurick.opsec.mod.lang.OpsecStrings;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.StringWidget;
 import net.minecraft.client.gui.screens.Screen;
@@ -23,7 +25,7 @@ public class UpdateScreen extends Screen {
     private final Screen parent;
 
     public UpdateScreen(Screen parent) {
-        super(Component.translatable("opsec.update.title"));
+        super(Component.literal(OpsecLang.tr(OpsecStrings.UPDATE_TITLE)));
         this.parent = parent;
     }
 
@@ -34,9 +36,9 @@ public class UpdateScreen extends Screen {
 
         // Text labels (using StringWidget for cross-version rendering compatibility)
         addCenteredStringWidget(this.title, centerX, centerY - 50);
-        addCenteredStringWidget(Component.translatable("opsec.update.message"), centerX, centerY - 28);
-        addCenteredStringWidget(Component.translatable("opsec.update.current", UpdateChecker.getCurrentVersion()), centerX, centerY - 14);
-        addCenteredStringWidget(Component.translatable("opsec.update.latest", UpdateChecker.getLatestVersion()), centerX, centerY);
+        addCenteredStringWidget(Component.literal(OpsecLang.tr(OpsecStrings.UPDATE_MESSAGE)), centerX, centerY - 28);
+        addCenteredStringWidget(Component.literal(OpsecLang.tr(OpsecStrings.UPDATE_CURRENT, UpdateChecker.getCurrentVersion())), centerX, centerY - 14);
+        addCenteredStringWidget(Component.literal(OpsecLang.tr(OpsecStrings.UPDATE_LATEST, UpdateChecker.getLatestVersion())), centerX, centerY);
 
         // Buttons stacked vertically, centered horizontally
         int buttonWidth = 200;
@@ -45,20 +47,20 @@ public class UpdateScreen extends Screen {
         int firstButtonY = centerY + 15;
 
         // Download button (green text)
-        this.addRenderableWidget(Button.builder(Component.translatable("opsec.update.download"), button -> {
+        this.addRenderableWidget(Button.builder(Component.literal(OpsecLang.tr(OpsecStrings.UPDATE_DOWNLOAD)), button -> {
             Util.getPlatform().openUri(UpdateChecker.getReleaseUrl());
             this.onClose();
         }).bounds(centerX - buttonWidth / 2, firstButtonY, buttonWidth, buttonHeight).build());
 
         // Skip This Version button
-        this.addRenderableWidget(Button.builder(Component.translatable("opsec.update.skip"), button -> {
+        this.addRenderableWidget(Button.builder(Component.literal(OpsecLang.tr(OpsecStrings.UPDATE_SKIP)), button -> {
             OpsecConfig.getInstance().getSettings().setSkippedUpdateVersion(UpdateChecker.getLatestVersion());
             OpsecConfig.getInstance().save();
             this.onClose();
         }).bounds(centerX - buttonWidth / 2, firstButtonY + buttonSpacing, buttonWidth, buttonHeight).build());
 
         // Cancel button
-        this.addRenderableWidget(Button.builder(Component.translatable("opsec.update.cancel"), button -> {
+        this.addRenderableWidget(Button.builder(Component.literal(OpsecLang.tr(OpsecStrings.UPDATE_CANCEL)), button -> {
             this.onClose();
         }).bounds(centerX - buttonWidth / 2, firstButtonY + buttonSpacing * 2, buttonWidth, buttonHeight).build());
     }

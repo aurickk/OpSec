@@ -10,10 +10,11 @@
 
 ## What it does
 
-- **[Brand Spoofing](#brand-spoofing)** - Change client brand name to Vanilla, Fabric, or Forge
+- **[Brand Spoofing](#brand-spoofing)** - Change client brand name to Vanilla or Fabric
 - **[Channel Spoofing](#channel-spoofing)** - Hide or fake mod channels to prevent mod detection
 - **[Isolate Pack Cache](#isolate-pack-cache)** - Isolate resource packs per-account to prevent tracking
 - **[Block Local URLs](#block-local-urls)** - Block resource pack redirects to local/private addresses
+- **[Bypass Server Pack Requirement](#bypass-server-pack-requirement)** - Let the user toggle server resource pack(s) whereas in vanilla wouldn't allow you to do so
 - **[Key Resolution Protection](#key-resolution-protection)** - Protect against key resolution mod detection in any server packet
 - **[Meteor Fix](#meteor-fix)** - Disable Meteor Client's broken key resolution protection
 - **[Mod Whitelist](#mod-whitelist)** - Automatically or manually exempt mods from channel spoofing and key resolution protection
@@ -51,7 +52,7 @@ If settings are changed while connected to a server it is recommended to reconne
 | Setting | Description |
 |---------|-------------|
 | **Spoof Brand** | Enable/disable [brand spoofing](#brand-spoofing) |
-| **Brand Type** | Select which brand to appear as (Vanilla/Fabric/Forge) |
+| **Brand Type** | Select which brand to appear as (Vanilla/Fabric) |
 | **Spoof Channels** | Enable/disable [channel spoofing](#channel-spoofing) |
 
 #### Protection Tab
@@ -60,6 +61,7 @@ If settings are changed while connected to a server it is recommended to reconne
 |---------|-------------|
 | **Isolate Pack Cache** | Enable/disable [cache isolation](#isolate-pack-cache) |
 | **Block Local Pack URLs** | Enable/disable [local URL blocking](#block-local-urls) |
+| **Bypass Server Pack Requirement** | Configure [server pack bypass](#bypass-server-pack-requirement) behavior:<br/>• **MANUAL** (default): Default vanilla behavior on push. You can still toggle any server pack.<br/>• **ASK**: Server resource pack not applied but with consent screen to ask if the pack(s) should be applied<br/>• **ALWAYS ON**: Server resource pack not applied by default. You can still toggle any server pack |
 | **Clear Cache** | Delete all cached server resource packs |
 | **Key Resolution Spoofing** | Enable/disable [key resolution protection](#key-resolution-protection) |
 | **Fake Default Keybinds** | Return default vanilla keybind values instead of actual bindings |
@@ -117,7 +119,6 @@ Servers can query your client brand to detect whether you're running a modded cl
 
 - **Vanilla** - Appear as an unmodified Minecraft client
 - **Fabric** - Appear as a standard Fabric client (default)
-- **Forge** - Appear as a Forge client
 
 The brand setting also determines how [Channel Spoofing](#channel-spoofing) and [Key Resolution Protection](#key-resolution-protection) behave for each mode.
 
@@ -145,7 +146,23 @@ Malicious servers can send resource pack URLs that redirect to your local networ
 
 https://alaggydev.github.io/posts/cytooxien/
 
-OpSec manually follows HTTP redirects (300-303, 305, 307) and checks each hop for local/private addresses using DNS resolution. If a redirect targets a local address, the connection is blocked. This also handles HTTP 305 proxy redirect attacks by injecting the correct Host header to prevent header leakage. Protection is automatically skipped when connected to a local server.
+OpSec checks if a redirect or normal request targets a local address, then blocks the connection.
+
+---
+
+### Bypass Server Pack Requirement
+
+Servers can push required resource packs the client is forced to apply. Declining them or toggling required server resource pack(s) is impossible on vanilla client. And fake accepting them is detectable with the key resolution exploit by probing the client's resource pack key response.
+
+Offsec lets the client accept and download the p these server resource packs as normal, but giving you the ability to toggle the resource pack texture at the client level. The language file of the server resource pack is preserved because servers can probe translation keys (e.g. via `{"translate": "some.pack.key"}`) to detect whether the pack is actually applied, and a vanilla client with the pack loaded would resolve those keys to the pack-defined value.
+
+With Opsec installed, server resource pack(s) appears as a normal user-toggleable entry in the resource pack menu so you can flip between stripped and fully-loaded.
+
+**Modes:**
+- **MANUAL** (default): Required packs apply fully like vanilla on push. Optional packs follow vanilla toggle semantics. The user can still unequip any server pack from the pack menu to strip it while keeping lang loaded.
+- **ASK**: Required packs are stripped on push and a consent overlay prompts `[Continue]` / `[Load Pack For Real]`.
+- **ALWAYS ON**: All server packs are stripped on push. No overlay. You can still toggle them back.
+
 
 ---
 
@@ -161,7 +178,6 @@ OpSec tracks when translation keys are being resolved during server packet proce
 
 - **Vanilla mode**: Blocks all mod keys, returns default keybind values for vanilla keys
 - **Fabric mode**: Allows Fabric API keys and whitelisted mod keys, blocks everything else
-- **Forge mode**: Returns fabricated Forge/FML key resolution values (e.g., `fml.menu.mods` → `"Mods"`), blocks other mod keys
 
 When **Fake Default Keybinds** is disabled, vanilla keybinds resolve to their actual values.
 
@@ -178,12 +194,6 @@ Spoofing vanilla keybinds with **Fake Default Keybinds** enabled (Returns defaul
 [key.hotbar.6] 'Q'→'6'
 [key.hotbar.7] 'E'→'7'
 [key.hotbar.8] 'R'→'8'
-```
-
-Forge mode fabrication (Returns fake Forge values):
-```
-[fml.menu.mods] 'fml.menu.mods'→'Mods'
-[forge.configgui.forgeCloudsEnabled] 'forge.configgui.forgeCloudsEnabled'→'Use Forge cloud renderer'
 ```
 
 ---
@@ -252,7 +262,6 @@ Servers can query your registered network channels to detect which mods you have
 When enabled, OpSec spoofs mod channels that are registered with the server based on your selected brand:
 - **Vanilla mode**: Blocks ALL mod channels (pure vanilla client)
 - **Fabric mode**: Only allows Fabric API channels and whitelisted mods, blocks other mods
-- **Forge mode**: Imitate Forge channels, blocks all mod channels
 
 > [!WARNING]
 > May break server-dependent mod(s) if not whitelisted. Use the [Mod Whitelist](#mod-whitelist) to exempt specific mods like [VoiceChat](https://modrinth.com/plugin/simple-voice-chat) or disable channel spoofing.
@@ -378,7 +387,6 @@ Output JARs are located in `versions/<minecraft_version>/build/libs/`:
 - [No Prying Eyes](https://github.com/Daxanius/NoPryingEyes?tab=readme-ov-file) - Secure chat enforcement detection
 - [MixinSquared](https://github.com/Bawnorton/MixinSquared) - Mixin cancellation for Meteor Fix
 - [Stonecutter](https://stonecutter.kikugie.dev/) - Multi-version build system
-- [Forge](https://github.com/MinecraftForge/MinecraftForge) - Forge translation and keybind keys
 - [Fabric API](https://github.com/FabricMC/fabric-api) - Fabric translation and keybind keys
 
 ## Disclaimer

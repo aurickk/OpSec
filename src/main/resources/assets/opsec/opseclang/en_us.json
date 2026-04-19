@@ -1,28 +1,43 @@
 {
   "opsec.config.title": "OpSec Settings",
-  
+
   "opsec.tab.identity": "Identity",
   "opsec.tab.protection": "Protection",
   "opsec.tab.accounts": "Accounts",
   "opsec.tab.whitelist": "Whitelist",
   "opsec.tab.misc": "Misc",
-  
+
   "opsec.option.spoofBrand": "Spoof Brand",
   "opsec.option.brandType": "Brand Type",
   "opsec.option.spoofChannels": "Spoof Channels",
-  
+
   "opsec.option.whitelistMode": "Whitelist Mode",
   "opsec.whitelist.search": "Search",
-  
+
   "opsec.option.isolatePackCache": "Isolate Pack Cache",
   "opsec.option.blockLocalPackUrls": "Block Local URLs",
   "opsec.option.clearCache": "Clear Cached Resource Packs",
   "opsec.option.keyResolutionSpoofing": "Key Resolution Spoofing",
   "opsec.option.fakeDefaultKeybinds": "Fake Default Keybinds",
   "opsec.option.meteorFix": "Meteor Fix",
+  "opsec.option.packStripMode": "Bypass Server Pack Requirement",
+
+  "opsec.packstrip.mode.manual": "\u00A7eMANUAL",
+  "opsec.packstrip.mode.ask": "\u00A7aASK",
+  "opsec.packstrip.mode.alwaysOn": "\u00A7cALWAYS",
+  "opsec.packstrip.mode.manual.tooltip": "Default vanilla behavior on push. You can still toggle any server pack",
+  "opsec.packstrip.mode.ask.tooltip": "Server resource pack not applied but with consent screen to ask if the pack(s) should be applied",
+  "opsec.packstrip.mode.alwaysOn.tooltip": "Server resource pack not applied by default. You can still toggle any server pack",
+
+  "opsec.packstrip.title": "Server Resource Pack",
+  "opsec.packstrip.required": "This server has a required resource pack.",
+  "opsec.packstrip.optional": "This server has an optional resource pack.",
+  "opsec.packstrip.stripped": "\u00A77OpSec bypassed this pack's content. You may apply it below.",
+  "opsec.packstrip.continue": "Continue",
+  "opsec.packstrip.loadReal": "Load Pack For Real",
   "opsec.option.chatSigning": "Chat Signing",
   "opsec.option.disableTelemetry": "Disable Telemetry",
-  
+
   "opsec.option.showAlerts": "Chat Alerts",
   "opsec.option.showToasts": "Toast Popups",
   "opsec.option.logDetections": "Log Events",
@@ -31,11 +46,10 @@
   "opsec.option.hideModifiedIndicators": "Hide 'Modified'",
   "opsec.option.hideSystemMsgIndicators": "Hide System Bar",
   "opsec.option.hideWarningToast": "Hide Warning Toast",
-  
+
   "opsec.brand.vanilla": "Vanilla",
   "opsec.brand.fabric": "Fabric",
-  "opsec.brand.forge": "Forge",
-  
+
   "opsec.translationMode.spoof": "Spoof",
   "opsec.translationMode.block": "Block",
 
@@ -64,4 +78,3 @@
   "opsec.tamper.dismiss_permanent": "I Know What I'm Doing",
   "opsec.tamper.dismiss": "Dismiss"
 }
-

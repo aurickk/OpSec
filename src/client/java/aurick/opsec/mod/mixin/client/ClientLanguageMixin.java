@@ -4,6 +4,8 @@ import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.llamalad7.mixinextras.sugar.Local;
 import aurick.opsec.mod.Opsec;
+import aurick.opsec.mod.lang.OpsecLang;
+import aurick.opsec.mod.protection.LangOnlyPackResources;
 import aurick.opsec.mod.tracking.ModIdResolver;
 import aurick.opsec.mod.tracking.ModRegistry;
 import aurick.opsec.mod.util.KeybindDefaults;
@@ -54,6 +56,9 @@ public class ClientLanguageMixin {
             boolean defaultRightToLeft, CallbackInfoReturnable<ClientLanguage> cir) {
         ModRegistry.clearTranslationKeys();
         KeybindDefaults.reset();
+        // Keep OpSec's private string map in sync with the client's selected locale.
+        // Runs outside the vanilla Language pipeline so server resource packs cannot override.
+        OpsecLang.reload(filenames);
         Opsec.LOGGER.debug("[OpSec] ClientLanguageMixin: Starting language load");
         opsec$loggedOnce = false;
     }
@@ -65,7 +70,7 @@ public class ClientLanguageMixin {
     private static void opsec$onLoadComplete(ResourceManager resourceManager, List<String> filenames,
             boolean defaultRightToLeft, CallbackInfoReturnable<ClientLanguage> cir) {
         ModRegistry.markInitialized();
-        
+
         if (!opsec$loggedOnce) {
             opsec$loggedOnce = true;
             Opsec.LOGGER.debug("[OpSec] Translation key tracking: {} vanilla, {} server pack, {} total",
@@ -117,8 +122,20 @@ public class ClientLanguageMixin {
         }
         
         // Server resource pack (downloaded) or composite pack - session whitelist
-        // These are packs the server requires, clean clients resolve them normally
-        if (pack instanceof FilePackResources || pack instanceof CompositePackResources) {
+        // These are packs the server requires, clean clients resolve them normally.
+        // LangOnlyPackResources is OpSec's own wrapper around a FilePackResources
+        // used by the fake-accept feature — treat it as a server pack too.
+        //
+        // IMPORTANT: apply ALL of the pack's lang entries, including overrides of
+        // vanilla keys. Commit 0065b2e explicitly requires this: a vanilla client
+        // with the pack loaded resolves poisoned keys (e.g. key.keyboard.w override)
+        // to the pack-defined value, and OpSec must match that behavior — otherwise
+        // translation-key probes that target vanilla keys expose us as non-vanilla.
+        // Some UI strings may look strange under exploit packs; that's the cost of
+        // blending in.
+        if (pack instanceof FilePackResources
+                || pack instanceof CompositePackResources
+                || pack instanceof LangOnlyPackResources) {
             Set<String> serverKeys = new HashSet<>();
             original.call(stream, (BiConsumer<String, String>) (key, value) -> {
                 ModRegistry.recordServerPackKey(key);

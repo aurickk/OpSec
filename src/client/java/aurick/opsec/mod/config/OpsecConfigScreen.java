@@ -4,6 +4,8 @@ import aurick.opsec.mod.Opsec;
 import aurick.opsec.mod.accounts.AccountManager;
 import aurick.opsec.mod.accounts.Account;
 import aurick.opsec.mod.accounts.SessionAccount;
+import aurick.opsec.mod.lang.OpsecLang;
+import aurick.opsec.mod.lang.OpsecStrings;
 import aurick.opsec.mod.mixin.MeteorMixinCanceller;
 import aurick.opsec.mod.protection.ResourcePackGuard;
 import aurick.opsec.mod.tracking.ModRegistry;
@@ -104,7 +106,7 @@ public class OpsecConfigScreen extends Screen {
     }
 
     public OpsecConfigScreen(Screen parent, int initialTab, double scrollOffset) {
-        super(Component.translatable("opsec.config.title"));
+        super(OpsecLang.component(OpsecStrings.CONFIG_TITLE));
         this.parent = parent;
         this.config = OpsecConfig.getInstance();
         this.currentTab = initialTab;
@@ -195,11 +197,11 @@ public class OpsecConfigScreen extends Screen {
 
         if (OpsecConfig.EXPLOIT_PREVENTER_LOADED) {
             widgets.add(createSectionHeader("\u00A77Managed by Exploit Preventer"));
-            widgets.add(createEPManagedToggle(Component.translatable("opsec.option.spoofBrand")));
+            widgets.add(createEPManagedToggle(OpsecLang.component(OpsecStrings.OPTION_SPOOF_BRAND)));
         } else {
             widgets.add(cycleBuilder(COLORED_BOOL_TO_TEXT, List.of(Boolean.TRUE, Boolean.FALSE), settings.isSpoofBrand())
                     .withTooltip(v -> Tooltip.create(Component.literal("Replace your client brand with a spoofed value")))
-                    .create(0, 0, 210, 20, Component.translatable("opsec.option.spoofBrand"),
+                    .create(0, 0, 230, 20, OpsecLang.component(OpsecStrings.OPTION_SPOOF_BRAND),
                         (button, value) -> {
                             settings.setSpoofBrand(value);
                             config.save();
@@ -213,13 +215,13 @@ public class OpsecConfigScreen extends Screen {
                 } else {
                     widgets.add(cycleBuilder(BrandType::getDisplayName, List.of(BrandType.values()), BrandType.fromString(settings.getCustomBrand()))
                             .withTooltip(v -> Tooltip.create(Component.literal("Select the brand to appear as")))
-                            .create(0, 0, 210, 20, Component.translatable("opsec.option.brandType"),
+                            .create(0, 0, 230, 20, OpsecLang.component(OpsecStrings.OPTION_BRAND_TYPE),
                             (button, value) -> { settings.setCustomBrand(value.getValue()); config.save(); }));
                 }
 
                 widgets.add(cycleBuilder(COLORED_BOOL_TO_TEXT, List.of(Boolean.TRUE, Boolean.FALSE), settings.isSpoofChannels())
                     .withTooltip(v -> Tooltip.create(Component.literal("Replace/block mod channels to appear as clean instance")))
-                        .create(0, 0, 210, 20, Component.translatable("opsec.option.spoofChannels"),
+                        .create(0, 0, 230, 20, OpsecLang.component(OpsecStrings.OPTION_SPOOF_CHANNELS),
                             (button, value) -> {
                                 settings.setSpoofChannels(value);
                                 config.save();
@@ -232,7 +234,7 @@ public class OpsecConfigScreen extends Screen {
             }
         }
 
-        return new WidgetTab(Component.translatable("opsec.tab.identity"), widgets);
+        return new WidgetTab(OpsecLang.component(OpsecStrings.TAB_IDENTITY), widgets);
     }
     
     private Tab createProtectionTab(SpoofSettings settings) {
@@ -243,23 +245,43 @@ public class OpsecConfigScreen extends Screen {
 
         if (OpsecConfig.EXPLOIT_PREVENTER_LOADED) {
             widgets.add(createSectionHeader("\u00A77Managed by Exploit Preventer"));
-            widgets.add(createEPManagedToggle(Component.translatable("opsec.option.isolatePackCache")));
-            widgets.add(createEPManagedToggle(Component.translatable("opsec.option.blockLocalPackUrls")));
+            widgets.add(createEPManagedToggle(OpsecLang.component(OpsecStrings.OPTION_ISOLATE_PACK_CACHE)));
+            widgets.add(createEPManagedToggle(OpsecLang.component(OpsecStrings.OPTION_BLOCK_LOCAL_PACK_URLS)));
         } else {
             widgets.add(cycleBuilder(COLORED_BOOL_TO_TEXT, List.of(Boolean.TRUE, Boolean.FALSE), settings.isIsolatePackCache())
                     .withTooltip(v -> Tooltip.create(Component.literal("Store packs per-account to prevent fingerprinting")))
-                    .create(0, 0, 210, 20, Component.translatable("opsec.option.isolatePackCache"),
+                    .create(0, 0, 230, 20, OpsecLang.component(OpsecStrings.OPTION_ISOLATE_PACK_CACHE),
                     (button, value) -> { settings.setIsolatePackCache(value); config.save(); }));
 
             widgets.add(cycleBuilder(COLORED_BOOL_TO_TEXT, List.of(Boolean.TRUE, Boolean.FALSE), settings.isBlockLocalPackUrls())
                 .withTooltip(v -> Tooltip.create(Component.literal("Block local URL resource pack requests")))
-                    .create(0, 0, 210, 20, Component.translatable("opsec.option.blockLocalPackUrls"),
+                    .create(0, 0, 230, 20, OpsecLang.component(OpsecStrings.OPTION_BLOCK_LOCAL_PACK_URLS),
                     (button, value) -> { settings.setBlockLocalPackUrls(value); config.save(); }));
+
+            // Bypass Server Pack Requirement (tri-state: MANUAL / ASK / ALWAYS_ON)
+            widgets.add(cycleBuilder(
+                    (SpoofSettings.StripMode m) -> switch (m) {
+                        case MANUAL    -> OpsecLang.component(OpsecStrings.PACKSTRIP_MODE_MANUAL);
+                        case ASK       -> OpsecLang.component(OpsecStrings.PACKSTRIP_MODE_ASK);
+                        case ALWAYS_ON -> OpsecLang.component(OpsecStrings.PACKSTRIP_MODE_ALWAYS_ON);
+                    },
+                    List.of(SpoofSettings.StripMode.values()),
+                    settings.getPackStripMode())
+                .withTooltip(v -> Tooltip.create(OpsecLang.component(switch (v) {
+                    case MANUAL    -> OpsecStrings.PACKSTRIP_MODE_MANUAL_TOOLTIP;
+                    case ASK       -> OpsecStrings.PACKSTRIP_MODE_ASK_TOOLTIP;
+                    case ALWAYS_ON -> OpsecStrings.PACKSTRIP_MODE_ALWAYS_ON_TOOLTIP;
+                })))
+                .create(0, 0, 230, 20, OpsecLang.component(OpsecStrings.OPTION_PACK_STRIP_MODE),
+                    (button, value) -> {
+                        settings.setPackStripMode(value);
+                        config.save();
+                    }));
         }
 
-        widgets.add(Button.builder(Component.translatable("opsec.option.clearCache"), button -> {
+        widgets.add(Button.builder(OpsecLang.component(OpsecStrings.OPTION_CLEAR_CACHE), button -> {
                 ResourcePackGuard.clearAllCaches();
-            }).size(210, 20)
+            }).size(230, 20)
           .tooltip(Tooltip.create(Component.literal("Deletes all cached server resource packs\nAlso resets download queue state")))
           .build());
 
@@ -268,11 +290,11 @@ public class OpsecConfigScreen extends Screen {
 
         if (OpsecConfig.EXPLOIT_PREVENTER_LOADED) {
             widgets.add(createSectionHeader("\u00A77Managed by Exploit Preventer"));
-            widgets.add(createEPManagedToggle(Component.translatable("opsec.option.keyResolutionSpoofing")));
+            widgets.add(createEPManagedToggle(OpsecLang.component(OpsecStrings.OPTION_KEY_RESOLUTION_SPOOFING)));
         } else {
             widgets.add(cycleBuilder(COLORED_BOOL_TO_TEXT, List.of(Boolean.TRUE, Boolean.FALSE), settings.isTranslationProtectionEnabled())
                 .withTooltip(v -> Tooltip.create(Component.literal("Mask translation key values to appear as default vanilla client")))
-                    .create(0, 0, 210, 20, Component.translatable("opsec.option.keyResolutionSpoofing"),
+                    .create(0, 0, 230, 20, OpsecLang.component(OpsecStrings.OPTION_KEY_RESOLUTION_SPOOFING),
                         (button, value) -> {
                             settings.setTranslationProtection(value);
                             config.save();
@@ -284,7 +306,7 @@ public class OpsecConfigScreen extends Screen {
                 widgets.add(cycleBuilder(COLORED_BOOL_TO_TEXT, List.of(Boolean.TRUE, Boolean.FALSE), settings.isFakeDefaultKeybinds())
                     .withTooltip(v -> Tooltip.create(Component.literal(
                         "Spoof vanilla keybinds to default values when enabled")))
-                        .create(0, 0, 210, 20, Component.translatable("opsec.option.fakeDefaultKeybinds"),
+                        .create(0, 0, 230, 20, OpsecLang.component(OpsecStrings.OPTION_FAKE_DEFAULT_KEYBINDS),
                             (button, value) -> {
                                 settings.setFakeDefaultKeybinds(value);
                                 config.save();
@@ -293,7 +315,7 @@ public class OpsecConfigScreen extends Screen {
                 widgets.add(cycleBuilder(COLORED_BOOL_TO_TEXT, List.of(Boolean.TRUE, Boolean.FALSE), settings.isMeteorFix())
                     .withTooltip(v -> Tooltip.create(Component.literal(
                         "Blacklist a Meteor Client mixin to allow OpSec's proper protection handling")))
-                        .create(0, 0, 210, 20, Component.translatable("opsec.option.meteorFix"),
+                        .create(0, 0, 230, 20, OpsecLang.component(OpsecStrings.OPTION_METEOR_FIX),
                             (button, value) -> {
                                 settings.setMeteorFix(value);
                                 config.save();
@@ -312,15 +334,15 @@ public class OpsecConfigScreen extends Screen {
         
         widgets.add(cycleBuilder(SigningModeDisplay::getDisplayName, List.of(SpoofSettings.SigningMode.values()), settings.getSigningMode())
                 .withTooltip(v -> Tooltip.create(SigningModeDisplay.getTooltip(v)))
-                .create(0, 0, 210, 20, Component.translatable("opsec.option.chatSigning"),
+                .create(0, 0, 230, 20, OpsecLang.component(OpsecStrings.OPTION_CHAT_SIGNING),
                 (button, value) -> { settings.setSigningMode(value); config.save(); }));
         
         widgets.add(cycleBuilder(COLORED_BOOL_TO_TEXT, List.of(Boolean.TRUE, Boolean.FALSE), settings.isDisableTelemetry())
                 .withTooltip(v -> Tooltip.create(Component.literal("Block telemetry data sent to Mojang")))
-                .create(0, 0, 210, 20, Component.translatable("opsec.option.disableTelemetry"),
+                .create(0, 0, 230, 20, OpsecLang.component(OpsecStrings.OPTION_DISABLE_TELEMETRY),
                 (button, value) -> { settings.setDisableTelemetry(value); config.save(); }));
         
-        return new WidgetTab(Component.translatable("opsec.tab.protection"), widgets);
+        return new WidgetTab(OpsecLang.component(OpsecStrings.TAB_PROTECTION), widgets);
     }
     
     private Tab createMiscTab(SpoofSettings settings) {
@@ -331,25 +353,25 @@ public class OpsecConfigScreen extends Screen {
         
         widgets.add(cycleBuilder(COLORED_BOOL_TO_TEXT, List.of(Boolean.TRUE, Boolean.FALSE), settings.isShowAlerts())
                 .withTooltip(v -> Tooltip.create(Component.literal("Show chat messages when tracking detected")))
-                .create(0, 0, 210, 20, Component.translatable("opsec.option.showAlerts"),
+                .create(0, 0, 230, 20, OpsecLang.component(OpsecStrings.OPTION_SHOW_ALERTS),
                 (button, value) -> { settings.setShowAlerts(value); config.save(); }));
         
         widgets.add(cycleBuilder(COLORED_BOOL_TO_TEXT, List.of(Boolean.TRUE, Boolean.FALSE), settings.isShowToasts())
                 .withTooltip(v -> Tooltip.create(Component.literal("Show popup notifications")))
-                .create(0, 0, 210, 20, Component.translatable("opsec.option.showToasts"),
+                .create(0, 0, 230, 20, OpsecLang.component(OpsecStrings.OPTION_SHOW_TOASTS),
                 (button, value) -> { settings.setShowToasts(value); config.save(); }));
         
         widgets.add(cycleBuilder(COLORED_BOOL_TO_TEXT, List.of(Boolean.TRUE, Boolean.FALSE), settings.isLogDetections())
                 .withTooltip(v -> Tooltip.create(Component.literal("Log detection events to game log")))
-                .create(0, 0, 210, 20, Component.translatable("opsec.option.logDetections"),
+                .create(0, 0, 230, 20, OpsecLang.component(OpsecStrings.OPTION_LOG_DETECTIONS),
                 (button, value) -> { settings.setLogDetections(value); config.save(); }));
 
         widgets.add(cycleBuilder(COLORED_BOOL_TO_TEXT, List.of(Boolean.TRUE, Boolean.FALSE), settings.isDebugAlerts())
                 .withTooltip(v -> Tooltip.create(Component.literal("Show alerts for all probed keys, even unchanged ones")))
-                .create(0, 0, 210, 20, Component.translatable("opsec.option.debugAlerts"),
+                .create(0, 0, 230, 20, OpsecLang.component(OpsecStrings.OPTION_DEBUG_ALERTS),
                 (button, value) -> { settings.setDebugAlerts(value); config.save(); }));
 
-        return new WidgetTab(Component.translatable("opsec.tab.misc"), widgets);
+        return new WidgetTab(OpsecLang.component(OpsecStrings.TAB_MISC), widgets);
     }
     
     private Tab createAccountsTab() {
@@ -494,7 +516,7 @@ public class OpsecConfigScreen extends Screen {
                 accountManager.refreshAllAccounts((valid, invalid) -> {
                     refreshScreen();
                 });
-            }).size(210, 20)              .tooltip(Tooltip.create(Component.literal("Revalidate all accounts\nInvalid tokens will be marked red")))
+            }).size(230, 20)              .tooltip(Tooltip.create(Component.literal("Revalidate all accounts\nInvalid tokens will be marked red")))
 
               .build();
             
@@ -510,16 +532,16 @@ public class OpsecConfigScreen extends Screen {
         widgets.add(createSectionHeader("\u00A7f\u00A7lAdd Account"));
         
         // Add button to open add account dialog
-        widgets.add(Button.builder(Component.translatable("opsec.account.addSession"), button -> {
+        widgets.add(Button.builder(OpsecLang.component(OpsecStrings.ACCOUNT_ADD_SESSION), button -> {
             this.minecraft.setScreen(new AddAccountScreen(this));
-        }).size(210, 20)
-          .tooltip(Tooltip.create(Component.translatable("opsec.account.addSession.tooltip")))
+        }).size(230, 20)
+          .tooltip(Tooltip.create(OpsecLang.component(OpsecStrings.ACCOUNT_ADD_SESSION_TOOLTIP)))
           .build());
 
-        widgets.add(Button.builder(Component.translatable("opsec.account.addOffline"), button -> {
+        widgets.add(Button.builder(OpsecLang.component(OpsecStrings.ACCOUNT_ADD_OFFLINE), button -> {
             this.minecraft.setScreen(new AddCrackedAccountScreen(this));
-        }).size(210, 20)
-          .tooltip(Tooltip.create(Component.translatable("opsec.account.addOffline.tooltip")))
+        }).size(230, 20)
+          .tooltip(Tooltip.create(OpsecLang.component(OpsecStrings.ACCOUNT_ADD_OFFLINE_TOOLTIP)))
           .build());
         
         // Import/Export buttons
@@ -534,7 +556,7 @@ public class OpsecConfigScreen extends Screen {
                 }
         ));
         
-        return new WidgetTab(Component.translatable("opsec.tab.accounts"), widgets);
+        return new WidgetTab(OpsecLang.component(OpsecStrings.TAB_ACCOUNTS), widgets);
     }
     
     private void openImportDialog() {
@@ -614,7 +636,7 @@ public class OpsecConfigScreen extends Screen {
         //?}
         
         public AccountRowWidget(String accountName, String tooltip, boolean isActive, Runnable onAccountClick, Runnable onRemoveClick) {
-            super(0, 0, 210, 20, Component.empty());
+            super(0, 0, 230, 20, Component.empty());
             this.onAccountClick = onAccountClick;
             this.onRemoveClick = onRemoveClick;
             
@@ -736,7 +758,7 @@ public class OpsecConfigScreen extends Screen {
         //?}
         
         public ImportExportRowWidget(Runnable onImport, Runnable onExport) {
-            super(0, 0, 210, 20, Component.empty());
+            super(0, 0, 230, 20, Component.empty());
             this.onImportAction = onImport;
             this.onExportAction = onExport;
             
@@ -855,7 +877,7 @@ public class OpsecConfigScreen extends Screen {
         //?}
 
         public ToggleAllRowWidget(Runnable onEnableAll, Runnable onDisableAll) {
-            super(0, 0, 210, 20, Component.empty());
+            super(0, 0, 230, 20, Component.empty());
             this.onEnableAll = onEnableAll;
             this.onDisableAll = onDisableAll;
 
@@ -981,14 +1003,14 @@ public class OpsecConfigScreen extends Screen {
             widgets.add(createSectionHeader("\u00A77Managed by Exploit Preventer"));
             CycleButton<SpoofSettings.WhitelistMode> modeButton = cycleBuilder(WhitelistModeDisplay::getDisplayName, List.of(SpoofSettings.WhitelistMode.values()), SpoofSettings.WhitelistMode.OFF)
                     .withTooltip(v -> Tooltip.create(Component.literal("Managed by Exploit Preventer")))
-                    .create(0, 0, 210, 20, Component.translatable("opsec.option.whitelistMode"), (b, v) -> {});
+                    .create(0, 0, 230, 20, OpsecLang.component(OpsecStrings.OPTION_WHITELIST_MODE), (b, v) -> {});
             modeButton.active = false;
             widgets.add(modeButton);
         } else {
             // Tri-state mode selector: OFF → AUTO → ON
             widgets.add(cycleBuilder(WhitelistModeDisplay::getDisplayName, List.of(SpoofSettings.WhitelistMode.values()), settings.getWhitelistMode())
                     .withTooltip(v -> Tooltip.create(WhitelistModeDisplay.getTooltip(v)))
-                    .create(0, 0, 210, 20, Component.translatable("opsec.option.whitelistMode"),
+                    .create(0, 0, 230, 20, OpsecLang.component(OpsecStrings.OPTION_WHITELIST_MODE),
                         (button, value) -> {
                             settings.setWhitelistMode(value);
                             config.save();
@@ -1034,7 +1056,7 @@ public class OpsecConfigScreen extends Screen {
                     final String finalModId = modId;
                     CycleButton<Boolean> modButton = cycleBuilder(COLORED_BOOL_TO_TEXT, List.of(Boolean.TRUE, Boolean.FALSE), isWhitelisted)
                         .withTooltip(v -> Tooltip.create(Component.literal(finalModId)))
-                        .create(0, 0, 210, 20, Component.literal(modName),
+                        .create(0, 0, 230, 20, Component.literal(modName),
                             (button, value) -> {
                                 if (value) {
                                     settings.getWhitelistedMods().add(finalModId);
@@ -1142,7 +1164,7 @@ public class OpsecConfigScreen extends Screen {
     private CycleButton<Boolean> createEPManagedToggle(Component label) {
         CycleButton<Boolean> button = cycleBuilder(COLORED_BOOL_TO_TEXT, List.of(Boolean.TRUE, Boolean.FALSE), false)
                 .withTooltip(v -> Tooltip.create(Component.literal("Managed by Exploit Preventer")))
-                .create(0, 0, 210, 20, label, (b, v) -> {});
+                .create(0, 0, 230, 20, label, (b, v) -> {});
         button.active = false;
         return button;
     }
@@ -1154,7 +1176,7 @@ public class OpsecConfigScreen extends Screen {
         int textWidth = Minecraft.getInstance().font.width(component);
         return new StringWidget(textWidth, 20, component, Minecraft.getInstance().font);
         //?} else
-        /*return new StringWidget(210, 20, Component.literal(text), Minecraft.getInstance().font);*/
+        /*return new StringWidget(230, 20, Component.literal(text), Minecraft.getInstance().font);*/
     }
     
     private int getCurrentTabIndex() {
@@ -1479,8 +1501,7 @@ public class OpsecConfigScreen extends Screen {
     
     public enum BrandType {
         VANILLA("vanilla", "Vanilla"),
-        FABRIC("fabric", "Fabric"),
-        FORGE("forge", "Forge");
+        FABRIC("fabric", "Fabric");
         
         private final String value;
         private final String displayName;

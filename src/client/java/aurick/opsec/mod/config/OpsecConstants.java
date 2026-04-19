@@ -7,7 +7,6 @@ public final class OpsecConstants {
     public static final class Brands {
         public static final String VANILLA = "vanilla";
         public static final String FABRIC = "fabric";
-        public static final String FORGE = "forge";
 
         private Brands() {}
     }
@@ -48,17 +47,12 @@ public final class OpsecConstants {
     /** Channel namespaces for filtering */
     public static final class Channels {
         public static final String MINECRAFT = "minecraft";
-        public static final String FORGE_NAMESPACE = "forge";
-        
+
         // Minecraft channel paths
         public static final String REGISTER = "register";
         public static final String UNREGISTER = "unregister";
         public static final String MCO = "mco";
-        
-        // Forge channel paths
-        public static final String LOGIN = "login";
-        public static final String HANDSHAKE = "handshake";
-        
+
         private Channels() {}
     }
     

@@ -38,6 +38,24 @@ public class SpoofSettings {
         /** Manual whitelist - only explicitly selected mods allowed */
         CUSTOM
     }
+
+    /**
+     * Bypass Server Pack Requirement modes.
+     * Controls whether server-pushed resource packs have their visual/audio content
+     * stripped (textures/sounds/models/fonts removed; lang data still applied so
+     * translation-key probes resolve vanilla-identically).
+     * In all modes the user can toggle any server pack in the resource pack menu;
+     * the mode only decides the initial state and whether a consent overlay appears.
+     */
+    public enum StripMode {
+        /** Default vanilla behavior on push. User may still toggle the pack off via the
+         *  resource pack menu to strip it while keeping lang loaded. */
+        MANUAL,
+        /** Consent screen asks on push. Pack is stripped until the user opts in. */
+        ASK,
+        /** No consent screen. Pack is always stripped; user may still toggle it on. */
+        ALWAYS_ON
+    }
     
     // Brand spoofing
     private boolean spoofBrand = true;
@@ -52,6 +70,12 @@ public class SpoofSettings {
     private boolean translationProtection = true;
     private boolean fakeDefaultKeybinds = true;  // Spoof vanilla keybinds to default values
     private boolean meteorFix = true;  // Block Meteor's broken key resolution protection
+
+    // Strip Server Pack
+    // Pack is still downloaded + cached by vanilla (fingerprint-normal), lang is loaded
+    // into ClientLanguage as a vanilla client would; only textures/sounds/models/fonts
+    // are filtered out via LangOnlyPackResources.
+    private StripMode packStripMode = StripMode.MANUAL;
     
     // Alerts
     private boolean showAlerts = true;
@@ -91,8 +115,6 @@ public class SpoofSettings {
     public void setCustomBrand(String customBrand) {
         if (VANILLA.equalsIgnoreCase(customBrand)) {
             this.customBrand = VANILLA;
-        } else if (FORGE.equalsIgnoreCase(customBrand)) {
-            this.customBrand = FORGE;
         } else {
             this.customBrand = FABRIC;
         }
@@ -115,6 +137,9 @@ public class SpoofSettings {
     
     public boolean isMeteorFix() { return meteorFix; }
     public void setMeteorFix(boolean enabled) { this.meteorFix = enabled; }
+
+    public StripMode getPackStripMode() { return packStripMode; }
+    public void setPackStripMode(StripMode mode) { this.packStripMode = mode != null ? mode : StripMode.MANUAL; }
     
     public boolean isShowAlerts() { return showAlerts; }
     public void setShowAlerts(boolean showAlerts) { this.showAlerts = showAlerts; }
@@ -196,20 +221,15 @@ public class SpoofSettings {
         // When whitelist is enabled (AUTO or ON), force Fabric brand
         if (isWhitelistEnabled()) return FABRIC;
         if (VANILLA.equalsIgnoreCase(customBrand)) return VANILLA;
-        if (FORGE.equalsIgnoreCase(customBrand)) return FORGE;
         return FABRIC;
     }
-    
+
     public boolean isVanillaMode() {
         return VANILLA.equals(getEffectiveBrand());
     }
 
     public boolean isFabricMode() {
         return FABRIC.equals(getEffectiveBrand());
-    }
-
-    public boolean isForgeMode() {
-        return FORGE.equals(getEffectiveBrand());
     }
     
     public JsonObject toJson() {
@@ -222,6 +242,7 @@ public class SpoofSettings {
         json.addProperty("translationProtection", translationProtection);
         json.addProperty("fakeDefaultKeybinds", fakeDefaultKeybinds);
         json.addProperty("meteorFix", meteorFix);
+        json.addProperty("packStripMode", packStripMode.name());
         json.addProperty("showAlerts", showAlerts);
         json.addProperty("showToasts", showToasts);
         json.addProperty("logDetections", logDetections);
@@ -259,6 +280,28 @@ public class SpoofSettings {
         if (json.has("blockTranslationExploit")) s.translationProtection = json.get("blockTranslationExploit").getAsBoolean();
         if (json.has("fakeDefaultKeybinds")) s.fakeDefaultKeybinds = json.get("fakeDefaultKeybinds").getAsBoolean();
         if (json.has("meteorFix")) s.meteorFix = json.get("meteorFix").getAsBoolean();
+        // Bypass Server Pack Requirement (tri-state, with backward-compat migrations)
+        if (json.has("packStripMode")) {
+            String raw = json.get("packStripMode").getAsString();
+            // Legacy OFF/ON enum values from the unreleased staged version.
+            s.packStripMode = switch (raw) {
+                case "OFF" -> StripMode.MANUAL;
+                case "ON"  -> StripMode.ALWAYS_ON;
+                default    -> {
+                    try {
+                        yield StripMode.valueOf(raw);
+                    } catch (IllegalArgumentException e) {
+                        yield StripMode.MANUAL;
+                    }
+                }
+            };
+        } else if (json.has("fakeAcceptResourcePack")) {
+            boolean legacyEnabled = json.get("fakeAcceptResourcePack").getAsBoolean();
+            boolean legacyOverlay = !json.has("showPackAcceptOverlay")
+                    || json.get("showPackAcceptOverlay").getAsBoolean();
+            s.packStripMode = !legacyEnabled ? StripMode.MANUAL
+                    : (legacyOverlay ? StripMode.ASK : StripMode.ALWAYS_ON);
+        }
         if (json.has("showAlerts")) s.showAlerts = json.get("showAlerts").getAsBoolean();
         if (json.has("showToasts")) s.showToasts = json.get("showToasts").getAsBoolean();
         if (json.has("logDetections")) s.logDetections = json.get("logDetections").getAsBoolean();
@@ -316,6 +359,7 @@ public class SpoofSettings {
         this.translationProtection = other.translationProtection;
         this.fakeDefaultKeybinds = other.fakeDefaultKeybinds;
         this.meteorFix = other.meteorFix;
+        this.packStripMode = other.packStripMode;
         this.showAlerts = other.showAlerts;
         this.showToasts = other.showToasts;
         this.logDetections = other.logDetections;

@@ -26,8 +26,8 @@
 
 ## Requirements
 
-- **Minecraft** 1.21.1 – 26.1
-- **Fabric Loader** 0.16.0+ (0.18.4+ for MC 26.1)
+- **Minecraft** 1.21.1 – 26.1.2
+- **Fabric Loader** 0.16.0+ (0.18.5+ for MC 26.1.x)
 - **Fabric API** (matching your Minecraft version)
 
 ### Installation
@@ -375,7 +375,7 @@ Output JARs are located in `versions/<minecraft_version>/build/libs/`:
 | 1.21.6 | 1.21.6 – 1.21.8 |
 | 1.21.9 | 1.21.9 – 1.21.10 |
 | 1.21.11 | 1.21.11 |
-| 26.1 | 26.1 |
+| 26.1 | 26.1 – 26.1.2 |
 
 
 ## References

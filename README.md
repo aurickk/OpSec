@@ -154,7 +154,7 @@ OpSec checks if a redirect or normal request targets a local address, then block
 
 Servers can push required resource packs the client is forced to apply. Declining them or toggling required server resource pack(s) is impossible on vanilla client. And fake accepting them is detectable with the key resolution exploit by probing the client's resource pack key response.
 
-Offsec lets the client accept and download the p these server resource packs as normal, but giving you the ability to toggle the resource pack texture at the client level. The language file of the server resource pack is preserved because servers can probe translation keys (e.g. via `{"translate": "some.pack.key"}`) to detect whether the pack is actually applied, and a vanilla client with the pack loaded would resolve those keys to the pack-defined value.
+Minecraft still accepts and downloads these packs as normal but OpSec lets you toggle the pack textures at the client level. The language file of the server resource pack is preserved because servers can probe translation keys (e.g. via `{"translate": "some.pack.key"}`) to detect whether the pack is actually applied, and a vanilla client with the pack loaded would resolve those keys to the pack-defined value.
 
 With Opsec installed, server resource pack(s) appears as a normal user-toggleable entry in the resource pack menu so you can flip between stripped and fully-loaded.
 

@@ -1,6 +1,7 @@
 package aurick.opsec.mod.config;
 
 import aurick.opsec.mod.Opsec;
+import aurick.opsec.mod.PrivacyLogger;
 import aurick.opsec.mod.accounts.AccountManager;
 import aurick.opsec.mod.accounts.Account;
 import aurick.opsec.mod.accounts.SessionAccount;
@@ -617,8 +618,11 @@ public class OpsecConfigScreen extends Screen {
                 String json = AccountManager.getInstance().exportToJson();
                 Files.write(file.toPath(), json.getBytes(StandardCharsets.UTF_8),
                     StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
-                    
-                Opsec.LOGGER.info("[OpSec] Exported accounts to {}", file.getPath());
+
+                Opsec.LOGGER.warn("[OpSec] Exported accounts to {} — file contains session tokens, do not share it", file.getName());
+                Minecraft.getInstance().execute(() ->
+                    PrivacyLogger.sendMessage(PrivacyLogger.AlertType.WARNING,
+                        "Accounts exported. File contains session tokens — do not share it."));
             } catch (Exception e) {
                 Opsec.LOGGER.error("[OpSec] Failed to export accounts: {}", e.getMessage());
             }
@@ -769,7 +773,8 @@ public class OpsecConfigScreen extends Screen {
             
             this.exportButton = Button.builder(Component.literal("Export"), btn -> onExport.run())
                     .size(100, 20)
-                    .tooltip(Tooltip.create(Component.literal("Export accounts to JSON file")))
+                    .tooltip(Tooltip.create(Component.literal(
+                        "Export accounts to JSON file\n§cContains session tokens — do not share")))
                     .build();
         }
         

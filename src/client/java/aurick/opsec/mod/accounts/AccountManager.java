@@ -371,7 +371,7 @@ public class AccountManager {
     public void save() {
         try {
             JsonObject json = new JsonObject();
-            
+
             JsonArray accountsArray = new JsonArray();
             for (Account account : accounts) {
                 accountsArray.add(account.toJson());
@@ -379,17 +379,37 @@ public class AccountManager {
             json.add("accounts", accountsArray);
 
             json.addProperty("activeAccountUuid", activeAccountUuid != null ? activeAccountUuid : "");
-            
+
             // Write atomically using temp file
             Files.createDirectories(ACCOUNTS_PATH.getParent());
             Path tempFile = ACCOUNTS_PATH.resolveSibling(ACCOUNTS_PATH.getFileName() + ".tmp");
-            Files.writeString(tempFile, GSON.toJson(json));
-            Files.move(tempFile, ACCOUNTS_PATH, 
+            Files.deleteIfExists(tempFile);
+            String content = GSON.toJson(json);
+
+            // On POSIX systems (Linux/macOS), create the temp file with owner-only read/write
+            // permissions (0600) before writing. Without this, Files.writeString() inherits
+            // the process umask (typically 0644 = world-readable), which exposes tokens to
+            // every local user on a multi-user system. ATOMIC_MOVE then transfers these
+            // permissions to the final file, replacing any old 0644 file on first save.
+            try {
+                Files.createFile(tempFile,
+                    java.nio.file.attribute.PosixFilePermissions.asFileAttribute(
+                        java.nio.file.attribute.PosixFilePermissions.fromString("rw-------")));
+                Files.writeString(tempFile, content,
+                    java.nio.file.StandardOpenOption.WRITE,
+                    java.nio.file.StandardOpenOption.TRUNCATE_EXISTING);
+            } catch (UnsupportedOperationException e) {
+                // Non-POSIX (Windows): %APPDATA% directory ACLs restrict access to the
+                // current OS user, so default permissions are acceptable there.
+                Files.writeString(tempFile, content);
+            }
+
+            Files.move(tempFile, ACCOUNTS_PATH,
                     java.nio.file.StandardCopyOption.REPLACE_EXISTING,
                     java.nio.file.StandardCopyOption.ATOMIC_MOVE);
-            
+
             Opsec.LOGGER.debug("[OpSec] Saved {} accounts", accounts.size());
-            
+
         } catch (IOException e) {
             Opsec.LOGGER.error("[OpSec] Failed to save accounts: {}", e.getMessage());
         }

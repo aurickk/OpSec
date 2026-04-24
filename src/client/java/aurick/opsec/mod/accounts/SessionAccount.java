@@ -821,9 +821,11 @@ public class SessionAccount implements Account {
         JsonObject json = new JsonObject();
         json.addProperty("type", "session");
         json.addProperty("accessToken", accessToken);
-        if (refreshToken != null && !refreshToken.isBlank()) {
-            json.addProperty("refreshToken", refreshToken);
-        }
+        // refreshToken is intentionally NOT written to disk.
+        // It is a long-lived Microsoft OAuth credential (valid up to 90 days) that can
+        // be used to re-derive Minecraft access tokens indefinitely. Persisting it means
+        // a single file read gives an attacker permanent account access. The token is
+        // kept in memory for the current session only and discarded on exit.
         json.addProperty("username", username);
         json.addProperty("uuid", uuid);
         json.addProperty("lastValidated", lastValidated);

@@ -3,6 +3,7 @@ package aurick.opsec.mod.tracking;
 import aurick.opsec.mod.Opsec;
 import aurick.opsec.mod.config.OpsecConfig;
 import aurick.opsec.mod.config.SpoofSettings;
+import aurick.opsec.mod.util.KeybindDefaults;
 import net.fabricmc.loader.api.FabricLoader;
 import net.fabricmc.loader.api.ModContainer;
 //? if >=1.21.11 {
@@ -32,10 +33,6 @@ public class ModRegistry {
 
     /** Vanilla translation keys (always whitelisted) */
     private static final Set<String> vanillaTranslationKeys =
-        ConcurrentHashMap.newKeySet();
-
-    /** Vanilla keybinds (always whitelisted) */
-    private static final Set<String> vanillaKeybinds =
         ConcurrentHashMap.newKeySet();
 
     /** Server resource pack translation keys (whitelisted for vanilla resolution) */
@@ -396,22 +393,6 @@ public class ModRegistry {
     }
 
     /**
-     * Record a vanilla keybind.
-     */
-    public static void recordVanillaKeybind(String keybindName) {
-        if (keybindName == null) return;
-
-        vanillaKeybinds.add(keybindName);
-    }
-
-    /**
-     * Check if a keybind is from vanilla.
-     */
-    public static boolean isVanillaKeybind(String keybindName) {
-        return keybindName != null && vanillaKeybinds.contains(keybindName);
-    }
-
-    /**
      * Get the mod ID that owns a keybind.
      */
     public static String getModForKeybind(String keybindName) {
@@ -590,12 +571,8 @@ public class ModRegistry {
     }
 
     public static int getKeybindCount() {
-        java.util.HashSet<String> all = new java.util.HashSet<>(
-            vanillaKeybinds
-        );
-        for (ModInfo info : registry.values()) {
-            all.addAll(info.keybinds);
-        }
-        return all.size();
+        int count = KeybindDefaults.size();
+        for (ModInfo info : registry.values()) count += info.keybinds.size();
+        return count;
     }
 }

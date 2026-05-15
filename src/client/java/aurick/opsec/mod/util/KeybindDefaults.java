@@ -97,6 +97,11 @@ public final class KeybindDefaults {
         return hasDefault(keyName);
     }
 
+    public static int size() {
+        if (!initialized) initialize();
+        return defaultKeys.size();
+    }
+
     /**
      * Clear the cache so the next {@link #getDefault(String)} / {@link #hasDefault(String)}
      * call re-populates from the current {@code KeyMapping[]} and current

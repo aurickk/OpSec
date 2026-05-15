@@ -27,7 +27,6 @@
 		"ClientLanguageMixin",
 		"DeprecatedTranslationsInfoMixin",
 		"KeyBindingRegistryImplMixin",
-		"OptionsMixin",
 		"KeybindContentsMixin",
 		"TranslatableContentsMixin",
 		"ComponentSerializationMixin",

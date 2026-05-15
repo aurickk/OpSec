@@ -3,6 +3,8 @@ package aurick.opsec.mod.mixin.client;
 import aurick.opsec.mod.config.OpsecConfigScreen;
 import aurick.opsec.mod.config.UpdateChecker;
 import aurick.opsec.mod.config.UpdateScreen;
+import aurick.opsec.mod.lang.OpsecLang;
+import aurick.opsec.mod.lang.OpsecStrings;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.screens.Screen;
@@ -42,7 +44,7 @@ public abstract class JoinMultiplayerScreenMixin extends Screen {
                 }
             }
         )
-        .tooltip(Tooltip.create(Component.literal("Open OpSec settings")))
+        .tooltip(Tooltip.create(OpsecLang.component(OpsecStrings.BUTTON_SETTINGS_TOOLTIP)))
         .build();
         
         opsec$updateButtonPosition();

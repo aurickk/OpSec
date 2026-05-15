@@ -2,6 +2,8 @@ package aurick.opsec.mod.config;
 
 import aurick.opsec.mod.accounts.AccountManager;
 import aurick.opsec.mod.accounts.CrackedAccount;
+import aurick.opsec.mod.lang.OpsecLang;
+import aurick.opsec.mod.lang.OpsecStrings;
 import net.minecraft.client.Minecraft;
 //? if >=26.1 {
 /*import net.minecraft.client.gui.GuiGraphicsExtractor;*/
@@ -31,7 +33,7 @@ public class AddCrackedAccountScreen extends Screen {
     private StringWidget statusLabel;
 
     public AddCrackedAccountScreen(Screen parent) {
-        super(Component.literal("Add Offline Account"));
+        super(OpsecLang.component(OpsecStrings.ACCOUNT_SCREEN_OFFLINE_TITLE));
         this.parent = parent;
         this.statusMessage = Component.literal("");
     }
@@ -53,10 +55,10 @@ public class AddCrackedAccountScreen extends Screen {
                 centerY - 30,
                 300,
                 20,
-                Component.literal("Username")
+                OpsecLang.component(OpsecStrings.ACCOUNT_SCREEN_USERNAME_LABEL)
         );
         this.usernameInput.setMaxLength(16);
-        this.usernameInput.setHint(Component.literal("Username (required)"));
+        this.usernameInput.setHint(OpsecLang.component(OpsecStrings.ACCOUNT_SCREEN_USERNAME_HINT));
         this.addRenderableWidget(this.usernameInput);
 
         // Status label
@@ -64,13 +66,13 @@ public class AddCrackedAccountScreen extends Screen {
         this.addRenderableWidget(this.statusLabel);
 
         // Add button
-        this.addButton = Button.builder(Component.literal("Add Account"), button -> {
+        this.addButton = Button.builder(OpsecLang.component(OpsecStrings.ACCOUNT_SCREEN_ADD_BUTTON), button -> {
             addAccount();
         }).bounds(centerX - 105, centerY + 5, 100, 20).build();
         this.addRenderableWidget(this.addButton);
 
         // Cancel button
-        this.cancelButton = Button.builder(Component.literal("Cancel"), button -> {
+        this.cancelButton = Button.builder(OpsecLang.component(OpsecStrings.ACCOUNT_SCREEN_CANCEL_BUTTON), button -> {
             this.onClose();
         }).bounds(centerX + 5, centerY + 5, 100, 20).build();
         this.addRenderableWidget(this.cancelButton);
@@ -83,7 +85,7 @@ public class AddCrackedAccountScreen extends Screen {
         String username = usernameInput.getValue().trim();
 
         if (username.isEmpty()) {
-            statusMessage = Component.literal("\u00A7cPlease enter a username");
+            statusMessage = OpsecLang.component(OpsecStrings.ACCOUNT_ERROR_EMPTY_USERNAME);
             if (statusLabel != null) {
                 statusLabel.setMessage(statusMessage);
             }
@@ -96,7 +98,7 @@ public class AddCrackedAccountScreen extends Screen {
 
         isAdding = true;
         addButton.active = false;
-        statusMessage = Component.literal("\u00A7eAdding account...");
+        statusMessage = OpsecLang.component(OpsecStrings.ACCOUNT_STATUS_ADDING);
         if (statusLabel != null) {
             statusLabel.setMessage(statusMessage);
         }
@@ -114,14 +116,14 @@ public class AddCrackedAccountScreen extends Screen {
                     AccountManager.getInstance().add(account);
                     AccountManager.getInstance().setActiveAccountUuid(account.getUuid());
 
-                    statusMessage = Component.literal("\u00A7aAdded: " + account.getUsername() + " \u00A77(offline)");
+                    statusMessage = Component.literal(OpsecLang.tr(OpsecStrings.ACCOUNT_SUCCESS_ADDED_OFFLINE, account.getUsername()));
                     if (statusLabel != null) {
                         statusLabel.setMessage(statusMessage);
                     }
 
                     Minecraft.getInstance().execute(this::onClose);
                 } else {
-                    statusMessage = Component.literal("\u00A7cFailed to add account");
+                    statusMessage = OpsecLang.component(OpsecStrings.ACCOUNT_ERROR_FAILED_ADD);
                     if (statusLabel != null) {
                         statusLabel.setMessage(statusMessage);
                     }

@@ -37,7 +37,7 @@ public class OpsecConfig {
         load();
         if (EXPLOIT_PREVENTER_LOADED) {
             Opsec.LOGGER.info(
-                "[OpSec] Exploit Preventer detected - compatibility mode active."
+                "[OpSec] ExploitPreventer detected - compatibility mode active."
             );
         }
     }

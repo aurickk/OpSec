@@ -2,6 +2,8 @@ package aurick.opsec.mod.config;
 
 import aurick.opsec.mod.accounts.AccountManager;
 import aurick.opsec.mod.accounts.SessionAccount;
+import aurick.opsec.mod.lang.OpsecLang;
+import aurick.opsec.mod.lang.OpsecStrings;
 import net.minecraft.client.Minecraft;
 //? if >=26.1 {
 /*import net.minecraft.client.gui.GuiGraphicsExtractor;*/
@@ -32,7 +34,7 @@ public class AddAccountScreen extends Screen {
     private StringWidget statusLabel;
     
     public AddAccountScreen(Screen parent) {
-        super(Component.literal("Add Account"));
+        super(OpsecLang.component(OpsecStrings.ACCOUNT_SCREEN_SESSION_TITLE));
         this.parent = parent;
         this.statusMessage = Component.literal("");
     }
@@ -54,12 +56,12 @@ public class AddAccountScreen extends Screen {
                 centerY - 50,
                 300,
                 20,
-                Component.literal("Session Token")
+                OpsecLang.component(OpsecStrings.ACCOUNT_SCREEN_SESSION_LABEL)
         );
         this.tokenInput.setMaxLength(2000);
-        this.tokenInput.setHint(Component.literal("Session/Access token (required)"));
+        this.tokenInput.setHint(OpsecLang.component(OpsecStrings.ACCOUNT_SCREEN_SESSION_HINT));
         this.addRenderableWidget(this.tokenInput);
-        
+
         // Refresh token input field (optional)
         this.refreshTokenInput = new EditBox(
                 this.font,
@@ -67,10 +69,10 @@ public class AddAccountScreen extends Screen {
                 centerY - 20,
                 300,
                 20,
-                Component.literal("Refresh Token")
+                OpsecLang.component(OpsecStrings.ACCOUNT_SCREEN_REFRESH_LABEL)
         );
         this.refreshTokenInput.setMaxLength(2000);
-        this.refreshTokenInput.setHint(Component.literal("Refresh token (optional, for auto-renewal)"));
+        this.refreshTokenInput.setHint(OpsecLang.component(OpsecStrings.ACCOUNT_SCREEN_REFRESH_HINT));
         this.addRenderableWidget(this.refreshTokenInput);
         
         // Status label - updated dynamically (centered manually, width updated in render)
@@ -78,13 +80,13 @@ public class AddAccountScreen extends Screen {
         this.addRenderableWidget(this.statusLabel);
         
         // Add button
-        this.addButton = Button.builder(Component.literal("Add Account"), button -> {
+        this.addButton = Button.builder(OpsecLang.component(OpsecStrings.ACCOUNT_SCREEN_ADD_BUTTON), button -> {
             addAccount();
         }).bounds(centerX - 105, centerY + 15, 100, 20).build();
         this.addRenderableWidget(this.addButton);
-        
+
         // Cancel button
-        this.cancelButton = Button.builder(Component.literal("Cancel"), button -> {
+        this.cancelButton = Button.builder(OpsecLang.component(OpsecStrings.ACCOUNT_SCREEN_CANCEL_BUTTON), button -> {
             this.onClose();
         }).bounds(centerX + 5, centerY + 15, 100, 20).build();
         this.addRenderableWidget(this.cancelButton);
@@ -98,20 +100,20 @@ public class AddAccountScreen extends Screen {
         String refreshToken = refreshTokenInput.getValue().trim();
         
         if (token.isEmpty()) {
-            statusMessage = Component.literal("\u00A7cPlease enter a session token");
+            statusMessage = OpsecLang.component(OpsecStrings.ACCOUNT_ERROR_EMPTY_TOKEN);
             if (statusLabel != null) {
                 statusLabel.setMessage(statusMessage);
             }
             return;
         }
-        
+
         if (isValidating) {
             return;
         }
-        
+
         isValidating = true;
         addButton.active = false;
-        statusMessage = Component.literal("\u00A7eValidating token...");
+        statusMessage = OpsecLang.component(OpsecStrings.ACCOUNT_STATUS_VALIDATING);
         if (statusLabel != null) {
             statusLabel.setMessage(statusMessage);
         }
@@ -137,21 +139,21 @@ public class AddAccountScreen extends Screen {
                         AccountManager.getInstance().setActiveAccountUuid(account.getUuid());
                     }
                     
-                    String successMsg = "\u00A7aAdded: " + account.getUsername();
+                    String successMsg = OpsecLang.tr(OpsecStrings.ACCOUNT_SUCCESS_ADDED, account.getUsername());
                     if (account.hasRefreshToken()) {
-                        successMsg += " \u00A77(with refresh)";
+                        successMsg += OpsecLang.tr(OpsecStrings.ACCOUNT_SUCCESS_REFRESH_SUFFIX);
                     }
                     statusMessage = Component.literal(successMsg);
                     if (statusLabel != null) {
                         statusLabel.setMessage(statusMessage);
                     }
-                    
+
                     // Return to config screen after short delay
                     Minecraft.getInstance().execute(() -> {
                         this.onClose();
                     });
                 } else {
-                    statusMessage = Component.literal("\u00A7cInvalid or expired token");
+                    statusMessage = OpsecLang.component(OpsecStrings.ACCOUNT_ERROR_INVALID_TOKEN);
                     if (statusLabel != null) {
                         statusLabel.setMessage(statusMessage);
                     }

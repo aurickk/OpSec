@@ -5,6 +5,8 @@ import aurick.opsec.mod.PrivacyLogger;
 import aurick.opsec.mod.config.OpsecConfig;
 import aurick.opsec.mod.config.SpoofSettings;
 import aurick.opsec.mod.detection.PacketContext;
+import aurick.opsec.mod.lang.OpsecLang;
+import aurick.opsec.mod.lang.OpsecStrings;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
@@ -94,14 +96,15 @@ public class TranslationProtectionHandler {
             Minecraft mc = Minecraft.getInstance();
             Runnable sendAlert = () -> {
                 if (mc.player != null) {
+                    String alertText = OpsecLang.tr(OpsecStrings.ALERT_KEYRESOLUTION);
                     //? if >=26.1 {
                     /*mc.player.sendSystemMessage(
                         Component.literal("[OpSec] ").withStyle(ChatFormatting.DARK_PURPLE)
-                            .append(Component.literal("Key resolution probe detected").withStyle(ChatFormatting.RED)));*/
+                            .append(Component.literal(alertText).withStyle(ChatFormatting.RED)));*/
                     //?} else {
                     mc.player.displayClientMessage(
                         Component.literal("[OpSec] ").withStyle(ChatFormatting.DARK_PURPLE)
-                            .append(Component.literal("Key resolution probe detected").withStyle(ChatFormatting.RED)),
+                            .append(Component.literal(alertText).withStyle(ChatFormatting.RED)),
                         false);
                     //?}
                 }
@@ -116,7 +119,7 @@ public class TranslationProtectionHandler {
         // Toast notification: red, no emoji icon
         if (OpsecConfig.getInstance().shouldShowToasts()) {
             PrivacyLogger.showToastRaw(
-                Component.literal("Key Resolution Probe Detected").withStyle(ChatFormatting.RED),
+                Component.literal(OpsecLang.tr(OpsecStrings.TOAST_KEYRESOLUTION)).withStyle(ChatFormatting.RED),
                 null);
         }
 
@@ -134,14 +137,13 @@ public class TranslationProtectionHandler {
                 Minecraft mc = Minecraft.getInstance();
                 mc.execute(() -> {
                     if (mc.player != null) {
+                        String hintText = OpsecLang.tr(OpsecStrings.HINT_ALERTS_CAN_BE_DISABLED);
                         //? if >=26.1 {
                         /*mc.player.sendSystemMessage(
-                            Component.literal("Chat and toast alerts can be disabled in OpSec > Misc settings.")
-                                .withStyle(ChatFormatting.AQUA));*/
+                            Component.literal(hintText).withStyle(ChatFormatting.AQUA));*/
                         //?} else {
                         mc.player.displayClientMessage(
-                            Component.literal("Chat and toast alerts can be disabled in OpSec > Misc settings.")
-                                .withStyle(ChatFormatting.AQUA), false);
+                            Component.literal(hintText).withStyle(ChatFormatting.AQUA), false);
                         //?}
                     }
                 });

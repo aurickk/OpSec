@@ -142,9 +142,9 @@ public class OpsecConfigScreen extends Screen {
             JarIntegrityChecker.resetShown();
             refreshScreen();
         }).width(150)
-          .tooltip(Tooltip.create(Component.literal(isAccountsTab 
-                  ? "Reset is disabled on Accounts tab" 
-                  : "Reset all settings to defaults")))
+          .tooltip(Tooltip.create(OpsecLang.component(isAccountsTab
+                  ? OpsecStrings.BUTTON_RESET_DISABLED_TOOLTIP
+                  : OpsecStrings.BUTTON_RESET_TOOLTIP)))
           .build();
         
         // Disable reset button on Accounts tab
@@ -180,10 +180,10 @@ public class OpsecConfigScreen extends Screen {
         this.versionLabel.setX(6);
         this.versionLabel.setY(labelY + 2);
         if (versionOutdated) {
-            this.versionLabel.setTooltip(Tooltip.create(Component.literal(
-                    "Latest: " + UpdateChecker.getLatestVersion() + "\nClick to download")));
+            this.versionLabel.setTooltip(Tooltip.create(OpsecLang.component(
+                    OpsecStrings.VERSION_TOOLTIP_OUTDATED, UpdateChecker.getLatestVersion())));
         } else {
-            this.versionLabel.setTooltip(Tooltip.create(Component.literal("Up to date")));
+            this.versionLabel.setTooltip(Tooltip.create(OpsecLang.component(OpsecStrings.VERSION_TOOLTIP_UPTODATE)));
         }
         this.addRenderableWidget(this.versionLabel);
     }
@@ -223,12 +223,12 @@ public class OpsecConfigScreen extends Screen {
             widgets.add(createEPManagedToggle(OpsecLang.component(OpsecStrings.OPTION_BLOCK_LOCAL_PACK_URLS)));
         } else {
             widgets.add(cycleBuilder(COLORED_BOOL_TO_TEXT, List.of(Boolean.TRUE, Boolean.FALSE), settings.isIsolatePackCache())
-                    .withTooltip(v -> Tooltip.create(Component.literal("Store packs per-account to prevent fingerprinting")))
+                    .withTooltip(v -> Tooltip.create(OpsecLang.component(OpsecStrings.TOOLTIP_ISOLATE_PACK_CACHE)))
                     .create(0, 0, 230, 20, OpsecLang.component(OpsecStrings.OPTION_ISOLATE_PACK_CACHE),
                     (button, value) -> { settings.setIsolatePackCache(value); config.save(); }));
 
             widgets.add(cycleBuilder(COLORED_BOOL_TO_TEXT, List.of(Boolean.TRUE, Boolean.FALSE), settings.isBlockLocalPackUrls())
-                .withTooltip(v -> Tooltip.create(Component.literal("Block local URL resource pack requests")))
+                .withTooltip(v -> Tooltip.create(OpsecLang.component(OpsecStrings.TOOLTIP_BLOCK_LOCAL_PACK_URLS)))
                     .create(0, 0, 230, 20, OpsecLang.component(OpsecStrings.OPTION_BLOCK_LOCAL_PACK_URLS),
                     (button, value) -> { settings.setBlockLocalPackUrls(value); config.save(); }));
 
@@ -256,7 +256,7 @@ public class OpsecConfigScreen extends Screen {
         widgets.add(Button.builder(OpsecLang.component(OpsecStrings.OPTION_CLEAR_CACHE), button -> {
                 ResourcePackGuard.clearAllCaches();
             }).size(230, 20)
-          .tooltip(Tooltip.create(Component.literal("Deletes all cached server resource packs\nAlso resets download queue state")))
+          .tooltip(Tooltip.create(OpsecLang.component(OpsecStrings.TOOLTIP_CLEAR_CACHE)))
           .build());
 
         // Key Resolution Protection Section
@@ -267,7 +267,7 @@ public class OpsecConfigScreen extends Screen {
             widgets.add(createEPManagedToggle(OpsecLang.component(OpsecStrings.OPTION_KEY_RESOLUTION_SPOOFING)));
         } else {
             widgets.add(cycleBuilder(COLORED_BOOL_TO_TEXT, List.of(Boolean.TRUE, Boolean.FALSE), settings.isTranslationProtectionEnabled())
-                .withTooltip(v -> Tooltip.create(Component.literal("Mask translation key values to appear as default vanilla client")))
+                .withTooltip(v -> Tooltip.create(OpsecLang.component(OpsecStrings.TOOLTIP_KEY_RESOLUTION_SPOOFING)))
                     .create(0, 0, 230, 20, OpsecLang.component(OpsecStrings.OPTION_KEY_RESOLUTION_SPOOFING),
                         (button, value) -> {
                             settings.setTranslationProtection(value);
@@ -278,8 +278,7 @@ public class OpsecConfigScreen extends Screen {
             // Only show sub-options when translation protection is enabled
             if (settings.isTranslationProtectionEnabled()) {
                 widgets.add(cycleBuilder(COLORED_BOOL_TO_TEXT, List.of(Boolean.TRUE, Boolean.FALSE), settings.isFakeDefaultKeybinds())
-                    .withTooltip(v -> Tooltip.create(Component.literal(
-                        "Spoof vanilla keybinds to default values when enabled")))
+                    .withTooltip(v -> Tooltip.create(OpsecLang.component(OpsecStrings.TOOLTIP_FAKE_DEFAULT_KEYBINDS)))
                         .create(0, 0, 230, 20, OpsecLang.component(OpsecStrings.OPTION_FAKE_DEFAULT_KEYBINDS),
                             (button, value) -> {
                                 settings.setFakeDefaultKeybinds(value);
@@ -287,8 +286,7 @@ public class OpsecConfigScreen extends Screen {
                         }));
 
                 widgets.add(cycleBuilder(COLORED_BOOL_TO_TEXT, List.of(Boolean.TRUE, Boolean.FALSE), settings.isMeteorFix())
-                    .withTooltip(v -> Tooltip.create(Component.literal(
-                        "Blacklist a Meteor Client mixin to allow OpSec's proper protection handling")))
+                    .withTooltip(v -> Tooltip.create(OpsecLang.component(OpsecStrings.TOOLTIP_METEOR_FIX)))
                         .create(0, 0, 230, 20, OpsecLang.component(OpsecStrings.OPTION_METEOR_FIX),
                             (button, value) -> {
                                 settings.setMeteorFix(value);
@@ -312,7 +310,7 @@ public class OpsecConfigScreen extends Screen {
                 (button, value) -> { settings.setSigningMode(value); config.save(); }));
         
         widgets.add(cycleBuilder(COLORED_BOOL_TO_TEXT, List.of(Boolean.TRUE, Boolean.FALSE), settings.isDisableTelemetry())
-                .withTooltip(v -> Tooltip.create(Component.literal("Block telemetry data sent to Mojang")))
+                .withTooltip(v -> Tooltip.create(OpsecLang.component(OpsecStrings.TOOLTIP_DISABLE_TELEMETRY)))
                 .create(0, 0, 230, 20, OpsecLang.component(OpsecStrings.OPTION_DISABLE_TELEMETRY),
                 (button, value) -> { settings.setDisableTelemetry(value); config.save(); }));
         
@@ -326,22 +324,22 @@ public class OpsecConfigScreen extends Screen {
         widgets.add(createSectionHeader("\u00A7f\u00A7lAlerts & Logging"));
         
         widgets.add(cycleBuilder(COLORED_BOOL_TO_TEXT, List.of(Boolean.TRUE, Boolean.FALSE), settings.isShowAlerts())
-                .withTooltip(v -> Tooltip.create(Component.literal("Show chat messages when tracking detected")))
+                .withTooltip(v -> Tooltip.create(OpsecLang.component(OpsecStrings.TOOLTIP_SHOW_ALERTS)))
                 .create(0, 0, 230, 20, OpsecLang.component(OpsecStrings.OPTION_SHOW_ALERTS),
                 (button, value) -> { settings.setShowAlerts(value); config.save(); }));
         
         widgets.add(cycleBuilder(COLORED_BOOL_TO_TEXT, List.of(Boolean.TRUE, Boolean.FALSE), settings.isShowToasts())
-                .withTooltip(v -> Tooltip.create(Component.literal("Show popup notifications")))
+                .withTooltip(v -> Tooltip.create(OpsecLang.component(OpsecStrings.TOOLTIP_SHOW_TOASTS)))
                 .create(0, 0, 230, 20, OpsecLang.component(OpsecStrings.OPTION_SHOW_TOASTS),
                 (button, value) -> { settings.setShowToasts(value); config.save(); }));
         
         widgets.add(cycleBuilder(COLORED_BOOL_TO_TEXT, List.of(Boolean.TRUE, Boolean.FALSE), settings.isLogDetections())
-                .withTooltip(v -> Tooltip.create(Component.literal("Log detection events to game log")))
+                .withTooltip(v -> Tooltip.create(OpsecLang.component(OpsecStrings.TOOLTIP_LOG_DETECTIONS)))
                 .create(0, 0, 230, 20, OpsecLang.component(OpsecStrings.OPTION_LOG_DETECTIONS),
                 (button, value) -> { settings.setLogDetections(value); config.save(); }));
 
         widgets.add(cycleBuilder(COLORED_BOOL_TO_TEXT, List.of(Boolean.TRUE, Boolean.FALSE), settings.isDebugAlerts())
-                .withTooltip(v -> Tooltip.create(Component.literal("Show alerts for all probed keys, even unchanged ones")))
+                .withTooltip(v -> Tooltip.create(OpsecLang.component(OpsecStrings.TOOLTIP_DEBUG_ALERTS)))
                 .create(0, 0, 230, 20, OpsecLang.component(OpsecStrings.OPTION_DEBUG_ALERTS),
                 (button, value) -> { settings.setDebugAlerts(value); config.save(); }));
 
@@ -479,18 +477,18 @@ public class OpsecConfigScreen extends Screen {
             }
             
             // Refresh button to revalidate all accounts
-            Button refreshButton = Button.builder(Component.literal(
-                    accountManager.isRefreshing() ? "\u00A77Refreshing..." : "Refresh All"
+            Button refreshButton = Button.builder(OpsecLang.component(
+                    accountManager.isRefreshing() ? OpsecStrings.BUTTON_REFRESHING : OpsecStrings.BUTTON_REFRESH_ALL
             ), button -> {
                 if (accountManager.isRefreshing()) {
                     return; // Already refreshing
                 }
-                button.setMessage(Component.literal("\u00A77Refreshing..."));
+                button.setMessage(OpsecLang.component(OpsecStrings.BUTTON_REFRESHING));
                 button.active = false;
                 accountManager.refreshAllAccounts((valid, invalid) -> {
                     refreshScreen();
                 });
-            }).size(230, 20)              .tooltip(Tooltip.create(Component.literal("Revalidate all accounts\nInvalid tokens will be marked red")))
+            }).size(230, 20)              .tooltip(Tooltip.create(OpsecLang.component(OpsecStrings.BUTTON_REFRESH_TOOLTIP)))
 
               .build();
             
@@ -619,9 +617,9 @@ public class OpsecConfigScreen extends Screen {
                     .tooltip(Tooltip.create(Component.literal(tooltip)))
                     .build();
             
-            this.removeButton = Button.builder(Component.literal("\u00A7cRemove"), btn -> onRemoveClick.run())
+            this.removeButton = Button.builder(OpsecLang.component(OpsecStrings.BUTTON_REMOVE), btn -> onRemoveClick.run())
                     .size(55, 20)
-                    .tooltip(Tooltip.create(Component.literal("Remove this account")))
+                    .tooltip(Tooltip.create(OpsecLang.component(OpsecStrings.BUTTON_REMOVE_TOOLTIP)))
                     .build();
         }
         
@@ -736,14 +734,14 @@ public class OpsecConfigScreen extends Screen {
             this.onImportAction = onImport;
             this.onExportAction = onExport;
             
-            this.importButton = Button.builder(Component.literal("Import"), btn -> onImport.run())
+            this.importButton = Button.builder(OpsecLang.component(OpsecStrings.BUTTON_IMPORT), btn -> onImport.run())
                     .size(100, 20)
-                    .tooltip(Tooltip.create(Component.literal("Import accounts from JSON file")))
+                    .tooltip(Tooltip.create(OpsecLang.component(OpsecStrings.BUTTON_IMPORT_TOOLTIP)))
                     .build();
             
-            this.exportButton = Button.builder(Component.literal("Export"), btn -> onExport.run())
+            this.exportButton = Button.builder(OpsecLang.component(OpsecStrings.BUTTON_EXPORT), btn -> onExport.run())
                     .size(100, 20)
-                    .tooltip(Tooltip.create(Component.literal("Export accounts to JSON file")))
+                    .tooltip(Tooltip.create(OpsecLang.component(OpsecStrings.BUTTON_EXPORT_TOOLTIP)))
                     .build();
         }
         
@@ -855,14 +853,14 @@ public class OpsecConfigScreen extends Screen {
             this.onEnableAll = onEnableAll;
             this.onDisableAll = onDisableAll;
 
-            this.enableAllButton = Button.builder(Component.literal("Enable All"), btn -> onEnableAll.run())
+            this.enableAllButton = Button.builder(OpsecLang.component(OpsecStrings.BUTTON_ENABLE_ALL), btn -> onEnableAll.run())
                     .size(100, 20)
-                    .tooltip(Tooltip.create(Component.literal("Whitelist all installed mods")))
+                    .tooltip(Tooltip.create(OpsecLang.component(OpsecStrings.BUTTON_ENABLE_ALL_TOOLTIP)))
                     .build();
 
-            this.disableAllButton = Button.builder(Component.literal("Disable All"), btn -> onDisableAll.run())
+            this.disableAllButton = Button.builder(OpsecLang.component(OpsecStrings.BUTTON_DISABLE_ALL), btn -> onDisableAll.run())
                     .size(100, 20)
-                    .tooltip(Tooltip.create(Component.literal("Remove all mods from whitelist")))
+                    .tooltip(Tooltip.create(OpsecLang.component(OpsecStrings.BUTTON_DISABLE_ALL_TOOLTIP)))
                     .build();
         }
 
@@ -1054,7 +1052,7 @@ public class OpsecConfigScreen extends Screen {
             }
         }
 
-        return new WidgetTab(Component.literal("Whitelist"), widgets);
+        return new WidgetTab(OpsecLang.component(OpsecStrings.TAB_WHITELIST), widgets);
     }
     
     /**
@@ -1516,9 +1514,9 @@ public class OpsecConfigScreen extends Screen {
         
         public static Component getTooltip(SpoofSettings.SigningMode mode) {
             return switch (mode) {
-                case SIGN -> Component.literal("Always sign chat messages");
-                case OFF -> Component.literal("Never sign chat messages");
-                case ON_DEMAND -> Component.literal("Only sign chat messages when server requires it");
+                case SIGN -> OpsecLang.component(OpsecStrings.CHATSIGNING_SIGN_TOOLTIP);
+                case OFF -> OpsecLang.component(OpsecStrings.CHATSIGNING_OFF_TOOLTIP);
+                case ON_DEMAND -> OpsecLang.component(OpsecStrings.CHATSIGNING_ONDEMAND_TOOLTIP);
             };
         }
     }

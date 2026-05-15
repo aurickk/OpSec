@@ -2,6 +2,8 @@ package aurick.opsec.mod.mixin.client;
 
 import aurick.opsec.mod.PrivacyLogger;
 import aurick.opsec.mod.detection.TrackPackDetector;
+import aurick.opsec.mod.lang.OpsecLang;
+import aurick.opsec.mod.lang.OpsecStrings;
 import aurick.opsec.mod.protection.PackStripHandler;
 import net.minecraft.client.multiplayer.ClientCommonPacketListenerImpl;
 import net.minecraft.network.protocol.common.ClientboundResourcePackPopPacket;
@@ -31,8 +33,9 @@ public abstract class ClientCommonPacketListenerImplMixin {
 
         if (TrackPackDetector.isFingerprinting() && TrackPackDetector.consumeNotifyPatternOnce()) {
             PrivacyLogger.alert(PrivacyLogger.AlertType.DANGER,
-                "Resource pack fingerprinting pattern detected!");
-            PrivacyLogger.toast(PrivacyLogger.AlertType.DANGER, "Resource Pack Fingerprinting Detected");
+                OpsecLang.tr(OpsecStrings.ALERT_TRACKPACK_PATTERN));
+            PrivacyLogger.toast(PrivacyLogger.AlertType.DANGER,
+                OpsecLang.tr(OpsecStrings.TOAST_TRACKPACK));
         }
 
         PackStripHandler.onPackPush(packet.id(), url, packet.required());

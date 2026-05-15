@@ -2,6 +2,8 @@ package aurick.opsec.mod;
 
 import aurick.opsec.mod.config.OpsecConfig;
 import aurick.opsec.mod.config.OpsecConstants;
+import aurick.opsec.mod.lang.OpsecLang;
+import aurick.opsec.mod.lang.OpsecStrings;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.toasts.SystemToast;
@@ -209,8 +211,8 @@ public class PrivacyLogger {
     
     public static void alertTrackPackDetected(String url) {
         logDetection("TrackPack", "Suspicious URL: " + url);
-        alert(AlertType.DANGER, "Resource pack fingerprinting detected! URL: " + url);
-        toastWithCooldown(AlertType.DANGER, "Resource Pack Fingerprinting Detected", 
+        alert(AlertType.DANGER, OpsecLang.tr(OpsecStrings.ALERT_TRACKPACK_DETECTED, url));
+        toastWithCooldown(AlertType.DANGER, OpsecLang.tr(OpsecStrings.TOAST_TRACKPACK),
             null, "trackpack_detected", OpsecConstants.Timeouts.DEFAULT_TOAST_COOLDOWN_MS);
     }
     
@@ -231,8 +233,10 @@ public class PrivacyLogger {
         }
         
         if (!isToastOnCooldown("localpack_alert", OpsecConstants.Timeouts.EXPLOIT_TOAST_COOLDOWN_MS)) {
-            alert(AlertType.DANGER, "Port scan " + (blocked ? "blocked" : "detected") + ": " + hostPort);
-            toast(AlertType.DANGER, "Local URL Scan Detected");
+            alert(AlertType.DANGER, OpsecLang.tr(
+                blocked ? OpsecStrings.ALERT_PORTSCAN_BLOCKED : OpsecStrings.ALERT_PORTSCAN_DETECTED,
+                hostPort));
+            toast(AlertType.DANGER, OpsecLang.tr(OpsecStrings.TOAST_PORTSCAN));
         }
     }
     
@@ -245,7 +249,7 @@ public class PrivacyLogger {
 
         if (uniquePorts == 1) {
             String port = pendingPortScans.iterator().next();
-            alert(AlertType.DANGER, "Detected " + total + " local port scan(s) to " + port);
+            alert(AlertType.DANGER, OpsecLang.tr(OpsecStrings.ALERT_PORTSCAN_SUMMARY_SINGLE, total, port));
         } else {
             StringBuilder portsStr = new StringBuilder();
             int shown = 0;
@@ -254,11 +258,12 @@ public class PrivacyLogger {
                 portsStr.append(port);
                 if (++shown >= OpsecConstants.Display.MAX_PORTS_TO_SHOW) {
                     if (uniquePorts > OpsecConstants.Display.MAX_PORTS_TO_SHOW)
-                        portsStr.append(" +").append(uniquePorts - OpsecConstants.Display.MAX_PORTS_TO_SHOW).append(" more");
+                        portsStr.append(OpsecLang.tr(OpsecStrings.ALERT_PORTSCAN_SUMMARY_MORE,
+                            uniquePorts - OpsecConstants.Display.MAX_PORTS_TO_SHOW));
                     break;
                 }
             }
-            alert(AlertType.DANGER, "Detected " + total + " local port scan(s): " + portsStr);
+            alert(AlertType.DANGER, OpsecLang.tr(OpsecStrings.ALERT_PORTSCAN_SUMMARY_MULTI, total, portsStr.toString()));
         }
 
         Opsec.LOGGER.info("[OpSec] Port scan summary: detected {} requests to {} unique targets", total, uniquePorts);
@@ -288,9 +293,9 @@ public class PrivacyLogger {
     }
     
     public static void alertSecureChatRequired() {
-        toast(AlertType.WARNING, "Secure Chat Required");
-        alert(AlertType.WARNING, "Server requires secure chat. Chat signing enabled.");
         logDetection("SecureChat", "Server enforces secure chat - ON_DEMAND signing activated");
+        if (!OpsecConfig.getInstance().isDebugAlerts()) return;
+        alert(AlertType.WARNING, OpsecLang.tr(OpsecStrings.ALERT_SECURECHAT_REQUIRED));
     }
 
 }

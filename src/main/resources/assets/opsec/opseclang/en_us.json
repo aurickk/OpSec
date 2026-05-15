@@ -1,18 +1,27 @@
 {
   "opsec.config.title": "OpSec Settings",
 
-  "opsec.tab.identity": "Identity",
   "opsec.tab.protection": "Protection",
   "opsec.tab.accounts": "Accounts",
   "opsec.tab.whitelist": "Whitelist",
   "opsec.tab.misc": "Misc",
 
-  "opsec.option.spoofBrand": "Spoof Brand",
-  "opsec.option.brandType": "Brand Type",
-  "opsec.option.spoofChannels": "Spoof Channels",
+  "opsec.option.spoofAsVanilla": "Spoof as Vanilla",
+  "opsec.option.spoofAsVanilla.tooltip": "On: advertise a vanilla brand and block ALL mod(s) from detection\nOff: advertise as real Fabric brand and optionally allow some mod(s)",
 
   "opsec.option.whitelistMode": "Whitelist Mode",
+  "opsec.option.whitelistMode.locked.tooltip": "Locked to 'Block All' because Spoof as Vanilla is on",
   "opsec.whitelist.search": "Search",
+
+  "opsec.whitelist.mode.blockAll": "§eBLOCK ALL",
+  "opsec.whitelist.mode.auto": "§aAUTO",
+  "opsec.whitelist.mode.custom": "§bCUSTOM",
+  "opsec.whitelist.mode.blockAll.tooltip": "Block all mod channels (no exceptions)",
+  "opsec.whitelist.mode.auto.tooltip": "Mods with network channels are automatically whitelisted",
+  "opsec.whitelist.mode.custom.tooltip": "Manually select which mods to whitelist",
+
+  "opsec.ep.managed.header": "§7Managed by Exploit Preventer",
+  "opsec.ep.managed.tooltip": "Managed by Exploit Preventer",
 
   "opsec.option.isolatePackCache": "Isolate Pack Cache",
   "opsec.option.blockLocalPackUrls": "Block Local URLs",
@@ -76,5 +85,16 @@
   "opsec.tamper.actual": "\u00A78Actual: %s...",
   "opsec.tamper.download": "\u00A7aDownload Official Release",
   "opsec.tamper.dismiss_permanent": "I Know What I'm Doing",
-  "opsec.tamper.dismiss": "Dismiss"
+  "opsec.tamper.dismiss": "Dismiss",
+
+  "opsec.alert.trackpack.detected": "Resource pack fingerprinting detected! URL: %s",
+  "opsec.alert.trackpack.pattern": "Resource pack fingerprinting pattern detected!",
+  "opsec.toast.trackpack": "Resource Pack Fingerprinting Detected",
+  "opsec.alert.portscan.blocked": "Port scan blocked: %s",
+  "opsec.alert.portscan.detected": "Port scan detected: %s",
+  "opsec.toast.portscan": "Local URL Scan Detected",
+  "opsec.alert.portscan.summary.single": "Detected %d local port scan(s) to %s",
+  "opsec.alert.portscan.summary.multi": "Detected %d local port scan(s): %s",
+  "opsec.alert.portscan.summary.more": " +%d more",
+  "opsec.alert.securechat.required": "Server requires secure chat. Chat signing enabled."
 }

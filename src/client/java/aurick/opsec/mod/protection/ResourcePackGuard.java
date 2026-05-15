@@ -1,7 +1,6 @@
 package aurick.opsec.mod.protection;
 
 import aurick.opsec.mod.Opsec;
-import aurick.opsec.mod.PrivacyLogger;
 import aurick.opsec.mod.mixin.client.DownloadedPackSourceAccessor;
 import aurick.opsec.mod.mixin.client.MinecraftAccessor;
 import net.minecraft.client.Minecraft;
@@ -35,19 +34,7 @@ public class ResourcePackGuard {
         // Try to reset the in-memory download state
         boolean memoryCleared = clearDownloadQueueState();
 
-        if (totalDeleted > 0 || memoryCleared) {
-            String message = "Cleared resource pack cache";
-            if (totalDeleted > 0) {
-                message += " (" + totalDeleted + " files)";
-            }
-            if (memoryCleared) {
-                message += " and reset download state";
-            }
-            Opsec.LOGGER.info("[OpSec] {}", message);
-            PrivacyLogger.sendMessage(PrivacyLogger.AlertType.SUCCESS, message + ".");
-        } else {
-            PrivacyLogger.sendMessage(PrivacyLogger.AlertType.INFO, "No resource pack cache to clear.");
-        }
+        Opsec.LOGGER.info("[OpSec] Clear pack cache: {} files removed, memoryCleared={}", totalDeleted, memoryCleared);
     }
     
     /**

@@ -1,15 +1,14 @@
 package aurick.opsec.mod.config;
 
+import aurick.opsec.mod.Opsec;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import aurick.opsec.mod.Opsec;
-import net.fabricmc.loader.api.FabricLoader;
-
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import net.fabricmc.loader.api.FabricLoader;
 
 /**
  * Main configuration manager for OpSec mod.
@@ -17,25 +16,32 @@ import java.nio.file.Path;
  * Uses thread-safe singleton pattern with double-checked locking.
  */
 public class OpsecConfig {
-    private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
-    private static final Path CONFIG_PATH = FabricLoader.getInstance().getConfigDir().resolve("opsec.json");
-    
+
+    private static final Gson GSON = new GsonBuilder()
+        .setPrettyPrinting()
+        .create();
+    private static final Path CONFIG_PATH = FabricLoader.getInstance()
+        .getConfigDir()
+        .resolve("opsec.json");
+
     public static final boolean EXPLOIT_PREVENTER_LOADED =
         FabricLoader.getInstance().isModLoaded("exploitpreventer");
 
     private static volatile OpsecConfig INSTANCE;
     private static final Object LOCK = new Object();
-    
+
     private SpoofSettings settings = new SpoofSettings();
     private volatile String currentServer = null;
-    
+
     private OpsecConfig() {
         load();
         if (EXPLOIT_PREVENTER_LOADED) {
-            Opsec.LOGGER.info("[OpSec] Exploit Preventer detected - compatibility mode active.");
+            Opsec.LOGGER.info(
+                "[OpSec] Exploit Preventer detected - compatibility mode active."
+            );
         }
     }
-    
+
     public static OpsecConfig getInstance() {
         if (INSTANCE == null) {
             synchronized (LOCK) {
@@ -46,55 +52,74 @@ public class OpsecConfig {
         }
         return INSTANCE;
     }
-    
+
     public void load() {
         if (!Files.exists(CONFIG_PATH)) {
             Opsec.LOGGER.info("[OpSec] Creating default config");
             save();
             return;
         }
-        
+
         try {
             String content = Files.readString(CONFIG_PATH);
             if (content == null || content.trim().isEmpty()) {
-                Opsec.LOGGER.warn("[OpSec] Config file is empty, using defaults");
+                Opsec.LOGGER.warn(
+                    "[OpSec] Config file is empty, using defaults"
+                );
                 settings = new SpoofSettings();
                 save();
                 return;
             }
-            
+
             JsonObject json = JsonParser.parseString(content).getAsJsonObject();
-            
+
             if (json.has("settings")) {
-                settings = SpoofSettings.fromJson(json.getAsJsonObject("settings"));
+                settings = SpoofSettings.fromJson(
+                    json.getAsJsonObject("settings")
+                );
             } else if (json.has("defaultSettings")) {
-                settings = SpoofSettings.fromJson(json.getAsJsonObject("defaultSettings"));
+                settings = SpoofSettings.fromJson(
+                    json.getAsJsonObject("defaultSettings")
+                );
             }
-            
+
             if (!validateAndCorrectSettings(settings)) {
-                Opsec.LOGGER.warn("[OpSec] Config validation failed, resetting to defaults");
+                Opsec.LOGGER.warn(
+                    "[OpSec] Config validation failed, resetting to defaults"
+                );
                 settings = new SpoofSettings();
                 save();
                 return;
             }
-            
-            Opsec.LOGGER.info("[OpSec] Loaded config - brand: {}, spoofing: {}", 
-                settings.getCustomBrand(), settings.isSpoofBrand());
+
+            Opsec.LOGGER.info(
+                "[OpSec] Loaded config - spoofAsVanilla: {}",
+                settings.isSpoofAsVanilla()
+            );
         } catch (IOException e) {
-            Opsec.LOGGER.error("[OpSec] Failed to read config file: {}", e.getMessage());
+            Opsec.LOGGER.error(
+                "[OpSec] Failed to read config file: {}",
+                e.getMessage()
+            );
             settings = new SpoofSettings();
             save();
-        } catch (com.google.gson.JsonSyntaxException | IllegalStateException e) {
-            Opsec.LOGGER.error("[OpSec] Invalid JSON in config file: {}", e.getMessage());
+        } catch (
+            com.google.gson.JsonSyntaxException
+            | IllegalStateException e
+        ) {
+            Opsec.LOGGER.error(
+                "[OpSec] Invalid JSON in config file: {}",
+                e.getMessage()
+            );
             settings = new SpoofSettings();
             save();
         }
     }
-    
+
     /**
      * Validates and auto-corrects settings if necessary.
      * This method modifies invalid settings to valid defaults.
-     * 
+     *
      * @param settings The settings to validate
      * @return true if settings were valid or have been corrected, false if settings is null
      */
@@ -103,106 +128,180 @@ public class OpsecConfig {
             Opsec.LOGGER.error("[OpSec] Validation failed: settings is null");
             return false;
         }
-        
+
         boolean modified = false;
-        
-        String brand = settings.getCustomBrand();
-        if (brand == null || (!OpsecConstants.Brands.VANILLA.equals(brand)
-                && !OpsecConstants.Brands.FABRIC.equals(brand))) {
-            Opsec.LOGGER.warn("[OpSec] Invalid brand value: {}, resetting to vanilla", brand);
-            settings.setCustomBrand(OpsecConstants.Brands.VANILLA);
-            modified = true;
-        }
-        
+
         if (settings.getSigningMode() == null) {
-            Opsec.LOGGER.warn("[OpSec] Invalid signing mode, resetting to ON_DEMAND");
+            Opsec.LOGGER.warn(
+                "[OpSec] Invalid signing mode, resetting to ON_DEMAND"
+            );
             settings.setSigningMode(SpoofSettings.SigningMode.ON_DEMAND);
             modified = true;
         }
 
         if (settings.getWhitelistMode() == null) {
-            Opsec.LOGGER.warn("[OpSec] Invalid whitelist mode, resetting to OFF");
+            Opsec.LOGGER.warn(
+                "[OpSec] Invalid whitelist mode, resetting to OFF"
+            );
             settings.setWhitelistMode(SpoofSettings.WhitelistMode.OFF);
             modified = true;
         }
-        
+
+        // Spoof-as-vanilla is the master mode: it implies "block ALL custom payloads",
+        // so an active whitelist (Auto/Custom) would be moot and the resulting state is
+        // incoherent (vanilla brand advertising selective mod channels). Force the
+        // whitelist to OFF (block all) whenever spoofAsVanilla is on.
+        if (settings.isSpoofAsVanilla() && settings.getWhitelistMode() != SpoofSettings.WhitelistMode.OFF) {
+            Opsec.LOGGER.warn(
+                "[OpSec] active whitelist incompatible with spoofAsVanilla; forcing whitelist OFF (block all)"
+            );
+            settings.setWhitelistMode(SpoofSettings.WhitelistMode.OFF);
+            modified = true;
+        }
+
         if (modified) {
             save();
         }
-        
+
         return true;
     }
-    
+
     public void save() {
         try {
             JsonObject json = new JsonObject();
             json.add("settings", settings.toJson());
-            
+
             Files.createDirectories(CONFIG_PATH.getParent());
-            
-            Path tempFile = CONFIG_PATH.resolveSibling(CONFIG_PATH.getFileName() + ".tmp");
+
+            Path tempFile = CONFIG_PATH.resolveSibling(
+                CONFIG_PATH.getFileName() + ".tmp"
+            );
             Files.writeString(tempFile, GSON.toJson(json));
-            Files.move(tempFile, CONFIG_PATH, java.nio.file.StandardCopyOption.REPLACE_EXISTING, 
-                java.nio.file.StandardCopyOption.ATOMIC_MOVE);
+            Files.move(
+                tempFile,
+                CONFIG_PATH,
+                java.nio.file.StandardCopyOption.REPLACE_EXISTING,
+                java.nio.file.StandardCopyOption.ATOMIC_MOVE
+            );
         } catch (IOException e) {
-            Opsec.LOGGER.error("[OpSec] Failed to save config to {}: {}", CONFIG_PATH, e.getMessage());
+            Opsec.LOGGER.error(
+                "[OpSec] Failed to save config to {}: {}",
+                CONFIG_PATH,
+                e.getMessage()
+            );
         }
     }
-    
-    public SpoofSettings getSettings() { return settings; }
-    
-    public void setCurrentServer(String server) { this.currentServer = normalizeAddress(server); }
-    public String getCurrentServer() { return currentServer; }
-    
+
+    public SpoofSettings getSettings() {
+        return settings;
+    }
+
+    public void setCurrentServer(String server) {
+        this.currentServer = normalizeAddress(server);
+    }
+
+    public String getCurrentServer() {
+        return currentServer;
+    }
+
     // Identity protection
-    public boolean shouldSpoofBrand() { return !EXPLOIT_PREVENTER_LOADED && settings.isSpoofBrand(); }
-    
     /**
-     * Determines if channel spoofing/filtering should be active.
-     * Returns true ONLY when channel spoofing is explicitly enabled.
-     * Whitelist alone does NOT enable channel filtering - it only affects translation keys.
-     * When whitelist is ON but channel spoofing is OFF, channels pass through unmodified.
+     * Whether the brand string should be overridden to "vanilla". Only true when
+     * the user opted in via the UI toggle and ExploitPreventer isn't loaded.
+     */
+    public boolean shouldSpoofBrand() {
+        return !EXPLOIT_PREVENTER_LOADED && settings.isSpoofAsVanilla();
+    }
+
+    /**
+     * Whether channel spoofing/filtering should be active. Independent of brand —
+     * channel filtering happens whenever OpSec is in charge (i.e., EP not loaded).
+     * The filter mode (block-all vs whitelist) is chosen by isVanillaMode/
+     * isFabricMode in SpoofSettings, which read directly from spoofAsVanilla.
      */
     public boolean shouldSpoofChannels() {
-        return !EXPLOIT_PREVENTER_LOADED && settings.isSpoofBrand() && settings.isSpoofChannels();
+        return !EXPLOIT_PREVENTER_LOADED;
     }
-    
-    public String getEffectiveBrand() { return settings.getEffectiveBrand(); }
-    
+
+    public String getEffectiveBrand() {
+        return settings.getEffectiveBrand();
+    }
+
     // Resource pack protection
-    public boolean shouldIsolatePackCache() { return !EXPLOIT_PREVENTER_LOADED && settings.isIsolatePackCache(); }
-    public boolean shouldBlockLocalPackUrls() { return !EXPLOIT_PREVENTER_LOADED && settings.isBlockLocalPackUrls(); }
-    
+    public boolean shouldIsolatePackCache() {
+        return !EXPLOIT_PREVENTER_LOADED && settings.isIsolatePackCache();
+    }
+
+    public boolean shouldBlockLocalPackUrls() {
+        return !EXPLOIT_PREVENTER_LOADED && settings.isBlockLocalPackUrls();
+    }
+
     // Key resolution protection
-    public boolean isTranslationProtectionEnabled() { return !EXPLOIT_PREVENTER_LOADED && settings.isTranslationProtectionEnabled(); }
-    public boolean isMeteorFix() { return settings.isMeteorFix(); }
+    public boolean isTranslationProtectionEnabled() {
+        return (
+            !EXPLOIT_PREVENTER_LOADED &&
+            settings.isTranslationProtectionEnabled()
+        );
+    }
+
+    public boolean isMeteorFix() {
+        return settings.isMeteorFix();
+    }
 
     // Bypass Server Pack Requirement
     public SpoofSettings.StripMode getPackStripMode() {
         return settings.getPackStripMode();
     }
+
     /** Bypass infrastructure (pack wrapping + pack-select UI unlock) is active.
      *  True for all modes; only Exploit Preventer force-disables it. */
-    public boolean shouldStripPack()       { return !EXPLOIT_PREVENTER_LOADED; }
+    public boolean shouldStripPack() {
+        return !EXPLOIT_PREVENTER_LOADED;
+    }
+
     /** The consent overlay prompt should show for an incoming push. */
     public boolean shouldShowPackOverlay() {
-        return !EXPLOIT_PREVENTER_LOADED && settings.getPackStripMode() == SpoofSettings.StripMode.ASK;
+        return (
+            !EXPLOIT_PREVENTER_LOADED &&
+            settings.getPackStripMode() == SpoofSettings.StripMode.ASK
+        );
     }
-    
+
     // Alerts and logging
-    public boolean shouldShowAlerts() { return settings.isShowAlerts(); }
-    public boolean shouldShowToasts() { return settings.isShowToasts(); }
-    public boolean isLogDetections() { return settings.isLogDetections(); }
-    public boolean isDebugAlerts() { return settings.isDebugAlerts(); }
-    
+    public boolean shouldShowAlerts() {
+        return settings.isShowAlerts();
+    }
+
+    public boolean shouldShowToasts() {
+        return settings.isShowToasts();
+    }
+
+    public boolean isLogDetections() {
+        return settings.isLogDetections();
+    }
+
+    public boolean isDebugAlerts() {
+        return settings.isDebugAlerts();
+    }
+
     // Chat signing
-    public SpoofSettings.SigningMode getSigningMode() { return settings.getSigningMode(); }
-    public boolean shouldNotSign() { return settings.shouldNotSign(); }
-    public boolean isOnDemandSigning() { return settings.isOnDemand(); }
-    
+    public SpoofSettings.SigningMode getSigningMode() {
+        return settings.getSigningMode();
+    }
+
+    public boolean shouldNotSign() {
+        return settings.shouldNotSign();
+    }
+
+    public boolean isOnDemandSigning() {
+        return settings.isOnDemand();
+    }
+
     // Privacy
-    public boolean shouldDisableTelemetry() { return settings.isDisableTelemetry(); }
-    
+    public boolean shouldDisableTelemetry() {
+        return settings.isDisableTelemetry();
+    }
+
     /**
      * Normalizes a server address by converting to lowercase and removing default port.
      * @param address The server address to normalize

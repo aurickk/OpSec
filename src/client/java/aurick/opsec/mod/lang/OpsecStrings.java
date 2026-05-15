@@ -11,18 +11,27 @@ public final class OpsecStrings {
 
     public static final String CONFIG_TITLE = "opsec.config.title";
 
-    public static final String TAB_IDENTITY = "opsec.tab.identity";
     public static final String TAB_PROTECTION = "opsec.tab.protection";
     public static final String TAB_ACCOUNTS = "opsec.tab.accounts";
     public static final String TAB_WHITELIST = "opsec.tab.whitelist";
     public static final String TAB_MISC = "opsec.tab.misc";
 
-    public static final String OPTION_SPOOF_BRAND = "opsec.option.spoofBrand";
-    public static final String OPTION_BRAND_TYPE = "opsec.option.brandType";
-    public static final String OPTION_SPOOF_CHANNELS = "opsec.option.spoofChannels";
+    public static final String OPTION_SPOOF_AS_VANILLA = "opsec.option.spoofAsVanilla";
+    public static final String OPTION_SPOOF_AS_VANILLA_TOOLTIP = "opsec.option.spoofAsVanilla.tooltip";
 
     public static final String OPTION_WHITELIST_MODE = "opsec.option.whitelistMode";
+    public static final String OPTION_WHITELIST_MODE_LOCKED_TOOLTIP = "opsec.option.whitelistMode.locked.tooltip";
     public static final String WHITELIST_SEARCH = "opsec.whitelist.search";
+
+    public static final String WHITELIST_MODE_BLOCK_ALL = "opsec.whitelist.mode.blockAll";
+    public static final String WHITELIST_MODE_AUTO = "opsec.whitelist.mode.auto";
+    public static final String WHITELIST_MODE_CUSTOM = "opsec.whitelist.mode.custom";
+    public static final String WHITELIST_MODE_BLOCK_ALL_TOOLTIP = "opsec.whitelist.mode.blockAll.tooltip";
+    public static final String WHITELIST_MODE_AUTO_TOOLTIP = "opsec.whitelist.mode.auto.tooltip";
+    public static final String WHITELIST_MODE_CUSTOM_TOOLTIP = "opsec.whitelist.mode.custom.tooltip";
+
+    public static final String EP_MANAGED_HEADER = "opsec.ep.managed.header";
+    public static final String EP_MANAGED_TOOLTIP = "opsec.ep.managed.tooltip";
 
     public static final String OPTION_ISOLATE_PACK_CACHE = "opsec.option.isolatePackCache";
     public static final String OPTION_BLOCK_LOCAL_PACK_URLS = "opsec.option.blockLocalPackUrls";
@@ -88,4 +97,16 @@ public final class OpsecStrings {
     public static final String TAMPER_DOWNLOAD = "opsec.tamper.download";
     public static final String TAMPER_DISMISS_PERMANENT = "opsec.tamper.dismiss_permanent";
     public static final String TAMPER_DISMISS = "opsec.tamper.dismiss";
+
+    // Chat alerts + toast titles (user-visible runtime messages)
+    public static final String ALERT_TRACKPACK_DETECTED = "opsec.alert.trackpack.detected";
+    public static final String ALERT_TRACKPACK_PATTERN = "opsec.alert.trackpack.pattern";
+    public static final String TOAST_TRACKPACK = "opsec.toast.trackpack";
+    public static final String ALERT_PORTSCAN_BLOCKED = "opsec.alert.portscan.blocked";
+    public static final String ALERT_PORTSCAN_DETECTED = "opsec.alert.portscan.detected";
+    public static final String TOAST_PORTSCAN = "opsec.toast.portscan";
+    public static final String ALERT_PORTSCAN_SUMMARY_SINGLE = "opsec.alert.portscan.summary.single";
+    public static final String ALERT_PORTSCAN_SUMMARY_MULTI = "opsec.alert.portscan.summary.multi";
+    public static final String ALERT_PORTSCAN_SUMMARY_MORE = "opsec.alert.portscan.summary.more";
+    public static final String ALERT_SECURECHAT_REQUIRED = "opsec.alert.securechat.required";
 }

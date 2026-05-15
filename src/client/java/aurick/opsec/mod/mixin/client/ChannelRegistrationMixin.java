@@ -1,7 +1,6 @@
 package aurick.opsec.mod.mixin.client;
 
 import aurick.opsec.mod.Opsec;
-import aurick.opsec.mod.PrivacyLogger;
 import aurick.opsec.mod.config.OpsecConfig;
 import aurick.opsec.mod.protection.ClientSpoofer;
 import net.minecraft.client.multiplayer.ClientConfigurationPacketListenerImpl;
@@ -20,31 +19,18 @@ public abstract class ChannelRegistrationMixin {
     @Inject(method = "handleConfigurationFinished", at = @At("HEAD"))
     private void onConfigurationFinished(ClientboundFinishConfigurationPacket packet, CallbackInfo ci) {
         OpsecConfig config = OpsecConfig.getInstance();
-        
-        if (!config.shouldSpoofBrand()) {
-            return;
-        }
-        
-        String brand = config.getEffectiveBrand();
-        
-        Opsec.LOGGER.debug("[OpSec] Configuration finished - spoofing as '{}'", brand);
 
-        // Brand-only spoofing mode (no channel modifications)
         if (!config.shouldSpoofChannels()) {
-            Opsec.LOGGER.debug("[OpSec] BRAND-ONLY MODE - channels are NOT spoofed/blocked");
-            PrivacyLogger.alert(PrivacyLogger.AlertType.SUCCESS,
-                "Privacy active: brand-only mode (channels unmodified)");
             return;
         }
-        
+
+        String brand = config.getEffectiveBrand();
+        Opsec.LOGGER.debug("[OpSec] Configuration finished - advertising brand '{}'", brand);
+
         if (ClientSpoofer.isVanillaMode()) {
             Opsec.LOGGER.debug("[OpSec] VANILLA MODE - all custom payloads blocked");
-            PrivacyLogger.alert(PrivacyLogger.AlertType.SUCCESS,
-                "Privacy active: vanilla mode (all channels blocked)");
         } else if (ClientSpoofer.isFabricMode()) {
             Opsec.LOGGER.debug("[OpSec] FABRIC MODE - non-whitelisted mod channels blocked");
-            PrivacyLogger.alert(PrivacyLogger.AlertType.SUCCESS,
-                "Privacy active: fabric mode (mod channels blocked)");
         }
     }
 }

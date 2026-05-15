@@ -119,7 +119,6 @@ public class OpsecConfigScreen extends Screen {
         SpoofSettings settings = config.getSettings();
         
         this.tabs = List.of(
-            createIdentityTab(settings),
             createProtectionTab(settings),
             createWhitelistTab(settings),
             createMiscTab(settings),
@@ -133,8 +132,8 @@ public class OpsecConfigScreen extends Screen {
         this.tabWidget.selectTab(this.currentTab, false);
         
         // Create footer buttons
-        // Accounts tab is index 4 - reset button doesn't apply to accounts
-        boolean isAccountsTab = this.currentTab == 4;
+        // Accounts tab is index 3 - reset button doesn't apply to accounts
+        boolean isAccountsTab = this.currentTab == 3;
         this.resetButton = Button.builder(Component.translatable("controls.reset"), button -> {
             SpoofSettings defaults = new SpoofSettings();
             settings.copyFrom(defaults);
@@ -189,62 +188,37 @@ public class OpsecConfigScreen extends Screen {
         this.addRenderableWidget(this.versionLabel);
     }
     
-    private Tab createIdentityTab(SpoofSettings settings) {
+    private Tab createProtectionTab(SpoofSettings settings) {
         List<AbstractWidget> widgets = new ArrayList<>();
 
         // Client Brand Section
         widgets.add(createSectionHeader("\u00A7f\u00A7lClient Brand"));
 
         if (OpsecConfig.EXPLOIT_PREVENTER_LOADED) {
-            widgets.add(createSectionHeader("\u00A77Managed by Exploit Preventer"));
-            widgets.add(createEPManagedToggle(OpsecLang.component(OpsecStrings.OPTION_SPOOF_BRAND)));
+            widgets.add(createSectionHeader(OpsecLang.tr(OpsecStrings.EP_MANAGED_HEADER)));
+            widgets.add(createEPManagedToggle(OpsecLang.component(OpsecStrings.OPTION_SPOOF_AS_VANILLA)));
         } else {
-            widgets.add(cycleBuilder(COLORED_BOOL_TO_TEXT, List.of(Boolean.TRUE, Boolean.FALSE), settings.isSpoofBrand())
-                    .withTooltip(v -> Tooltip.create(Component.literal("Replace your client brand with a spoofed value")))
-                    .create(0, 0, 230, 20, OpsecLang.component(OpsecStrings.OPTION_SPOOF_BRAND),
+            widgets.add(cycleBuilder(COLORED_BOOL_TO_TEXT, List.of(Boolean.TRUE, Boolean.FALSE), settings.isSpoofAsVanilla())
+                    .withTooltip(v -> Tooltip.create(OpsecLang.component(OpsecStrings.OPTION_SPOOF_AS_VANILLA_TOOLTIP)))
+                    .create(0, 0, 230, 20, OpsecLang.component(OpsecStrings.OPTION_SPOOF_AS_VANILLA),
                         (button, value) -> {
-                            settings.setSpoofBrand(value);
+                            settings.setSpoofAsVanilla(value);
+                            // Spoofing as vanilla implies "block all" \u2014 the whitelist mode
+                            // is meaningless in that state, so force it OFF and let the
+                            // Whitelist tab show its greyed-out cycle with the explanatory tooltip.
+                            if (value && settings.getWhitelistMode() != SpoofSettings.WhitelistMode.OFF) {
+                                settings.setWhitelistMode(SpoofSettings.WhitelistMode.OFF);
+                            }
                             config.save();
                             refreshScreen();
                     }));
-
-            if (settings.isSpoofBrand()) {
-                // When whitelist is enabled, show greyed-out forced Fabric indicator
-                if (settings.isWhitelistEnabled()) {
-                    widgets.add(createSectionHeader("\u00A77Brand: Fabric (forced by whitelist)"));
-                } else {
-                    widgets.add(cycleBuilder(BrandType::getDisplayName, List.of(BrandType.values()), BrandType.fromString(settings.getCustomBrand()))
-                            .withTooltip(v -> Tooltip.create(Component.literal("Select the brand to appear as")))
-                            .create(0, 0, 230, 20, OpsecLang.component(OpsecStrings.OPTION_BRAND_TYPE),
-                            (button, value) -> { settings.setCustomBrand(value.getValue()); config.save(); }));
-                }
-
-                widgets.add(cycleBuilder(COLORED_BOOL_TO_TEXT, List.of(Boolean.TRUE, Boolean.FALSE), settings.isSpoofChannels())
-                    .withTooltip(v -> Tooltip.create(Component.literal("Replace/block mod channels to appear as clean instance")))
-                        .create(0, 0, 230, 20, OpsecLang.component(OpsecStrings.OPTION_SPOOF_CHANNELS),
-                            (button, value) -> {
-                                settings.setSpoofChannels(value);
-                                config.save();
-                                refreshScreen();
-                        }));
-
-                if (settings.isSpoofChannels() && settings.getWhitelistMode() != SpoofSettings.WhitelistMode.AUTO) {
-                    widgets.add(createSectionHeader("\u00A7e\u26A0 May break mods if not whitelisted"));
-                }
-            }
         }
-
-        return new WidgetTab(OpsecLang.component(OpsecStrings.TAB_IDENTITY), widgets);
-    }
-    
-    private Tab createProtectionTab(SpoofSettings settings) {
-        List<AbstractWidget> widgets = new ArrayList<>();
 
         // Resource Pack Protection Section
         widgets.add(createSectionHeader("\u00A7f\u00A7lResource Pack Protection"));
 
         if (OpsecConfig.EXPLOIT_PREVENTER_LOADED) {
-            widgets.add(createSectionHeader("\u00A77Managed by Exploit Preventer"));
+            widgets.add(createSectionHeader(OpsecLang.tr(OpsecStrings.EP_MANAGED_HEADER)));
             widgets.add(createEPManagedToggle(OpsecLang.component(OpsecStrings.OPTION_ISOLATE_PACK_CACHE)));
             widgets.add(createEPManagedToggle(OpsecLang.component(OpsecStrings.OPTION_BLOCK_LOCAL_PACK_URLS)));
         } else {
@@ -289,7 +263,7 @@ public class OpsecConfigScreen extends Screen {
         widgets.add(createSectionHeader("\u00A7f\u00A7lKey Resolution Protection"));
 
         if (OpsecConfig.EXPLOIT_PREVENTER_LOADED) {
-            widgets.add(createSectionHeader("\u00A77Managed by Exploit Preventer"));
+            widgets.add(createSectionHeader(OpsecLang.tr(OpsecStrings.EP_MANAGED_HEADER)));
             widgets.add(createEPManagedToggle(OpsecLang.component(OpsecStrings.OPTION_KEY_RESOLUTION_SPOOFING)));
         } else {
             widgets.add(cycleBuilder(COLORED_BOOL_TO_TEXT, List.of(Boolean.TRUE, Boolean.FALSE), settings.isTranslationProtectionEnabled())
@@ -1000,14 +974,23 @@ public class OpsecConfigScreen extends Screen {
         widgets.add(createSectionHeader("\u00A7f\u00A7lMod Whitelist"));
 
         if (OpsecConfig.EXPLOIT_PREVENTER_LOADED) {
-            widgets.add(createSectionHeader("\u00A77Managed by Exploit Preventer"));
+            widgets.add(createSectionHeader(OpsecLang.tr(OpsecStrings.EP_MANAGED_HEADER)));
             CycleButton<SpoofSettings.WhitelistMode> modeButton = cycleBuilder(WhitelistModeDisplay::getDisplayName, List.of(SpoofSettings.WhitelistMode.values()), SpoofSettings.WhitelistMode.OFF)
-                    .withTooltip(v -> Tooltip.create(Component.literal("Managed by Exploit Preventer")))
+                    .withTooltip(v -> Tooltip.create(OpsecLang.component(OpsecStrings.EP_MANAGED_TOOLTIP)))
                     .create(0, 0, 230, 20, OpsecLang.component(OpsecStrings.OPTION_WHITELIST_MODE), (b, v) -> {});
             modeButton.active = false;
             widgets.add(modeButton);
+        } else if (settings.isSpoofAsVanilla()) {
+            // Spoofing as vanilla blocks ALL custom payloads, so the whitelist mode
+            // is moot. Pin the cycle to OFF (Block All) and grey it out with a
+            // tooltip explaining how to unlock it.
+            CycleButton<SpoofSettings.WhitelistMode> lockedModeButton = cycleBuilder(WhitelistModeDisplay::getDisplayName, List.of(SpoofSettings.WhitelistMode.values()), SpoofSettings.WhitelistMode.OFF)
+                    .withTooltip(v -> Tooltip.create(OpsecLang.component(OpsecStrings.OPTION_WHITELIST_MODE_LOCKED_TOOLTIP)))
+                    .create(0, 0, 230, 20, OpsecLang.component(OpsecStrings.OPTION_WHITELIST_MODE), (b, v) -> {});
+            lockedModeButton.active = false;
+            widgets.add(lockedModeButton);
         } else {
-            // Tri-state mode selector: OFF → AUTO → ON
+            // Tri-state mode selector: Block All -> AUTO -> CUSTOM
             widgets.add(cycleBuilder(WhitelistModeDisplay::getDisplayName, List.of(SpoofSettings.WhitelistMode.values()), settings.getWhitelistMode())
                     .withTooltip(v -> Tooltip.create(WhitelistModeDisplay.getTooltip(v)))
                     .create(0, 0, 230, 20, OpsecLang.component(OpsecStrings.OPTION_WHITELIST_MODE),
@@ -1163,7 +1146,7 @@ public class OpsecConfigScreen extends Screen {
     
     private CycleButton<Boolean> createEPManagedToggle(Component label) {
         CycleButton<Boolean> button = cycleBuilder(COLORED_BOOL_TO_TEXT, List.of(Boolean.TRUE, Boolean.FALSE), false)
-                .withTooltip(v -> Tooltip.create(Component.literal("Managed by Exploit Preventer")))
+                .withTooltip(v -> Tooltip.create(OpsecLang.component(OpsecStrings.EP_MANAGED_TOOLTIP)))
                 .create(0, 0, 230, 20, label, (b, v) -> {});
         button.active = false;
         return button;
@@ -1497,56 +1480,23 @@ public class OpsecConfigScreen extends Screen {
         }
     }
     
-    // === Enums ===
-    
-    public enum BrandType {
-        VANILLA("vanilla", "Vanilla"),
-        FABRIC("fabric", "Fabric");
-        
-        private final String value;
-        private final String displayName;
-        
-        BrandType(String value, String displayName) {
-            this.value = value;
-            this.displayName = displayName;
-        }
-        
-        public String getValue() {
-            return value;
-        }
-        
-        public Component getDisplayName() {
-            return Component.literal(displayName);
-        }
-        
-        public static BrandType fromString(String s) {
-            for (BrandType type : values()) {
-                if (type.value.equalsIgnoreCase(s)) {
-                    return type;
-                }
-            }
-            return VANILLA;
-        }
-    }
-    
-    
     /**
      * Display helper for WhitelistMode enum.
      */
     private static class WhitelistModeDisplay {
         public static Component getDisplayName(SpoofSettings.WhitelistMode mode) {
             return switch (mode) {
-                case OFF -> Component.literal("\u00A7eOFF");        // Yellow
-                case AUTO -> Component.literal("\u00A7aAUTO");      // Green
-                case CUSTOM -> Component.literal("\u00A7bCUSTOM");  // Aqua
+                case OFF -> OpsecLang.component(OpsecStrings.WHITELIST_MODE_BLOCK_ALL);
+                case AUTO -> OpsecLang.component(OpsecStrings.WHITELIST_MODE_AUTO);
+                case CUSTOM -> OpsecLang.component(OpsecStrings.WHITELIST_MODE_CUSTOM);
             };
         }
 
         public static Component getTooltip(SpoofSettings.WhitelistMode mode) {
             return switch (mode) {
-                case OFF -> Component.literal("Whitelist disabled - all mod content blocked");
-                case AUTO -> Component.literal("Mods with network channels are automatically whitelisted");
-                case CUSTOM -> Component.literal("Manually select which mods to whitelist");
+                case OFF -> OpsecLang.component(OpsecStrings.WHITELIST_MODE_BLOCK_ALL_TOOLTIP);
+                case AUTO -> OpsecLang.component(OpsecStrings.WHITELIST_MODE_AUTO_TOOLTIP);
+                case CUSTOM -> OpsecLang.component(OpsecStrings.WHITELIST_MODE_CUSTOM_TOOLTIP);
             };
         }
     }

@@ -57,11 +57,14 @@ public class SpoofSettings {
         ALWAYS_ON
     }
     
-    // Brand spoofing
-    private boolean spoofBrand = true;
-    private String customBrand = FABRIC;
-    private boolean spoofChannels = true;
-    
+    // Brand spoofing — when true, the client advertises a vanilla brand and blocks
+    // ALL outbound custom payloads. When false, the natural Fabric brand passes
+    // through and channels are filtered via the Whitelist tab (Block All / Auto /
+    // Custom). The UI prevents spoofAsVanilla=true while the whitelist is in
+    // Auto/Custom — the resulting state would be incoherent (vanilla brand
+    // advertising selective mod channels).
+    private boolean spoofAsVanilla = false;
+
     // Resource pack protection
     private boolean isolatePackCache = true;
     private boolean blockLocalPackUrls = true;
@@ -108,21 +111,9 @@ public class SpoofSettings {
     
     public SpoofSettings() {}
     
-    public boolean isSpoofBrand() { return spoofBrand; }
-    public void setSpoofBrand(boolean spoofBrand) { this.spoofBrand = spoofBrand; }
-    
-    public String getCustomBrand() { return customBrand; }
-    public void setCustomBrand(String customBrand) {
-        if (VANILLA.equalsIgnoreCase(customBrand)) {
-            this.customBrand = VANILLA;
-        } else {
-            this.customBrand = FABRIC;
-        }
-    }
+    public boolean isSpoofAsVanilla() { return spoofAsVanilla; }
+    public void setSpoofAsVanilla(boolean spoofAsVanilla) { this.spoofAsVanilla = spoofAsVanilla; }
 
-    public boolean isSpoofChannels() { return spoofChannels; }
-    public void setSpoofChannels(boolean spoofChannels) { this.spoofChannels = spoofChannels; }
-    
     public boolean isIsolatePackCache() { return isolatePackCache; }
     public void setIsolatePackCache(boolean isolatePackCache) { this.isolatePackCache = isolatePackCache; }
     
@@ -217,26 +208,20 @@ public class SpoofSettings {
     public void setTamperWarningDismissed(boolean dismissed) { this.tamperWarningDismissed = dismissed; }
 
     public String getEffectiveBrand() {
-        if (!spoofBrand) return FABRIC;
-        // When whitelist is enabled (AUTO or ON), force Fabric brand
-        if (isWhitelistEnabled()) return FABRIC;
-        if (VANILLA.equalsIgnoreCase(customBrand)) return VANILLA;
-        return FABRIC;
+        return spoofAsVanilla ? VANILLA : FABRIC;
     }
 
     public boolean isVanillaMode() {
-        return VANILLA.equals(getEffectiveBrand());
+        return spoofAsVanilla;
     }
 
     public boolean isFabricMode() {
-        return FABRIC.equals(getEffectiveBrand());
+        return !spoofAsVanilla;
     }
     
     public JsonObject toJson() {
         JsonObject json = new JsonObject();
-        json.addProperty("spoofBrand", spoofBrand);
-        json.addProperty("customBrand", customBrand);
-        json.addProperty("spoofChannels", spoofChannels);
+        json.addProperty("spoofAsVanilla", spoofAsVanilla);
         json.addProperty("isolatePackCache", isolatePackCache);
         json.addProperty("blockLocalPackUrls", blockLocalPackUrls);
         json.addProperty("translationProtection", translationProtection);
@@ -268,9 +253,15 @@ public class SpoofSettings {
     
     public static SpoofSettings fromJson(JsonObject json) {
         SpoofSettings s = new SpoofSettings();
-        if (json.has("spoofBrand")) s.spoofBrand = json.get("spoofBrand").getAsBoolean();
-        if (json.has("customBrand")) s.setCustomBrand(json.get("customBrand").getAsString());
-        if (json.has("spoofChannels")) s.spoofChannels = json.get("spoofChannels").getAsBoolean();
+        if (json.has("spoofAsVanilla")) {
+            s.spoofAsVanilla = json.get("spoofAsVanilla").getAsBoolean();
+        } else if (json.has("spoofBrand")) {
+            // Legacy migration: old spoofBrand + customBrand collapse into a single toggle.
+            // spoofAsVanilla=true iff the old config was actively spoofing AND spoofing to vanilla.
+            boolean sb = json.get("spoofBrand").getAsBoolean();
+            String cb = json.has("customBrand") ? json.get("customBrand").getAsString() : FABRIC;
+            s.spoofAsVanilla = sb && VANILLA.equalsIgnoreCase(cb);
+        }
         if (json.has("isolatePackCache")) s.isolatePackCache = json.get("isolatePackCache").getAsBoolean();
         if (json.has("blockLocalPackUrls")) s.blockLocalPackUrls = json.get("blockLocalPackUrls").getAsBoolean();
         // Legacy support
@@ -351,9 +342,7 @@ public class SpoofSettings {
     }
     
     public void copyFrom(SpoofSettings other) {
-        this.spoofBrand = other.spoofBrand;
-        this.customBrand = other.customBrand;
-        this.spoofChannels = other.spoofChannels;
+        this.spoofAsVanilla = other.spoofAsVanilla;
         this.isolatePackCache = other.isolatePackCache;
         this.blockLocalPackUrls = other.blockLocalPackUrls;
         this.translationProtection = other.translationProtection;

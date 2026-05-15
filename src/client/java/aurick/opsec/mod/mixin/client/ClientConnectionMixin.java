@@ -129,7 +129,7 @@ public class ClientConnectionMixin {
             }
             
             OpsecConfig config = OpsecConfig.getInstance();
-            if (!config.shouldSpoofBrand() || !config.shouldSpoofChannels()) {
+            if (!config.shouldSpoofChannels()) {
                 ctx.write(msg, promise);
                 return;
             }
@@ -248,14 +248,10 @@ public class ClientConnectionMixin {
         }
         
         OpsecConfig config = OpsecConfig.getInstance();
-        if (!config.shouldSpoofBrand()) {
-            return;
-        }
-
         if (!config.shouldSpoofChannels()) {
             return;
         }
-        
+
         if (payload instanceof BrandPayload) {
             return;
         }

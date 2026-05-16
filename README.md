@@ -1,12 +1,14 @@
 <p align="center">
-<img src="https://github.com/user-attachments/assets/085ae33d-eee9-4624-b7e2-d65ef565342d" alt="duper trooper mogging my whole family" width="15%"/>
+<img src="https://github.com/user-attachments/assets/9adba640-2570-4c22-9355-4f13aa5d4507" alt="opsectransparent" width="15%"/>
 </p>
+<h1 align="center">OpSec</h1>
+
 
 <p align="center">A client-side Minecraft mod that provides protection against client fingerprinting, tracking exploits, and other privacy focused features.</p>
 
 
 > [!WARNING]
-> This is a passion project mostly built with AI. Everything is tested but don't rely on this for actual security. If you want something proven, use [ExploitPreventer](https://github.com/NikOverflow/ExploitPreventer) (See [EP Compatibility](#exploitpreventer-compatibility) and [Meteor Client notes](#pre-patched-meteor-client)). OpSec just offers more features and interactive customization on top of the basics.
+> This is a passion project mostly built with AI. Everything is tested, however if you to rely on something written by real people, use [ExploitPreventer](https://github.com/NikOverflow/ExploitPreventer) (See [EP Compatibility](#exploitpreventer-compatibility) and [Meteor Client notes](#pre-patched-meteor-client)). OpSec offers more comprehensive protection and features on top of the basics.
 
 > [!IMPORTANT]
 > OpSec and ExploitPrevent are **seperate and independent** projects. Please do not contact the ExploitPreventer developer regarding OpSec issues and vice versa. Feel free to open an issue here or express your concern in our [official support Discord server](https://discord.com/invite/PJ853Mpa8W).
@@ -133,7 +135,7 @@ Instead of storing all resource packs in a shared cache (`~/.minecraft/downloads
 
 ### Block Local URLs
 
-Taken from [ExploitPreventer](https://github.com/NikOverflow/ExploitPreventer) by [NikOverFlow](https://github.com/NikOverflow)
+Derived from [ExploitPreventer](https://github.com/NikOverflow/ExploitPreventer) by [NikOverFlow](https://github.com/NikOverflow)
 
 Malicious servers can send resource pack URLs that redirect to your local network to probe for local devices and services.
 

@@ -337,10 +337,9 @@ public class OpsecCommand {
     // ==================== FORMATTING HELPERS ====================
 
     private static MutableComponent header(String text) {
-        return Component.literal("")
-                .withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD)
-                .append("[OpSec] ")
-                .append(Component.literal(text).withStyle(ChatFormatting.YELLOW));
+        return Component.literal("[OpSec] ")
+                .withStyle(ChatFormatting.DARK_PURPLE)
+                .append(Component.literal(text).withStyle(ChatFormatting.WHITE, ChatFormatting.BOLD));
     }
 
     private static MutableComponent subheader(String text) {

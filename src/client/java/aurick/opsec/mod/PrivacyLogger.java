@@ -57,11 +57,8 @@ public class PrivacyLogger {
     }
     
     public enum AlertType {
-        INFO(ChatFormatting.GRAY, "ℹ"),
         WARNING(ChatFormatting.YELLOW, "⚠"),
-        DANGER(ChatFormatting.RED, "⛔"),
-        SUCCESS(ChatFormatting.GREEN, "✓"),
-        BLOCKED(ChatFormatting.GOLD, "🛡");
+        DANGER(ChatFormatting.RED, "⛔");
         
         private final ChatFormatting color;
         private final String icon;
@@ -175,9 +172,8 @@ public class PrivacyLogger {
             return;
         }
 
-        MutableComponent component = Component.literal(type.getIcon() + " ")
-                .withStyle(type.getColor())
-                .append(Component.literal("[OpSec] ").withStyle(ChatFormatting.DARK_PURPLE))
+        MutableComponent component = Component.literal("[OpSec] ")
+                .withStyle(ChatFormatting.DARK_PURPLE)
                 .append(Component.literal(message).withStyle(type.getColor()));
 
         //? if >=26.1 {

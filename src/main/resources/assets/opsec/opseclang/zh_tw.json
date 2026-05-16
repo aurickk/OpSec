@@ -85,7 +85,6 @@
   "opsec.tamper.actual": "\u00A78實際：%s...",
   "opsec.tamper.download": "\u00A7a下載官方發行版本",
   "opsec.tamper.dismiss_permanent": "我清楚自己在做什麼",
-  "opsec.tamper.dismiss": "關閉",
 
   "opsec.alert.trackpack.detected": "偵測到資源包指紋追蹤！網址：%s",
   "opsec.alert.trackpack.pattern": "偵測到資源包指紋追蹤模式！",

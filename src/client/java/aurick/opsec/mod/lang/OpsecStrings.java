@@ -96,7 +96,6 @@ public final class OpsecStrings {
     public static final String TAMPER_ACTUAL = "opsec.tamper.actual";
     public static final String TAMPER_DOWNLOAD = "opsec.tamper.download";
     public static final String TAMPER_DISMISS_PERMANENT = "opsec.tamper.dismiss_permanent";
-    public static final String TAMPER_DISMISS = "opsec.tamper.dismiss";
 
     // Chat alerts + toast titles (user-visible runtime messages)
     public static final String ALERT_TRACKPACK_DETECTED = "opsec.alert.trackpack.detected";

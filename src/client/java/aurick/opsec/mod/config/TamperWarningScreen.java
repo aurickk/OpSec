@@ -47,7 +47,7 @@ public class TamperWarningScreen extends Screen {
 
         // Compute total content height to center vertically
         int textHeight = textLineHeight * 8 + textGap + hashGap;
-        int totalHeight = textHeight + textToButtonGap + 2 * buttonSpacing + buttonHeight;
+        int totalHeight = textHeight + textToButtonGap + buttonSpacing + buttonHeight;
         int startY = (this.height - totalHeight) / 2;
 
         // Text labels (using StringWidget for cross-version rendering compatibility)
@@ -80,10 +80,6 @@ public class TamperWarningScreen extends Screen {
             OpsecConfig.getInstance().save();
             this.onClose();
         }).bounds(centerX - buttonWidth / 2, y + buttonSpacing, buttonWidth, buttonHeight).build());
-
-        this.addRenderableWidget(Button.builder(Component.literal(OpsecLang.tr(OpsecStrings.TAMPER_DISMISS)), button -> {
-            this.onClose();
-        }).bounds(centerX - buttonWidth / 2, y + buttonSpacing * 2, buttonWidth, buttonHeight).build());
     }
 
     private void addCenteredStringWidget(Component text, int centerX, int y) {

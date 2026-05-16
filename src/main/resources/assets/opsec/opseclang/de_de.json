@@ -85,7 +85,6 @@
   "opsec.tamper.actual": "\u00A78Tatsächlich: %s...",
   "opsec.tamper.download": "\u00A7aOffizielle Version herunterladen",
   "opsec.tamper.dismiss_permanent": "Ich weiß, was ich tue",
-  "opsec.tamper.dismiss": "Schließen",
 
   "opsec.alert.trackpack.detected": "Ressourcenpaket-Fingerprinting erkannt! URL: %s",
   "opsec.alert.trackpack.pattern": "Ressourcenpaket-Fingerprinting-Muster erkannt!",

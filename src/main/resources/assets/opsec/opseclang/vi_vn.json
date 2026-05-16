@@ -85,7 +85,6 @@
   "opsec.tamper.actual": "\u00A78Thực tế: %s...",
   "opsec.tamper.download": "\u00A7aTải Bản Phát Hành Chính Thức",
   "opsec.tamper.dismiss_permanent": "Tôi Biết Mình Đang Làm Gì",
-  "opsec.tamper.dismiss": "Bỏ qua",
 
   "opsec.alert.trackpack.detected": "Phát hiện lấy dấu vân tay qua gói tài nguyên! URL: %s",
   "opsec.alert.trackpack.pattern": "Phát hiện mẫu lấy dấu vân tay qua gói tài nguyên!",

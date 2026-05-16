@@ -27,6 +27,21 @@ public class OpsecConfig {
     public static final boolean EXPLOIT_PREVENTER_LOADED =
         FabricLoader.getInstance().isModLoaded("exploitpreventer");
 
+    // Per-MC-version feature gate: DownloadQueue + multi-pack stacking arrived 1.20.3.
+    // 1.20.1/1.20.2 isolate the pack cache via LegacyDownloadedPackSourceMixin instead.
+    //? if >=1.20.3 {
+    public static final boolean MC_VERSION_HAS_MULTI_PACK = true;
+    //?} else {
+    /*public static final boolean MC_VERSION_HAS_MULTI_PACK = false;
+    *///?}
+
+    // Block Local URLs: 1.20.1's HttpUtil lambda targeting was unreliable in practice; off there.
+    //? if >=1.20.2 {
+    public static final boolean MC_VERSION_HAS_BLOCK_LOCAL_URLS = true;
+    //?} else {
+    /*public static final boolean MC_VERSION_HAS_BLOCK_LOCAL_URLS = false;
+    *///?}
+
     private static volatile OpsecConfig INSTANCE;
     private static final Object LOCK = new Object();
 
@@ -141,21 +156,32 @@ public class OpsecConfig {
 
         if (settings.getWhitelistMode() == null) {
             Opsec.LOGGER.warn(
-                "[OpSec] Invalid whitelist mode, resetting to OFF"
+                "[OpSec] Invalid whitelist mode, resetting to AUTO"
             );
-            settings.setWhitelistMode(SpoofSettings.WhitelistMode.OFF);
+            settings.setWhitelistMode(SpoofSettings.WhitelistMode.AUTO);
             modified = true;
         }
 
         // Spoof-as-vanilla is the master mode: it implies "block ALL custom payloads",
-        // so an active whitelist (Auto/Custom) would be moot and the resulting state is
-        // incoherent (vanilla brand advertising selective mod channels). Force the
-        // whitelist to OFF (block all) whenever spoofAsVanilla is on.
+        // so an active whitelist (Auto/Custom) would be moot. Force the whitelist to
+        // OFF (block all) whenever spoofAsVanilla is on. setSpoofAsVanilla normally
+        // handles the swap, but hand-edited configs can still land here inconsistent.
         if (settings.isSpoofAsVanilla() && settings.getWhitelistMode() != SpoofSettings.WhitelistMode.OFF) {
             Opsec.LOGGER.warn(
                 "[OpSec] active whitelist incompatible with spoofAsVanilla; forcing whitelist OFF (block all)"
             );
             settings.setWhitelistMode(SpoofSettings.WhitelistMode.OFF);
+            modified = true;
+        }
+
+        // Block-All is no longer user-selectable: when spoof-vanilla is off, migrate
+        // any leftover OFF mode (from older configs that exposed it as a tri-state)
+        // back to AUTO so the user isn't stuck in an unreachable state.
+        if (!settings.isSpoofAsVanilla() && settings.getWhitelistMode() == SpoofSettings.WhitelistMode.OFF) {
+            Opsec.LOGGER.info(
+                "[OpSec] Migrating legacy whitelist OFF (block all) to AUTO — option is no longer user-selectable"
+            );
+            settings.setWhitelistMode(SpoofSettings.WhitelistMode.AUTO);
             modified = true;
         }
 
@@ -253,8 +279,6 @@ public class OpsecConfig {
         return settings.getPackStripMode();
     }
 
-    /** Bypass infrastructure (pack wrapping + pack-select UI unlock) is active.
-     *  True for all modes; only Exploit Preventer force-disables it. */
     public boolean shouldStripPack() {
         return !EXPLOIT_PREVENTER_LOADED;
     }

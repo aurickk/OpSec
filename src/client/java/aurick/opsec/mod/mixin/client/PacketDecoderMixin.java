@@ -1,5 +1,6 @@
 package aurick.opsec.mod.mixin.client;
 
+//? if >=1.20.5 {
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import aurick.opsec.mod.detection.PacketContext;
@@ -25,3 +26,15 @@ public class PacketDecoderMixin {
         }
     }
 }
+//?} else {
+/*
+import net.minecraft.network.protocol.PacketUtils;
+import org.spongepowered.asm.mixin.Mixin;
+
+// 1.20.4 and below: StreamCodec doesn't exist (introduced in 1.20.5 with the codec rewrite).
+// Empty mixin into a stable class — packet decode flag is set via PacketProcessorMixin /
+// PacketUtilsMixin on the message-handle path instead.
+@Mixin(PacketUtils.class)
+public class PacketDecoderMixin {
+}
+*///?}

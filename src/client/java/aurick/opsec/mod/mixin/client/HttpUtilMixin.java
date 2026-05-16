@@ -1,5 +1,6 @@
 package aurick.opsec.mod.mixin.client;
 
+//? if >=1.20.2 {
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.llamalad7.mixinextras.sugar.Local;
@@ -37,7 +38,18 @@ public class HttpUtilMixin {
 
     @SuppressWarnings("deprecation")
     @WrapOperation(
+        //? if >=1.20.3 {
         method = "downloadFile",
+        //?} else {
+        /*// 1.20.1 / 1.20.2: HttpUtil.downloadFile doesn't exist yet — the actual HTTP work
+        // lives in a private static synthetic method (the CompletableFuture.supplyAsync
+        // lambda body of downloadTo). Mojang's official mappings don't cover this synthetic,
+        // so Loom falls back to the Yarn intermediary name "method_15303". We list
+        // "lambda$downloadTo$0" as a secondary candidate in case a future toolchain rev
+        // picks the Java synthetic name instead — the @At INVOKE selector ensures only
+        // one of them binds.
+        method = {"method_15303", "lambda$downloadTo$0"},
+        *///?}
         at = @At(value = "INVOKE", target = "Ljava/net/HttpURLConnection;getInputStream()Ljava/io/InputStream;"),
         require = 1
     )
@@ -117,3 +129,13 @@ public class HttpUtilMixin {
         return original.call(instance);
     }
 }
+//?} else {
+/*
+import net.minecraft.network.protocol.PacketUtils;
+import org.spongepowered.asm.mixin.Mixin;
+
+// 1.20.1: Block Local URLs disabled (see MC_VERSION_HAS_BLOCK_LOCAL_URLS). Stub.
+@Mixin(PacketUtils.class)
+public class HttpUtilMixin {
+}
+*///?}

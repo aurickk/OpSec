@@ -46,7 +46,7 @@ public class CrackedAccount implements Account {
                     Optional.empty(),
                     Optional.empty()
             );*/
-            //?} else {
+            //?} else if >=1.20.2 {
             User newUser = new User(
                     username,
                     UUID.fromString(uuid),
@@ -55,7 +55,16 @@ public class CrackedAccount implements Account {
                     Optional.empty(),
                     User.Type.MSA
             );
-            //?}
+            //?} else {
+            /*User newUser = new User(
+                    username,
+                    uuid,
+                    "",
+                    Optional.empty(),
+                    Optional.empty(),
+                    User.Type.MSA
+            );
+            *///?}
 
             accessor.opsec$setUser(newUser);
 

@@ -319,7 +319,7 @@ public class SessionAccount implements Account {
                     Optional.empty(),
                     Optional.empty()
             );*/
-            //?} else {
+            //?} else if >=1.20.2 {
             User newUser = new User(
                     username,
                     UUID.fromString(uuid),
@@ -328,7 +328,16 @@ public class SessionAccount implements Account {
                     Optional.empty(),
                     User.Type.MSA
             );
-            //?}
+            //?} else {
+            /*User newUser = new User(
+                    username,
+                    uuid,
+                    accessToken,
+                    Optional.empty(),
+                    Optional.empty(),
+                    User.Type.MSA
+            );
+            *///?}
             
             // Set the new user/session
             accessor.opsec$setUser(newUser);

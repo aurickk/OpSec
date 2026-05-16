@@ -2,6 +2,8 @@ package aurick.opsec.mod.config;
 
 import aurick.opsec.mod.lang.OpsecLang;
 import aurick.opsec.mod.lang.OpsecStrings;
+//? if <1.20.2
+/*import net.minecraft.client.gui.GuiGraphics;*/
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.StringWidget;
 import net.minecraft.client.gui.screens.Screen;
@@ -69,6 +71,15 @@ public class UpdateScreen extends Screen {
         int textWidth = this.font.width(text);
         this.addRenderableWidget(new StringWidget(centerX - textWidth / 2, y, textWidth, 10, text, this.font));
     }
+
+    //? if <1.20.2 {
+    /*@Override
+    public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
+        // 1.20.1 Screen.render does not auto-call renderBackground.
+        this.renderBackground(graphics);
+        super.render(graphics, mouseX, mouseY, partialTick);
+    }
+    *///?}
 
     @Override
     public void onClose() {

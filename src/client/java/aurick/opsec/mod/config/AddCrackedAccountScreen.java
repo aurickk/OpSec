@@ -147,13 +147,29 @@ public class AddCrackedAccountScreen extends Screen {
             statusLabel.setWidth(statusWidth);
         }
     }*/
-    //?} elif <1.21.6 {
+    //?} elif <1.21.6 && >=1.20.2 {
     /*@Override
     public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
         this.renderBackground(graphics, mouseX, mouseY, partialTick);
         super.render(graphics, mouseX, mouseY, partialTick);
 
         // Update status label position to keep it centered
+        if (statusLabel != null && statusMessage != null && !statusMessage.getString().isEmpty()) {
+            int centerX = this.width / 2;
+            int centerY = this.height / 2;
+            int statusWidth = this.font.width(statusMessage);
+            statusLabel.setX(centerX - statusWidth / 2);
+            statusLabel.setY(centerY + 35);
+            statusLabel.setWidth(statusWidth);
+        }
+    }*/
+    //?} elif <1.20.2 {
+    /*@Override
+    public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
+        // 1.20.1: Screen.renderBackground takes a single GuiGraphics arg.
+        this.renderBackground(graphics);
+        super.render(graphics, mouseX, mouseY, partialTick);
+
         if (statusLabel != null && statusMessage != null && !statusMessage.getString().isEmpty()) {
             int centerX = this.width / 2;
             int centerY = this.height / 2;
@@ -187,9 +203,9 @@ public class AddCrackedAccountScreen extends Screen {
             grandParent = configScreen.getParent();
         }
         //? if >=1.21.6 {
-        this.minecraft.setScreen(new OpsecConfigScreen(grandParent, 4, 0));
+        this.minecraft.setScreen(new OpsecConfigScreen(grandParent, 3, 0));
         //?} else
-        /*this.minecraft.setScreen(new OpsecConfigScreen(grandParent, 4));*/
+        /*this.minecraft.setScreen(new OpsecConfigScreen(grandParent, 3));*/
     }
 
     //? if <1.21.9 {

@@ -1,7 +1,8 @@
 package aurick.opsec.mod.mixin.client;
 
+//? if >=1.20.3 {
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
- import com.llamalad7.mixinextras.sugar.Local;
+import com.llamalad7.mixinextras.sugar.Local;
 import aurick.opsec.mod.Opsec;
 import aurick.opsec.mod.config.OpsecConfig;
 import net.minecraft.client.Minecraft;
@@ -16,13 +17,13 @@ import java.util.UUID;
 
 /**
  * Isolates resource pack cache per-account to prevent cross-account fingerprinting.
- * 
+ *
  * <p>This prevents servers from tracking users across accounts by storing downloaded
  * resource packs in account-specific subdirectories instead of a shared cache.</p>
- * 
+ *
  * <p>Adapted from <a href="https://github.com/CCBlueX/LiquidBounce">LiquidBounce</a></p>
  * Copyright (c) 2015 - 2025 CCBlueX
- * 
+ *
  * @author Izuna
  * @see <a href="https://github.com/CCBlueX/LiquidBounce/blob/nextgen/src/main/java/net/ccbluex/liquidbounce/injection/mixins/minecraft/util/MixinDownloadQueue.java">MixinDownloadQueue.java</a>
  */
@@ -58,4 +59,15 @@ public class DownloadQueueMixin {
         return isolatedPath;
     }
 }
+//?} else {
+/*
+import net.minecraft.network.protocol.PacketUtils;
+import org.spongepowered.asm.mixin.Mixin;
 
+// 1.20.1/1.20.2: DownloadQueue class doesn't exist (introduced 1.20.3 with the
+// multi-pack rewrite). Per-account isolated pack cache on this era is handled
+// by HttpUtilMixin path redirection in the legacy server-resource-packs flow.
+@Mixin(PacketUtils.class)
+public class DownloadQueueMixin {
+}
+*///?}

@@ -1,10 +1,16 @@
 package aurick.opsec.mod.protection;
 
 import aurick.opsec.mod.Opsec;
+//? if >=1.20.5 {
 import aurick.opsec.mod.mixin.client.DownloadedPackSourceAccessor;
 import aurick.opsec.mod.mixin.client.MinecraftAccessor;
+//?}
 import net.minecraft.client.Minecraft;
+//? if >=1.20.3 {
 import net.minecraft.client.resources.server.DownloadedPackSource;
+//?} else {
+/*import net.minecraft.client.resources.DownloadedPackSource;
+*///?}
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -43,10 +49,11 @@ public class ResourcePackGuard {
      * @return true if successfully cleared, false otherwise
      */
     private static boolean clearDownloadQueueState() {
+        //? if >=1.20.5 {
         try {
             Minecraft mc = Minecraft.getInstance();
             DownloadedPackSource packSource = ((MinecraftAccessor) mc).opsec$getDownloadedPackSource();
-            
+
             if (packSource != null) {
                 ((DownloadedPackSourceAccessor) packSource).opsec$invokeCleanupAfterDisconnect();
                 Opsec.LOGGER.debug("[OpSec] Cleared download queue state via cleanupAfterDisconnect");
@@ -56,6 +63,33 @@ public class ResourcePackGuard {
             Opsec.LOGGER.debug("[OpSec] Could not clear download queue state: {}", e.getMessage());
         }
         return false;
+        //?} else if >=1.20.3 {
+        /*// 1.20.3-1.20.4: cleanupAfterDisconnect is public — call it directly.
+        try {
+            DownloadedPackSource packSource = Minecraft.getInstance().getDownloadedPackSource();
+            if (packSource != null) {
+                packSource.cleanupAfterDisconnect();
+                Opsec.LOGGER.debug("[OpSec] Cleared download queue state via cleanupAfterDisconnect");
+                return true;
+            }
+        } catch (Exception e) {
+            Opsec.LOGGER.debug("[OpSec] Could not clear download queue state: {}", e.getMessage());
+        }
+        return false;
+        *///?} else {
+        /*// 1.20.1 / 1.20.2: legacy DownloadedPackSource exposes public clearServerPack().
+        try {
+            DownloadedPackSource packSource = Minecraft.getInstance().getDownloadedPackSource();
+            if (packSource != null) {
+                packSource.clearServerPack();
+                Opsec.LOGGER.debug("[OpSec] Cleared download queue state via clearServerPack");
+                return true;
+            }
+        } catch (Exception e) {
+            Opsec.LOGGER.debug("[OpSec] Could not clear download queue state: {}", e.getMessage());
+        }
+        return false;
+        *///?}
     }
     
     /**

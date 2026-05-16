@@ -2,7 +2,7 @@
 	"required": true,
 	"package": "aurick.opsec.mod.mixin.client",
 	"refmap": "client-opsec.refmap.json",
-	"compatibilityLevel": "JAVA_21",
+	"compatibilityLevel": "${mixin_compat_level}",
 	"client": [
 		"ClientBrandRetrieverMixin",
 		"ClientConnectionMixin",
@@ -12,6 +12,7 @@
 		"DownloadQueueMixin",
 		"DownloadedPackSourceMixin",
 		"DownloadedPackSourceAccessor",
+		"LegacyDownloadedPackSourceMixin",
 		"PackRepositoryMixin",
 		"PackSelectionModelMixin",
 		"PackSelectionModelEntryBaseMixin",
@@ -33,6 +34,7 @@
 		"PacketDecoderMixin",
 		"PacketProcessorMixin",
 		"PacketUtilsMixin",
+		"TabNavigationBarMixin",
 		"TitleScreenMixin"
 	],
 	"injectors": {

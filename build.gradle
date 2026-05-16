@@ -101,7 +101,9 @@ dependencies {
     } else {
         modImplementation(loaderCoord)
         modImplementation(apiCoord)
-        modImplementation(modmenuCoord)
+        modImplementation("com.terraformersmc:modmenu:${modmenu_version}") {
+            exclude group: "eu.pb4", module: "placeholder-api"
+        }
     }
 
     // MixinSquared for cancelling other mods' mixins (Meteor Client fix)
@@ -115,18 +117,23 @@ dependencies {
     }
 }
 
-tasks.processResources {
+def javaVersion = (findProperty("java_version") ?: (isUnobfuscated ? "25" : "21")) as int
+
+tasks.withType(ProcessResources).configureEach {
+    def mixinCompatLevel = "JAVA_${javaVersion}"
     inputs.property("version", project.version)
     inputs.property("minecraft_version_range", minecraft_version_range)
-    filesMatching("fabric.mod.json") {
+    inputs.property("mixin_compat_level", mixinCompatLevel)
+    inputs.property("java_version", javaVersion.toString())
+    filesMatching(["fabric.mod.json", "opsec.client.mixins.json"]) {
         expand(
             "version": project.version,
-            "minecraft_version_range": minecraft_version_range
+            "minecraft_version_range": minecraft_version_range,
+            "mixin_compat_level": mixinCompatLevel,
+            "java_version": javaVersion.toString()
         )
     }
 }
-
-def javaVersion = isUnobfuscated ? 25 : 21
 
 tasks.withType(JavaCompile).configureEach {
     options.release = javaVersion

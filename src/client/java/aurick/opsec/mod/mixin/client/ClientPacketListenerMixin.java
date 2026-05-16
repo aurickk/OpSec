@@ -20,6 +20,15 @@ import net.minecraft.network.chat.SignedMessageChain;
 import net.minecraft.network.chat.contents.TranslatableContents;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.game.ClientboundLoginPacket;
+//? if <1.20.2 {
+/*import aurick.opsec.mod.detection.TrackPackDetector;
+import aurick.opsec.mod.lang.OpsecLang;
+import aurick.opsec.mod.lang.OpsecStrings;
+import net.minecraft.network.protocol.game.ClientboundResourcePackPacket;
+*///?}
+//? if <1.20.5 {
+/*import net.minecraft.network.protocol.game.ClientboundServerDataPacket;
+*///?}
 import net.minecraft.network.protocol.game.ClientboundSystemChatPacket;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
@@ -129,6 +138,7 @@ public abstract class ClientPacketListenerMixin {
 
         // Login packet flag: enable signing immediately if server declares it
         SpoofSettings settings = OpsecConfig.getInstance().getSettings();
+        //? if >=1.20.5 {
         if (packet.enforcesSecureChat()) {
             Opsec.LOGGER.debug("[OpSec] Server enforces secure chat");
 
@@ -141,12 +151,59 @@ public abstract class ClientPacketListenerMixin {
                 }
             }
         }
+        //?} else {
+        /*// <1.20.5: enforcesSecureChat moved off the login packet; picked up via
+        // opsec$onServerData below.
+        *///?}
 
         // Schedule port scan summary after 2 seconds
         opsec$pendingTask = opsec$getScheduler().schedule(() -> {
             Minecraft.getInstance().execute(PrivacyLogger::showPortScanSummary);
         }, 2, TimeUnit.SECONDS);
     }
+
+    //? if <1.20.5 {
+    /*// <1.20.5 fallback for the 1.20.5+ handleLogin enforcesSecureChat path.
+    @Inject(method = "handleServerData", at = @At("HEAD"))
+    private void opsec$onServerData(ClientboundServerDataPacket packet, CallbackInfo ci) {
+        if (!packet.enforcesSecureChat()) return;
+        SpoofSettings settings = OpsecConfig.getInstance().getSettings();
+        if (!settings.isOnDemand() || settings.isTempSign()) return;
+
+        Opsec.LOGGER.debug("[OpSec] Server enforces secure chat (server data)");
+        settings.setTempSign(true);
+
+        if (!settings.isSigningToastShown()) {
+            settings.setSigningToastShown(true);
+            PrivacyLogger.alertSecureChatRequired();
+        }
+    }
+    *///?}
+
+    //? if <1.20.2 {
+    /*// <1.20.2: single-pack server packs come through ClientboundResourcePackPacket on
+    // the game listener; on 1.20.2+ this is ClientCommonPacketListenerImplMixin instead.
+    // Drives TrackPack detection and pack-strip state (keyed by LEGACY_SERVER_PACK_UUID).
+    @Inject(method = "handleResourcePack", at = @At("HEAD"))
+    private void opsec$onLegacyResourcePack(ClientboundResourcePackPacket packet, CallbackInfo ci) {
+        String url = packet.getUrl();
+        String hash = packet.getHash();
+
+        boolean suspicious = TrackPackDetector.recordRequest(url, hash);
+        if (suspicious && TrackPackDetector.consumeNotifySuspiciousOnce()) {
+            PrivacyLogger.alertTrackPackDetected(url);
+        }
+
+        if (TrackPackDetector.isFingerprinting() && TrackPackDetector.consumeNotifyPatternOnce()) {
+            PrivacyLogger.alert(PrivacyLogger.AlertType.DANGER,
+                OpsecLang.tr(OpsecStrings.ALERT_TRACKPACK_PATTERN));
+            PrivacyLogger.toast(PrivacyLogger.AlertType.DANGER,
+                OpsecLang.tr(OpsecStrings.TOAST_TRACKPACK));
+        }
+
+        PackStripHandler.onPackPush(PackStripHandler.LEGACY_SERVER_PACK_UUID, url, packet.isRequired());
+    }
+    *///?}
 
     /**
      * Capture the message text when sending unsigned, so we can resend it signed

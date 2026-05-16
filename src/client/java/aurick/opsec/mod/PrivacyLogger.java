@@ -122,12 +122,16 @@ public class PrivacyLogger {
                 ? Component.literal(message).withStyle(ChatFormatting.GRAY) 
                 : null;
             
+            //? if >=1.20.3 {
             SystemToast.add(toastComponent, SystemToast.SystemToastId.PACK_LOAD_FAILURE, titleComponent, messageComponent);
+            //?} else {
+            /*SystemToast.add(toastComponent, SystemToast.SystemToastIds.PACK_LOAD_FAILURE, titleComponent, messageComponent);
+            *///?}
         } catch (RuntimeException e) {
             Opsec.LOGGER.error("[OpSec] Exception showing toast: {}", e.getMessage());
         }
     }
-    
+
     /**
      * Show a toast with pre-built components (no icon prefix added).
      */
@@ -147,7 +151,11 @@ public class PrivacyLogger {
             /*var toastComponent = client.getToasts();*/
             if (toastComponent == null) return;
 
+            //? if >=1.20.3 {
             SystemToast.add(toastComponent, SystemToast.SystemToastId.PACK_LOAD_FAILURE, titleComponent, messageComponent);
+            //?} else {
+            /*SystemToast.add(toastComponent, SystemToast.SystemToastIds.PACK_LOAD_FAILURE, titleComponent, messageComponent);
+            *///?}
         } catch (RuntimeException e) {
             Opsec.LOGGER.error("[OpSec] Exception showing toast: {}", e.getMessage());
         }

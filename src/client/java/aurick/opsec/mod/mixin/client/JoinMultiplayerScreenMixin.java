@@ -71,7 +71,11 @@ public abstract class JoinMultiplayerScreenMixin extends Screen {
             this.opsec$settingsButton.setX(this.width / 2 - SERVER_LIST_HALF_ROW_WIDTH);
             this.opsec$settingsButton.setY(6);
             this.opsec$settingsButton.setWidth(textWidth + BUTTON_PADDING);
+            //? if >=1.20.2 {
             this.opsec$settingsButton.setHeight(BUTTON_HEIGHT);
+            //?}
+            // 1.20.1: AbstractWidget.setHeight didn't exist; Button defaults to height=20
+            // (matches BUTTON_HEIGHT) — height isn't user-resizable on this era.
         }
     }
 }

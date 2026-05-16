@@ -74,7 +74,15 @@ public final class PackStripHandler {
 
     private static boolean isHttpUrl(String url) {
         try {
+            //? if >=1.21 {
             Util.parseAndValidateUntrustedUri(url);
+            //?} else {
+            /*java.net.URI uri = java.net.URI.create(url);
+            String scheme = uri.getScheme();
+            if (scheme == null || (!scheme.equalsIgnoreCase("http") && !scheme.equalsIgnoreCase("https"))) {
+                return false;
+            }
+            *///?}
             return true;
         } catch (Exception e) {
             return false;
@@ -137,12 +145,18 @@ public final class PackStripHandler {
         return id != null && userUnselectedOptional.contains(id);
     }
 
-    // Vanilla format: "server/<serial>/<uuid>" (DownloadedPackSource#loadRequestedPacks, "server/%08X/%s").
+    // 1.20.2+ multi-pack format: "server/<serial>/<uuid>" (DownloadedPackSource#loadRequestedPacks, "server/%08X/%s").
+    // 1.20.1 single-pack era uses the literal "server" — mapped to a sentinel UUID.
     private static final String SERVER_PACK_PREFIX = "server/";
+    public static final String LEGACY_SERVER_PACK_ID = "server";
+    public static final UUID LEGACY_SERVER_PACK_UUID =
+        UUID.fromString("00000000-0000-0000-0000-000000000001");
 
     /** Parses a downloaded-server pack id back into its UUID. Empty for any other shape. */
     public static Optional<UUID> packIdToUuid(String packId) {
-        if (packId == null || !packId.startsWith(SERVER_PACK_PREFIX)) return Optional.empty();
+        if (packId == null) return Optional.empty();
+        if (LEGACY_SERVER_PACK_ID.equals(packId)) return Optional.of(LEGACY_SERVER_PACK_UUID);
+        if (!packId.startsWith(SERVER_PACK_PREFIX)) return Optional.empty();
         int lastSlash = packId.lastIndexOf('/');
         if (lastSlash < SERVER_PACK_PREFIX.length() - 1) return Optional.empty();
         try {

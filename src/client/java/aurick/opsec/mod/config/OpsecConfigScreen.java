@@ -96,7 +96,16 @@ public class OpsecConfigScreen extends Screen {
     private int currentTab = 0;
     private double scrollOffset = 0;
     private List<Tab> tabs;
-    
+
+    //? if <1.20.3 {
+    /*// 1.20.1 / 1.20.2: Tab.visitChildren only accepts AbstractWidget, but
+    // ScrollableWidgetList is a ContainerObjectSelectionList (Renderable + GuiEventListener
+    // + NarratableEntry, not AbstractWidget). The screen registers the active tab's body
+    // itself, bypassing the tab-manager pipeline. Also tracks the last-known current tab so
+    // a click on a tab strip swaps the active body on the next render frame.
+    private ScrollableWidgetList managedBody;
+    *///?}
+
     public OpsecConfigScreen(Screen parent) {
         this(parent, 0, 0);
     }
@@ -154,7 +163,13 @@ public class OpsecConfigScreen extends Screen {
                 .width(150)
                 .build();
         
+        //? if >=1.20.3 {
         LinearLayout footer = this.layout.addToFooter(LinearLayout.horizontal().spacing(8));
+        //?} else {
+        /*// 1.20.1 / 1.20.2: LinearLayout.horizontal() static factory not yet present —
+        // construct directly with explicit position + orientation.
+        LinearLayout footer = this.layout.addToFooter(new LinearLayout(0, 0, LinearLayout.Orientation.HORIZONTAL));
+        *///?}
         footer.addChild(this.resetButton);
         footer.addChild(this.doneButton);
         
@@ -202,13 +217,9 @@ public class OpsecConfigScreen extends Screen {
                     .withTooltip(v -> Tooltip.create(OpsecLang.component(OpsecStrings.OPTION_SPOOF_AS_VANILLA_TOOLTIP)))
                     .create(0, 0, 230, 20, OpsecLang.component(OpsecStrings.OPTION_SPOOF_AS_VANILLA),
                         (button, value) -> {
+                            // setSpoofAsVanilla snapshots / restores whitelistMode around
+                            // the implicit Block-All override (see SpoofSettings).
                             settings.setSpoofAsVanilla(value);
-                            // Spoofing as vanilla implies "block all" \u2014 the whitelist mode
-                            // is meaningless in that state, so force it OFF and let the
-                            // Whitelist tab show its greyed-out cycle with the explanatory tooltip.
-                            if (value && settings.getWhitelistMode() != SpoofSettings.WhitelistMode.OFF) {
-                                settings.setWhitelistMode(SpoofSettings.WhitelistMode.OFF);
-                            }
                             config.save();
                             refreshScreen();
                     }));
@@ -219,18 +230,26 @@ public class OpsecConfigScreen extends Screen {
 
         if (OpsecConfig.EXPLOIT_PREVENTER_LOADED) {
             widgets.add(createSectionHeader(OpsecLang.tr(OpsecStrings.EP_MANAGED_HEADER)));
-            widgets.add(createEPManagedToggle(OpsecLang.component(OpsecStrings.OPTION_ISOLATE_PACK_CACHE)));
-            widgets.add(createEPManagedToggle(OpsecLang.component(OpsecStrings.OPTION_BLOCK_LOCAL_PACK_URLS)));
+            if (OpsecConfig.MC_VERSION_HAS_MULTI_PACK) {
+                widgets.add(createEPManagedToggle(OpsecLang.component(OpsecStrings.OPTION_ISOLATE_PACK_CACHE)));
+            }
+            if (OpsecConfig.MC_VERSION_HAS_BLOCK_LOCAL_URLS) {
+                widgets.add(createEPManagedToggle(OpsecLang.component(OpsecStrings.OPTION_BLOCK_LOCAL_PACK_URLS)));
+            }
         } else {
-            widgets.add(cycleBuilder(COLORED_BOOL_TO_TEXT, List.of(Boolean.TRUE, Boolean.FALSE), settings.isIsolatePackCache())
-                    .withTooltip(v -> Tooltip.create(OpsecLang.component(OpsecStrings.TOOLTIP_ISOLATE_PACK_CACHE)))
-                    .create(0, 0, 230, 20, OpsecLang.component(OpsecStrings.OPTION_ISOLATE_PACK_CACHE),
-                    (button, value) -> { settings.setIsolatePackCache(value); config.save(); }));
+            if (OpsecConfig.MC_VERSION_HAS_MULTI_PACK) {
+                widgets.add(cycleBuilder(COLORED_BOOL_TO_TEXT, List.of(Boolean.TRUE, Boolean.FALSE), settings.isIsolatePackCache())
+                        .withTooltip(v -> Tooltip.create(OpsecLang.component(OpsecStrings.TOOLTIP_ISOLATE_PACK_CACHE)))
+                        .create(0, 0, 230, 20, OpsecLang.component(OpsecStrings.OPTION_ISOLATE_PACK_CACHE),
+                        (button, value) -> { settings.setIsolatePackCache(value); config.save(); }));
+            }
 
-            widgets.add(cycleBuilder(COLORED_BOOL_TO_TEXT, List.of(Boolean.TRUE, Boolean.FALSE), settings.isBlockLocalPackUrls())
-                .withTooltip(v -> Tooltip.create(OpsecLang.component(OpsecStrings.TOOLTIP_BLOCK_LOCAL_PACK_URLS)))
-                    .create(0, 0, 230, 20, OpsecLang.component(OpsecStrings.OPTION_BLOCK_LOCAL_PACK_URLS),
-                    (button, value) -> { settings.setBlockLocalPackUrls(value); config.save(); }));
+            if (OpsecConfig.MC_VERSION_HAS_BLOCK_LOCAL_URLS) {
+                widgets.add(cycleBuilder(COLORED_BOOL_TO_TEXT, List.of(Boolean.TRUE, Boolean.FALSE), settings.isBlockLocalPackUrls())
+                    .withTooltip(v -> Tooltip.create(OpsecLang.component(OpsecStrings.TOOLTIP_BLOCK_LOCAL_PACK_URLS)))
+                        .create(0, 0, 230, 20, OpsecLang.component(OpsecStrings.OPTION_BLOCK_LOCAL_PACK_URLS),
+                        (button, value) -> { settings.setBlockLocalPackUrls(value); config.save(); }));
+            }
 
             // Bypass Server Pack Requirement (tri-state: MANUAL / ASK / ALWAYS_ON)
             widgets.add(cycleBuilder(
@@ -988,8 +1007,15 @@ public class OpsecConfigScreen extends Screen {
             lockedModeButton.active = false;
             widgets.add(lockedModeButton);
         } else {
-            // Tri-state mode selector: Block All -> AUTO -> CUSTOM
-            widgets.add(cycleBuilder(WhitelistModeDisplay::getDisplayName, List.of(SpoofSettings.WhitelistMode.values()), settings.getWhitelistMode())
+            // Two-state mode selector: AUTO <-> CUSTOM. Block All (WhitelistMode.OFF)
+            // is an internal override only exercised while spoof-as-vanilla is on
+            // (handled in the locked branch above), so it isn't offered here.
+            widgets.add(cycleBuilder(
+                        WhitelistModeDisplay::getDisplayName,
+                        List.of(SpoofSettings.WhitelistMode.AUTO, SpoofSettings.WhitelistMode.CUSTOM),
+                        settings.getWhitelistMode() == SpoofSettings.WhitelistMode.OFF
+                            ? SpoofSettings.WhitelistMode.AUTO
+                            : settings.getWhitelistMode())
                     .withTooltip(v -> Tooltip.create(WhitelistModeDisplay.getTooltip(v)))
                     .create(0, 0, 230, 20, OpsecLang.component(OpsecStrings.OPTION_WHITELIST_MODE),
                         (button, value) -> {
@@ -1184,7 +1210,52 @@ public class OpsecConfigScreen extends Screen {
         double scroll = getCurrentScrollOffset();
         this.minecraft.setScreen(new OpsecConfigScreen(this.parent, tabIndex, scroll));
     }
-    
+
+    //? if <1.20.2 {
+    /*@Override
+    public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
+        // 1.20.1: Screen.render does NOT auto-invoke renderBackground and does NOT
+        // route Tab body widgets through the renderables list — handle both here.
+        // (renderBackground is 1-arg on 1.20.1; gained mouseX/mouseY/partialTick in 1.20.2.)
+        syncManagedBody();
+        this.renderBackground(graphics);
+        super.render(graphics, mouseX, mouseY, partialTick);
+    }
+    *///?} elif <1.20.3 {
+    /*@Override
+    public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
+        // 1.20.2: same need as 1.20.1 (Tab body widgets aren't auto-routed since
+        // ScrollableWidgetList isn't an AbstractWidget yet), but renderBackground
+        // now takes the full (graphics, mouseX, mouseY, partialTick) signature.
+        syncManagedBody();
+        this.renderBackground(graphics, mouseX, mouseY, partialTick);
+        super.render(graphics, mouseX, mouseY, partialTick);
+    }
+    *///?}
+
+    //? if <1.20.3 {
+    /*private void syncManagedBody() {
+        ScrollableWidgetList desired = null;
+        Tab current = this.tabManager.getCurrentTab();
+        if (current instanceof WidgetTab wt) desired = wt.scrollableList;
+        if (this.managedBody == desired) return;
+        if (this.managedBody != null) this.removeWidget(this.managedBody);
+        this.managedBody = desired;
+        if (this.managedBody != null) {
+            sizeManagedBody();
+            this.managedBody.setScrollAmount(this.scrollOffset);
+            this.addRenderableWidget(this.managedBody);
+        }
+    }
+
+    private void sizeManagedBody() {
+        if (this.managedBody == null || this.tabWidget == null) return;
+        int tabBottom = this.tabWidget.getRectangle().bottom();
+        int bodyHeight = this.height - 36 - tabBottom;
+        this.managedBody.updateSize(this.width, bodyHeight, tabBottom, tabBottom + bodyHeight);
+    }
+    *///?}
+
     @Override
     protected void repositionElements() {
         if (this.tabWidget != null) {
@@ -1199,6 +1270,9 @@ public class OpsecConfigScreen extends Screen {
             this.tabManager.setTabArea(screenRect);
             this.layout.setHeaderHeight(tabBottom);
             this.layout.arrangeElements();
+            //? if <1.20.3 {
+            /*sizeManagedBody();
+            *///?}
         }
         // Reposition version label to match current screen height
         if (this.versionLabel != null) {
@@ -1213,10 +1287,10 @@ public class OpsecConfigScreen extends Screen {
     @Override
     public void tick() {
         super.tick();
-        // Update reset button state based on current tab (Accounts tab = index 4)
+        // Update reset button state based on current tab (Accounts tab = index 3)
         if (this.resetButton != null) {
             int currentTabIndex = getCurrentTabIndex();
-            boolean isAccountsTab = currentTabIndex == 4;
+            boolean isAccountsTab = currentTabIndex == 3;
             this.resetButton.active = !isAccountsTab;
         }
         
@@ -1329,7 +1403,7 @@ public class OpsecConfigScreen extends Screen {
             return scrollableList.currentScrollAmount();
         }
     }
-    //?} else {
+    //?} else if >=1.20.3 {
     /*// === Scrollable Tab implementation extending GridLayoutTab for compatibility ===
     // GridLayoutTab provides default getTabExtraNarration() implementation
     private class WidgetTab extends GridLayoutTab {
@@ -1356,13 +1430,54 @@ public class OpsecConfigScreen extends Screen {
             return scrollableList.currentScrollAmount();
         }
     }*/
-    //?}
+    //?} else {
+    /*// === 1.20.1 / 1.20.2: AbstractSelectionList lacks setSize/setPosition and is not an
+    // AbstractWidget. The visitChildren signature accepts a raw widget consumer that
+    // we can no-op (no widget is added — content is drawn manually via doLayout).
+    private class WidgetTab extends GridLayoutTab {
+        private final ScrollableWidgetList scrollableList;
+
+        public WidgetTab(Component title, List<AbstractWidget> widgets) {
+            super(title);
+            this.scrollableList = new ScrollableWidgetList(Minecraft.getInstance(), 300, 200, 0, widgets);
+        }
+
+        @Override
+        public void visitChildren(java.util.function.Consumer<AbstractWidget> consumer) {
+            // 1.20.1: ScrollableWidgetList is not an AbstractWidget — skip child visit.
+            // Tab content still renders via the scrollableList field directly.
+        }
+
+        @Override
+        public void doLayout(ScreenRectangle rectangle) {
+            // 1.20.1: setSize/setPosition were inlined as field assignments; use the
+            // protected fields on AbstractSelectionList directly via reflection-free
+            // helper. Since the list will be rendered manually, we just record offset.
+            scrollableList.setScrollAmount(scrollOffset);
+        }
+
+        public double getScrollAmount() {
+            return scrollableList.currentScrollAmount();
+        }
+    }
+    *///?}
 
     // === Scrollable Widget List ===
     private static class ScrollableWidgetList extends ContainerObjectSelectionList<ScrollableWidgetList.WidgetEntry> {
         public ScrollableWidgetList(Minecraft minecraft, int width, int height, int top, List<AbstractWidget> widgets) {
+            //? if >=1.20.3 {
             super(minecraft, width, height, top, 25);
+            //?} else {
+            /*// 1.20.1 / 1.20.2: 6-arg constructor including y1 (top + height).
+            super(minecraft, width, height, top, top + height, 25);
+            *///?}
             this.centerListVertically = false;
+            //? if <1.20.2 {
+            /*// AbstractSelectionList draws fading dark strips above y0 and below y1
+            // by default. Above y0 = tabBottom would obscure the TabNavigationBar's
+            // header bar; disable so the header and footer render unobscured.
+            this.setRenderTopAndBottom(false);
+            *///?}
 
             for (AbstractWidget widget : widgets) {
                 //? if >=1.21.6
@@ -1399,12 +1514,20 @@ public class OpsecConfigScreen extends Screen {
         protected int scrollBarX() {
             return this.getX() + this.getWidth() / 2 + 124;
         }
-        //?} else {
+        //?} else if >=1.20.3 {
         /*@Override
         protected int getScrollbarPosition() {
             return this.getX() + this.getWidth() / 2 + 124;
         }*/
-        //?}
+        //?} else {
+        /*@Override
+        protected int getScrollbarPosition() {
+            // 1.20.1 / 1.20.2: AbstractSelectionList uses protected x0/width fields directly,
+            // not getX()/getWidth() accessors (those came in 1.20.3 with the AbstractWidget
+            // layout API alignment).
+            return this.x0 + this.width / 2 + 124;
+        }
+        *///?}
         
 
         public static class WidgetEntry extends ContainerObjectSelectionList.Entry<WidgetEntry> {

@@ -40,7 +40,12 @@ public class PacketContext {
     public static void setPacketName(Object packet) {
         if (packet instanceof Packet<?> p) {
             try {
+                //? if >=1.20.5 {
                 PACKET_NAME.set(p.type().id().toString());
+                //?} else {
+                /*// 1.20.4 and below: Packet doesn't have type() — fall back to class name
+                PACKET_NAME.set(p.getClass().getSimpleName());
+                *///?}
             } catch (Exception e) {
                 PACKET_NAME.set("unknown");
             }

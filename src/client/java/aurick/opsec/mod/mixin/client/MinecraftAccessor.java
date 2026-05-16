@@ -4,7 +4,9 @@ import com.mojang.authlib.minecraft.UserApiService;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ProfileKeyPairManager;
 import net.minecraft.client.gui.screens.social.PlayerSocialManager;
+//? if >=1.20.5 {
 import net.minecraft.client.resources.server.DownloadedPackSource;
+//?}
 import net.minecraft.client.User;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Mutable;
@@ -32,7 +34,9 @@ public interface MinecraftAccessor {
     @Mutable
     @Accessor("playerSocialManager")
     void opsec$setPlayerSocialManager(PlayerSocialManager manager);
-    
+
+    //? if >=1.20.5 {
     @Accessor("downloadedPackSource")
     DownloadedPackSource opsec$getDownloadedPackSource();
+    //?}
 }

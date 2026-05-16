@@ -1,6 +1,8 @@
 package aurick.opsec.mod.protection;
 
+//? if >=1.20.5 {
 import net.minecraft.server.packs.PackLocationInfo;
+//?}
 import net.minecraft.server.packs.PackResources;
 import net.minecraft.server.packs.PackType;
 //? if >=1.21.4 {
@@ -87,20 +89,24 @@ public final class LangOnlyPackResources implements PackResources {
     }
     *///?}
 
+    //? if >=1.20.5 {
     @Override
     public PackLocationInfo location() {
         return delegate.location();
     }
+    //?}
 
     @Override
     public String packId() {
         return delegate.packId();
     }
 
+    //? if >=1.20.5 {
     @Override
     public Optional<net.minecraft.server.packs.repository.KnownPack> knownPackInfo() {
         return delegate.knownPackInfo();
     }
+    //?}
 
     @Override
     public void close() {

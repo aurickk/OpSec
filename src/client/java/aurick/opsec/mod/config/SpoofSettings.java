@@ -107,12 +107,38 @@ public class SpoofSettings {
     
     // Whitelist settings
     private WhitelistMode whitelistMode = WhitelistMode.AUTO;
+    // Snapshot of whitelistMode taken when spoofAsVanilla flipped on, so we can
+    // restore it when the user toggles spoofAsVanilla off. Null when spoofAsVanilla
+    // is currently false. Block-All (WhitelistMode.OFF) is the implicit override
+    // used while spoofAsVanilla is on and is not user-selectable from the UI.
+    private WhitelistMode previousWhitelistMode = null;
     private Set<String> whitelistedMods = new HashSet<>();
-    
+
     public SpoofSettings() {}
-    
+
     public boolean isSpoofAsVanilla() { return spoofAsVanilla; }
-    public void setSpoofAsVanilla(boolean spoofAsVanilla) { this.spoofAsVanilla = spoofAsVanilla; }
+    public void setSpoofAsVanilla(boolean spoofAsVanilla) {
+        if (this.spoofAsVanilla == spoofAsVanilla) return;
+        if (spoofAsVanilla) {
+            // Off -> On: remember the user's current whitelist choice so we can
+            // restore it later, then force the Block-All override.
+            if (this.whitelistMode != WhitelistMode.OFF) {
+                this.previousWhitelistMode = this.whitelistMode;
+            }
+            this.whitelistMode = WhitelistMode.OFF;
+        } else {
+            // On -> Off: restore the user's prior whitelist choice. Default to
+            // AUTO if there is no remembered choice (or it was somehow OFF) so
+            // the user is never left in the now-unreachable Block-All state.
+            WhitelistMode restored = this.previousWhitelistMode;
+            if (restored == null || restored == WhitelistMode.OFF) {
+                restored = WhitelistMode.AUTO;
+            }
+            this.whitelistMode = restored;
+            this.previousWhitelistMode = null;
+        }
+        this.spoofAsVanilla = spoofAsVanilla;
+    }
 
     public boolean isIsolatePackCache() { return isolatePackCache; }
     public void setIsolatePackCache(boolean isolatePackCache) { this.isolatePackCache = isolatePackCache; }
@@ -242,6 +268,9 @@ public class SpoofSettings {
 
         // Whitelist settings
         json.addProperty("whitelistMode", whitelistMode.name());
+        if (previousWhitelistMode != null) {
+            json.addProperty("previousWhitelistMode", previousWhitelistMode.name());
+        }
         JsonArray modsArray = new JsonArray();
         for (String modId : whitelistedMods) {
             modsArray.add(modId);
@@ -330,6 +359,18 @@ public class SpoofSettings {
         } else if (json.has("whitelistEnabled")) {
             s.whitelistMode = json.get("whitelistEnabled").getAsBoolean() ? WhitelistMode.CUSTOM : WhitelistMode.OFF;
         }
+        if (json.has("previousWhitelistMode")) {
+            String prevStr = json.get("previousWhitelistMode").getAsString();
+            try {
+                WhitelistMode prev = WhitelistMode.valueOf(prevStr);
+                // OFF is never a meaningful "previous" (it's the override state) — drop it.
+                if (prev != WhitelistMode.OFF) {
+                    s.previousWhitelistMode = prev;
+                }
+            } catch (IllegalArgumentException ignored) {
+                // unknown enum value — leave null
+            }
+        }
         if (json.has("whitelistedMods")) {
             JsonArray modsArray = json.getAsJsonArray("whitelistedMods");
             s.whitelistedMods = new HashSet<>();
@@ -361,6 +402,7 @@ public class SpoofSettings {
         this.tamperWarningDismissed = other.tamperWarningDismissed;
         this.alertHintShown = other.alertHintShown;
         this.whitelistMode = other.whitelistMode;
+        this.previousWhitelistMode = other.previousWhitelistMode;
         this.whitelistedMods = new HashSet<>(other.whitelistedMods);
     }
 }

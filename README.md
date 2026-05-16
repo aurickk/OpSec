@@ -8,7 +8,7 @@
 
 
 > [!WARNING]
-> This is a passion project mostly built with AI. Everything is tested, however if you to rely on something written by real people, use [ExploitPreventer](https://github.com/NikOverflow/ExploitPreventer) (See [EP Compatibility](#exploitpreventer-compatibility) and [Meteor Client notes](#pre-patched-meteor-client)). OpSec offers more comprehensive protection and features on top of the basics.
+> This is a passion project mostly built with AI. Everything is tested, however if you want to rely on something written by real people, use [ExploitPreventer](https://github.com/NikOverflow/ExploitPreventer) (See [EP Compatibility](#exploitpreventer-compatibility) and [Meteor Client notes](#pre-patched-meteor-client)). OpSec offers more comprehensive protection and features on top of the basics.
 
 > [!IMPORTANT]
 > OpSec and ExploitPrevent are **seperate and independent** projects. Please do not contact the ExploitPreventer developer regarding OpSec issues and vice versa. Feel free to open an issue here or express your concern in our [official support Discord server](https://discord.com/invite/PJ853Mpa8W).

@@ -8,7 +8,6 @@ import com.llamalad7.mixinextras.sugar.ref.LocalRef;
 import aurick.opsec.mod.Opsec;
 import aurick.opsec.mod.PrivacyLogger;
 import aurick.opsec.mod.config.OpsecConfig;
-import aurick.opsec.mod.util.HttpURLConnectionAccessor;
 import aurick.opsec.mod.util.LocalAddressUtil;
 import net.minecraft.util.HttpUtil;
 import org.spongepowered.asm.mixin.Mixin;
@@ -17,21 +16,21 @@ import org.spongepowered.asm.mixin.injection.At;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
+import java.net.InetSocketAddress;
 import java.net.MalformedURLException;
 import java.net.ProtocolException;
 import java.net.Proxy;
 import java.net.URL;
 import java.util.Map;
-import java.util.Objects;
 
 /**
- * Protects against redirect-to-localhost and HTTP 305 proxy redirect attacks.
- * Aligned with ExploitPreventer's HttpUtilMixin implementation.
+ * Vanilla-aligned redirect handling with per-hop local-address rejection.
  *
- * <p>Handles redirect codes 300-303, 305, and 307 with manual redirect following,
- * per-hop local address checking, and OpenSeSame-based Host header injection for 305 responses.
- *
- * @see <a href="https://github.com/NikOverflow/ExploitPreventer">ExploitPreventer</a>
+ * <p>Follows 301/302/303/307 normally and handles 305 by re-issuing the original
+ * request through the proxy named in {@code Location} — same observable behavior
+ * as JDK auto-follow, so the hop counts match vanilla exactly. The local-address
+ * check runs against every destination, including 305 proxies. HTTPS→HTTP
+ * downgrades are rejected; HTTP→HTTPS upgrades are followed, matching JDK.
  */
 @Mixin(HttpUtil.class)
 public class HttpUtilMixin {
@@ -81,49 +80,57 @@ public class HttpUtilMixin {
         int status = instance.getResponseCode();
 
         while (instance.getHeaderField("Location") != null
-                && ((status > 299 && status < 304) || status == 305 || status == 307)) {
-            if (redirects > maxRedirects - 1)
+                && (status == 301 || status == 302 || status == 303 || status == 305 || status == 307)) {
+            if (redirects >= maxRedirects - 1)
                 throw new ProtocolException("Server redirected too many times (" + maxRedirects + ")");
 
-            URL url;
-            try {
-                url = new URL(instance.getHeaderField("Location"));
-                if (!instance.getURL().getProtocol().equalsIgnoreCase(url.getProtocol())) break;
-            } catch (MalformedURLException exception) {
-                url = new URL(instance.getURL(), instance.getHeaderField("Location"));
-            }
-
-            String host = null;
             if (status == 305) {
-                url = new URL(instance.getURL().getProtocol(), url.getHost(), url.getPort(),
-                    instance.getURL().getFile());
-                host = instance.getURL().getHost()
-                    + (instance.getURL().getPort() != instance.getURL().getDefaultPort()
-                        ? (":" + instance.getURL().getPort()) : "");
+                URL proxyUrl;
+                try {
+                    proxyUrl = new URL(instance.getHeaderField("Location"));
+                } catch (MalformedURLException exception) {
+                    break;
+                }
+                if (!proxyUrl.getProtocol().equalsIgnoreCase("http")
+                        && !proxyUrl.getProtocol().equalsIgnoreCase("https")) break;
+
+                if (!LocalAddressUtil.isLocalAddress(LocalAddressUtil.serverAddress)
+                        && LocalAddressUtil.isLocalAddress(proxyUrl.getHost())) {
+                    Opsec.LOGGER.warn("[OpSec] Blocked connection to local address: {}", proxyUrl);
+                    PrivacyLogger.alertLocalPortScanDetected(proxyUrl.toString(), true);
+                    throw new IllegalStateException("Tried to connect to local address!");
+                }
+
+                int proxyPort = proxyUrl.getPort() == -1 ? proxyUrl.getDefaultPort() : proxyUrl.getPort();
+                Proxy hopProxy = new Proxy(Proxy.Type.HTTP,
+                    InetSocketAddress.createUnresolved(proxyUrl.getHost(), proxyPort));
+                instance = (HttpURLConnection) instance.getURL().openConnection(hopProxy);
+            } else {
+                URL url;
+                try {
+                    url = new URL(instance.getHeaderField("Location"));
+                    if (instance.getURL().getProtocol().equalsIgnoreCase("https")
+                            && url.getProtocol().equalsIgnoreCase("http")) break;
+                } catch (MalformedURLException exception) {
+                    url = new URL(instance.getURL(), instance.getHeaderField("Location"));
+                }
+
+                instance = (HttpURLConnection) url.openConnection(proxy);
+
+                if (!LocalAddressUtil.isLocalAddress(LocalAddressUtil.serverAddress)
+                        && LocalAddressUtil.isLocalAddress(instance.getURL().getHost())) {
+                    Opsec.LOGGER.warn("[OpSec] Blocked connection to local address: {}", instance.getURL());
+                    PrivacyLogger.alertLocalPortScanDetected(instance.getURL().toString(), true);
+                    throw new IllegalStateException("Tried to connect to local address!");
+                }
             }
 
-            instance = (HttpURLConnection) url.openConnection(proxy);
             instance.setInstanceFollowRedirects(false);
-            Objects.requireNonNull(instance);
             requestProperties.forEach(instance::setRequestProperty);
-
-            if (status == 305) {
-                HttpURLConnectionAccessor.add(HttpURLConnectionAccessor.getRequests(instance), "Host", host);
-            }
-
-            if (!LocalAddressUtil.isLocalAddress(LocalAddressUtil.serverAddress)
-                    && LocalAddressUtil.isLocalAddress(instance.getURL().getHost())) {
-                Opsec.LOGGER.warn("[OpSec] Blocked connection to local address: {}", instance.getURL());
-                PrivacyLogger.alertLocalPortScanDetected(instance.getURL().toString(), true);
-                throw new IllegalStateException("Tried to connect to local address!");
-            }
 
             status = instance.getResponseCode();
             redirects++;
         }
-
-        if (redirects > maxRedirects - 1)
-            throw new ProtocolException("Server redirected too many times (" + maxRedirects + ")");
 
         httpURLConnection.set(instance);
         return original.call(instance);

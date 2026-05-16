@@ -6,8 +6,6 @@ buildscript {
     }
     dependencies {
         classpath "net.fabricmc:fabric-loom:${property('loom_version')}"
-        classpath "dev.lukebemish.opensesame.loom:dev.lukebemish.opensesame.loom.gradle.plugin:0.8.1"
-        classpath "dev.lukebemish.opensesame:dev.lukebemish.opensesame.gradle.plugin:0.8.1"
     }
 }
 
@@ -25,11 +23,6 @@ if (isUnobfuscated) {
     apply plugin: "fabric-loom"
 }
 apply plugin: "maven-publish"
-if (isUnobfuscated) {
-    apply plugin: "dev.lukebemish.opensesame"
-} else {
-    apply plugin: "dev.lukebemish.opensesame.loom"
-}
 
 group = property("maven_group")
 version = property("mod_version")
@@ -62,8 +55,6 @@ loom {
         }
     }
 }
-
-opensesame.apply(sourceSets.client)
 
 sourceSets {
     main {
@@ -108,13 +99,6 @@ dependencies {
 
     // MixinSquared for cancelling other mods' mixins (Meteor Client fix)
     include(implementation(annotationProcessor("com.github.bawnorton.mixinsquared:mixinsquared-fabric:0.3.2-beta.4")))
-
-    // OpenSeSame for safe JVM-internal access (Host header injection in HttpUtilMixin)
-    if (isUnobfuscated) {
-        include(implementation("dev.lukebemish.opensesame:opensesame-core:0.8.1"))
-    } else {
-        include(implementation("dev.lukebemish.opensesame:opensesame-fabric:0.8.1"))
-    }
 }
 
 def javaVersion = (findProperty("java_version") ?: (isUnobfuscated ? "25" : "21")) as int

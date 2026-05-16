@@ -304,6 +304,7 @@ public class OpsecConfigScreen extends Screen {
                                 config.save();
                         }));
 
+                //? if <26.1 {
                 widgets.add(cycleBuilder(COLORED_BOOL_TO_TEXT, List.of(Boolean.TRUE, Boolean.FALSE), settings.isMeteorFix())
                     .withTooltip(v -> Tooltip.create(OpsecLang.component(OpsecStrings.TOOLTIP_METEOR_FIX)))
                         .create(0, 0, 230, 20, OpsecLang.component(OpsecStrings.OPTION_METEOR_FIX),
@@ -317,6 +318,7 @@ public class OpsecConfigScreen extends Screen {
                 if (MeteorMixinCanceller.needsRestart(settings.isMeteorFix())) {
                     widgets.add(createSectionHeader("\u00A7e\u26A0 Requires game restart to take effect"));
                 }
+                //?}
             }
         }
 

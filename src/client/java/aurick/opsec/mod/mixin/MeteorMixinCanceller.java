@@ -14,16 +14,20 @@ import java.util.List;
 
 /**
  * Cancels Meteor Client's broken AbstractSignEditScreenMixin when the Meteor Fix option is enabled.
- * 
+ *
  * Meteor's mixin converts TranslatableContents to PlainTextContent.Literal, which:
  * 1. Destroys the fallback value
  * 2. Returns the raw key instead of the expected fallback
  * 3. Exposes the client to anti-spoof detection by servers
- * 
+ *
  * By disabling Meteor's mixin, OpSec's proper implementation handles everything correctly,
  * including returning fallback values when present.
- * 
+ *
  * Note: Changes to this setting require a game restart to take effect.
+ *
+ * On Minecraft 26.1+ this canceller is a no-op: Meteor Client 26.1.2 removed the targeted
+ * AbstractSignEditScreenMixin upstream, so there is nothing to cancel. The UI toggle is
+ * also hidden on 26.1+ (see OpsecConfigScreen).
  */
 public class MeteorMixinCanceller implements MixinCanceller {
     
@@ -123,6 +127,11 @@ public class MeteorMixinCanceller implements MixinCanceller {
     
     @Override
     public boolean shouldCancel(List<String> targetClassNames, String mixinClassName) {
+        //? if >=26.1 {
+        /*// Meteor Client 26.1.2 removed AbstractSignEditScreenMixin upstream; nothing to cancel.
+        return false;
+        */
+        //?} else {
         // Only cancel Meteor's AbstractSignEditScreenMixin when:
         // 1. Meteor Client is installed
         // 2. Meteor Fix is enabled in config
@@ -132,6 +141,7 @@ public class MeteorMixinCanceller implements MixinCanceller {
             return true;
         }
         return false;
+        //?}
     }
 }
 

@@ -95,7 +95,6 @@
   "opsec.alert.portscan.summary.single": "Detected %d local port scan(s) to %s",
   "opsec.alert.portscan.summary.multi": "Detected %d local port scan(s): %s",
   "opsec.alert.portscan.summary.more": " +%d more",
-  "opsec.alert.securechat.required": "Server requires secure chat. Chat signing enabled.",
 
   "opsec.alert.keyresolution": "Key resolution probe detected",
   "opsec.toast.keyresolution": "Key Resolution Probe Detected",
@@ -196,6 +195,5 @@
   "opsec.button.disableAll.tooltip": "Remove all mods from whitelist",
 
   "opsec.chatSigning.sign.tooltip": "Always sign chat messages",
-  "opsec.chatSigning.off.tooltip": "Never sign chat messages",
-  "opsec.chatSigning.onDemand.tooltip": "Only sign chat messages when server requires it"
+  "opsec.chatSigning.off.tooltip": "Never sign chat messages"
 }

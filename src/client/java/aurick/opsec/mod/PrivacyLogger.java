@@ -296,10 +296,4 @@ public class PrivacyLogger {
         }
     }
     
-    public static void alertSecureChatRequired() {
-        logDetection("SecureChat", "Server enforces secure chat - ON_DEMAND signing activated");
-        if (!OpsecConfig.getInstance().isDebugAlerts()) return;
-        alert(AlertType.WARNING, OpsecLang.tr(OpsecStrings.ALERT_SECURECHAT_REQUIRED));
-    }
-
 }

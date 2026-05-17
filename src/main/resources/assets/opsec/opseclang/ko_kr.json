@@ -95,7 +95,6 @@
   "opsec.alert.portscan.summary.single": "%s에 대한 로컬 포트 스캔 %d건이 감지되었습니다",
   "opsec.alert.portscan.summary.multi": "로컬 포트 스캔 %d건이 감지되었습니다: %s",
   "opsec.alert.portscan.summary.more": " 외 +%d건",
-  "opsec.alert.securechat.required": "서버에서 보안 채팅이 필요합니다. 채팅 서명이 활성화되었습니다.",
 
   "opsec.alert.keyresolution": "키 해석 탐지 시도가 감지되었습니다",
   "opsec.toast.keyresolution": "키 해석 탐지 시도 감지됨",
@@ -196,6 +195,5 @@
   "opsec.button.disableAll.tooltip": "화이트리스트에서 모든 모드를 제거합니다",
 
   "opsec.chatSigning.sign.tooltip": "채팅 메시지에 항상 서명합니다",
-  "opsec.chatSigning.off.tooltip": "채팅 메시지에 절대 서명하지 않습니다",
-  "opsec.chatSigning.onDemand.tooltip": "서버에서 요구할 때만 채팅 메시지에 서명합니다"
+  "opsec.chatSigning.off.tooltip": "채팅 메시지에 절대 서명하지 않습니다"
 }

@@ -1631,17 +1631,15 @@ public class OpsecConfigScreen extends Screen {
     private static class SigningModeDisplay {
         public static Component getDisplayName(SpoofSettings.SigningMode mode) {
             return switch (mode) {
-                case SIGN -> Component.literal("\u00A7cON"); // Red - signing enabled
-                case OFF -> Component.literal("\u00A7eOFF"); // Yellow - signing disabled 
-                case ON_DEMAND -> Component.literal("\u00A7aAUTO"); // Green - recommended
+                case SIGN -> Component.literal("\u00A7aON");  // Green - default, chat works everywhere
+                case OFF  -> Component.literal("\u00A7eOFF"); // Yellow - privacy at the cost of chat on strict servers
             };
         }
-        
+
         public static Component getTooltip(SpoofSettings.SigningMode mode) {
             return switch (mode) {
                 case SIGN -> OpsecLang.component(OpsecStrings.CHATSIGNING_SIGN_TOOLTIP);
-                case OFF -> OpsecLang.component(OpsecStrings.CHATSIGNING_OFF_TOOLTIP);
-                case ON_DEMAND -> OpsecLang.component(OpsecStrings.CHATSIGNING_ONDEMAND_TOOLTIP);
+                case OFF  -> OpsecLang.component(OpsecStrings.CHATSIGNING_OFF_TOOLTIP);
             };
         }
     }

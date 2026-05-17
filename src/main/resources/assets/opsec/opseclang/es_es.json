@@ -95,7 +95,6 @@
   "opsec.alert.portscan.summary.single": "Detectado %d escaneo(s) de puertos locales hacia %s",
   "opsec.alert.portscan.summary.multi": "Detectados %d escaneo(s) de puertos locales: %s",
   "opsec.alert.portscan.summary.more": " +%d más",
-  "opsec.alert.securechat.required": "El servidor requiere chat seguro. Firma de chat activada.",
 
   "opsec.alert.keyresolution": "Sondeo de resolución de claves detectado",
   "opsec.toast.keyresolution": "Sondeo de resolución de claves detectado",
@@ -196,6 +195,5 @@
   "opsec.button.disableAll.tooltip": "Eliminar todos los mods de la whitelist",
 
   "opsec.chatSigning.sign.tooltip": "Firmar siempre los mensajes del chat",
-  "opsec.chatSigning.off.tooltip": "No firmar nunca los mensajes del chat",
-  "opsec.chatSigning.onDemand.tooltip": "Firmar los mensajes del chat solo cuando el servidor lo requiera"
+  "opsec.chatSigning.off.tooltip": "No firmar nunca los mensajes del chat"
 }

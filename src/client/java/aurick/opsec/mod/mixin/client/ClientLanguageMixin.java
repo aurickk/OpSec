@@ -44,27 +44,34 @@ public class ClientLanguageMixin {
     private static boolean opsec$loggedOnce = false;
     
     /**
-     * Clear translation key caches and reset logging flag before loading new language.
-     * The WrapOperation on appendFrom (require=1) will repopulate all keys from each pack.
+     * Begin a translation-key rebuild before vanilla starts populating the new
+     * ClientLanguage. The WrapOperation on appendFrom (require=1) calls our
+     * record* methods, which route to the staging buffer set up here. The live
+     * registry stays consistent for any concurrent reader (chat / sign render
+     * on the main thread) until {@link #opsec$onLoadComplete} swaps in the new
+     * snapshot.
      */
     @Inject(method = "loadFrom", at = @At("HEAD"))
     private static void opsec$onLoadStart(ResourceManager resourceManager, List<String> filenames,
             boolean defaultRightToLeft, CallbackInfoReturnable<ClientLanguage> cir) {
-        ModRegistry.clearTranslationKeys();
-        KeybindDefaults.reset();
+        ModRegistry.beginTranslationRebuild();
         // Keep OpSec's private string map in sync with the client's selected locale.
         // Runs outside the vanilla Language pipeline so server resource packs cannot override.
         OpsecLang.reload(filenames);
         Opsec.LOGGER.debug("[OpSec] ClientLanguageMixin: Starting language load");
         opsec$loggedOnce = false;
     }
-    
+
     /**
-     * Log one-time tracking summary after language load completes.
+     * Atomically install the staged translation-key snapshot, refresh
+     * KeybindDefaults (its lazy init reads ModRegistry's vanilla key set), and
+     * log a one-time summary.
      */
     @Inject(method = "loadFrom", at = @At("RETURN"))
     private static void opsec$onLoadComplete(ResourceManager resourceManager, List<String> filenames,
             boolean defaultRightToLeft, CallbackInfoReturnable<ClientLanguage> cir) {
+        ModRegistry.commitTranslationRebuild();
+        KeybindDefaults.reset();
         if (!opsec$loggedOnce) {
             opsec$loggedOnce = true;
             Opsec.LOGGER.debug("[OpSec] Translation key tracking: {} vanilla, {} server pack, {} total",

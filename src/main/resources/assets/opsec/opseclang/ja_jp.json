@@ -95,7 +95,6 @@
   "opsec.alert.portscan.summary.single": "%d 件のローカルポートスキャンを %s に対して検出しました",
   "opsec.alert.portscan.summary.multi": "%d 件のローカルポートスキャンを検出しました: %s",
   "opsec.alert.portscan.summary.more": " +%d 件以上",
-  "opsec.alert.securechat.required": "サーバーがセキュアチャットを要求しています。チャット署名を有効化しました。",
 
   "opsec.alert.keyresolution": "キー解決の探査を検出しました",
   "opsec.toast.keyresolution": "キー解決の探査を検出",
@@ -196,6 +195,5 @@
   "opsec.button.disableAll.tooltip": "ホワイトリストからすべてのMODを削除します",
 
   "opsec.chatSigning.sign.tooltip": "チャットメッセージを常に署名します",
-  "opsec.chatSigning.off.tooltip": "チャットメッセージを署名しません",
-  "opsec.chatSigning.onDemand.tooltip": "サーバーが要求した場合のみチャットメッセージを署名します"
+  "opsec.chatSigning.off.tooltip": "チャットメッセージを署名しません"
 }

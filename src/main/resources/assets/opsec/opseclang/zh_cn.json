@@ -95,7 +95,6 @@
   "opsec.alert.portscan.summary.single": "检测到 %d 次对 %s 的本地端口扫描",
   "opsec.alert.portscan.summary.multi": "检测到 %d 次本地端口扫描：%s",
   "opsec.alert.portscan.summary.more": " 等 %d 项",
-  "opsec.alert.securechat.required": "服务器要求安全聊天。已启用聊天签名。",
 
   "opsec.alert.keyresolution": "检测到翻译键解析探测",
   "opsec.toast.keyresolution": "检测到翻译键解析探测",
@@ -196,6 +195,5 @@
   "opsec.button.disableAll.tooltip": "从白名单中移除所有模组",
 
   "opsec.chatSigning.sign.tooltip": "始终签名聊天消息",
-  "opsec.chatSigning.off.tooltip": "从不签名聊天消息",
-  "opsec.chatSigning.onDemand.tooltip": "仅当服务器要求时才签名聊天消息"
+  "opsec.chatSigning.off.tooltip": "从不签名聊天消息"
 }

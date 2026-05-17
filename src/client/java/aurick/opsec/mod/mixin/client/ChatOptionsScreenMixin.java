@@ -34,7 +34,7 @@ public abstract class ChatOptionsScreenMixin extends OptionsSubScreen {
     protected void init() {
         super.init();
 
-        // Disable option when not signing (OFF, or ON_DEMAND without tempSign)
+        // Disable option when signing is OFF — there are no signatures to verify.
         if (OpsecConfig.getInstance().shouldNotSign()) {
             // Find and disable the onlyShowSecureChat option
             Optional.ofNullable(this.list.findOption(Minecraft.getInstance().options.onlyShowSecureChat()))

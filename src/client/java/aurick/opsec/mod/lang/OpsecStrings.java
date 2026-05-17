@@ -107,7 +107,6 @@ public final class OpsecStrings {
     public static final String ALERT_PORTSCAN_SUMMARY_SINGLE = "opsec.alert.portscan.summary.single";
     public static final String ALERT_PORTSCAN_SUMMARY_MULTI = "opsec.alert.portscan.summary.multi";
     public static final String ALERT_PORTSCAN_SUMMARY_MORE = "opsec.alert.portscan.summary.more";
-    public static final String ALERT_SECURECHAT_REQUIRED = "opsec.alert.securechat.required";
 
     // Key-resolution probe alert + toast + one-time hint
     public static final String ALERT_KEYRESOLUTION = "opsec.alert.keyresolution";
@@ -218,5 +217,4 @@ public final class OpsecStrings {
     // Chat-signing mode tooltips
     public static final String CHATSIGNING_SIGN_TOOLTIP = "opsec.chatSigning.sign.tooltip";
     public static final String CHATSIGNING_OFF_TOOLTIP = "opsec.chatSigning.off.tooltip";
-    public static final String CHATSIGNING_ONDEMAND_TOOLTIP = "opsec.chatSigning.onDemand.tooltip";
 }

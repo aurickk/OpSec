@@ -95,7 +95,6 @@
   "opsec.alert.portscan.summary.single": "Đã phát hiện %d lần quét cổng cục bộ tới %s",
   "opsec.alert.portscan.summary.multi": "Đã phát hiện %d lần quét cổng cục bộ: %s",
   "opsec.alert.portscan.summary.more": " +%d nữa",
-  "opsec.alert.securechat.required": "Máy chủ yêu cầu chat bảo mật. Đã bật ký tin nhắn chat.",
 
   "opsec.alert.keyresolution": "Phát hiện thăm dò phân giải khóa",
   "opsec.toast.keyresolution": "Phát hiện Thăm dò Phân giải Khóa",
@@ -196,6 +195,5 @@
   "opsec.button.disableAll.tooltip": "Xóa tất cả mod khỏi danh sách trắng",
 
   "opsec.chatSigning.sign.tooltip": "Luôn ký tin nhắn chat",
-  "opsec.chatSigning.off.tooltip": "Không bao giờ ký tin nhắn chat",
-  "opsec.chatSigning.onDemand.tooltip": "Chỉ ký tin nhắn chat khi máy chủ yêu cầu"
+  "opsec.chatSigning.off.tooltip": "Không bao giờ ký tin nhắn chat"
 }

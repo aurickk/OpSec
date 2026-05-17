@@ -148,9 +148,9 @@ public class OpsecConfig {
 
         if (settings.getSigningMode() == null) {
             Opsec.LOGGER.warn(
-                "[OpSec] Invalid signing mode, resetting to ON_DEMAND"
+                "[OpSec] Invalid signing mode, resetting to SIGN"
             );
-            settings.setSigningMode(SpoofSettings.SigningMode.ON_DEMAND);
+            settings.setSigningMode(SpoofSettings.SigningMode.SIGN);
             modified = true;
         }
 
@@ -315,10 +315,6 @@ public class OpsecConfig {
 
     public boolean shouldNotSign() {
         return settings.shouldNotSign();
-    }
-
-    public boolean isOnDemandSigning() {
-        return settings.isOnDemand();
     }
 
     // Privacy

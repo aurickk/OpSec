@@ -16,14 +16,19 @@ public class SpoofSettings {
     /**
      * Signing modes for chat messages.
      * Controls whether messages are cryptographically signed.
+     *
+     * <p>ON_DEMAND was removed: it could not be implemented without either a
+     * server-detectable fingerprint (auto-upgrade based on attacker-controlled
+     * system chat) or breaking on every proxy network (login flag is set by the
+     * proxy, not the backend). Users who want maximum privacy set OFF and
+     * accept that some servers will reject their chats; users who want chat to
+     * just work set SIGN. The mod no longer tries to straddle the two.</p>
      */
     public enum SigningMode {
-        /** Always sign messages (chat reportable to Mojang) */
+        /** Always sign messages (chat reportable to Mojang). Default. */
         SIGN,
-        /** Never sign messages (may break on strict servers) */
-        OFF,
-        /** Only sign when server requires it (recommended) */
-        ON_DEMAND
+        /** Never sign messages (may break on strict servers). */
+        OFF
     }
 
     /**
@@ -87,9 +92,7 @@ public class SpoofSettings {
     private boolean debugAlerts = false;
     
     // Chat Signing
-    private SigningMode signingMode = SigningMode.ON_DEMAND;
-    private transient boolean tempSign = false;
-    private transient boolean signingToastShown = false;
+    private SigningMode signingMode = SigningMode.SIGN;
     
     // Privacy
     private boolean disableTelemetry = true;
@@ -173,26 +176,11 @@ public class SpoofSettings {
     // Signing mode methods
     public SigningMode getSigningMode() { return signingMode; }
     public void setSigningMode(SigningMode mode) { this.signingMode = mode; }
-    
+
     public boolean shouldNotSign() {
-        return signingMode == SigningMode.OFF || (signingMode == SigningMode.ON_DEMAND && !tempSign);
+        return signingMode == SigningMode.OFF;
     }
-    
-    public boolean isOnDemand() {
-        return signingMode == SigningMode.ON_DEMAND;
-    }
-    
-    public boolean isTempSign() { return tempSign; }
-    public void setTempSign(boolean tempSign) { this.tempSign = tempSign; }
-    
-    public boolean isSigningToastShown() { return signingToastShown; }
-    public void setSigningToastShown(boolean shown) { this.signingToastShown = shown; }
-    
-    public void resetSessionState() {
-        this.tempSign = false;
-        this.signingToastShown = false;
-    }
-    
+
     public boolean isDisableTelemetry() { return disableTelemetry; }
     public void setDisableTelemetry(boolean disableTelemetry) { this.disableTelemetry = disableTelemetry; }
     
@@ -328,16 +316,14 @@ public class SpoofSettings {
         if (json.has("debugAlerts")) s.debugAlerts = json.get("debugAlerts").getAsBoolean();
         if (json.has("signingMode")) {
             String mode = json.get("signingMode").getAsString();
-            if ("NO_KEY".equals(mode) || "NO_SIGN".equals(mode)) {
-                s.signingMode = SigningMode.OFF;
-            } else if ("SIGN".equals(mode)) {
-                s.signingMode = SigningMode.SIGN;
-            } else if ("ON_DEMAND".equals(mode)) {
-                s.signingMode = SigningMode.ON_DEMAND;
-            } else if ("OFF".equals(mode)) {
+            // Legacy migrations:
+            //   NO_KEY / NO_SIGN  → OFF  (old enum values)
+            //   ON_DEMAND         → SIGN (removed: see SigningMode javadoc)
+            //   unknown           → SIGN (safe default — chat just works)
+            if ("NO_KEY".equals(mode) || "NO_SIGN".equals(mode) || "OFF".equals(mode)) {
                 s.signingMode = SigningMode.OFF;
             } else {
-                s.signingMode = SigningMode.ON_DEMAND;
+                s.signingMode = SigningMode.SIGN;
             }
         }
         if (json.has("disableTelemetry")) s.disableTelemetry = json.get("disableTelemetry").getAsBoolean();

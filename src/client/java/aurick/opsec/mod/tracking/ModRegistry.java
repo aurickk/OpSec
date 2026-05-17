@@ -31,20 +31,26 @@ public class ModRegistry {
     private static final Map<String, ModInfo> registry =
         new ConcurrentHashMap<>();
 
-    /** Vanilla translation keys (always whitelisted) */
-    private static final Set<String> vanillaTranslationKeys =
+    /**
+     * Vanilla translation keys (always whitelisted).
+     * Volatile + non-final so {@link #commitTranslationRebuild()} can atomically
+     * swap in a freshly-built set at language reload, instead of clearing this
+     * set at HEAD and repopulating piecemeal — which left a window where mid-
+     * reload translation probes saw an empty set.
+     */
+    private static volatile Set<String> vanillaTranslationKeys =
         ConcurrentHashMap.newKeySet();
 
-    /** Server resource pack translation keys (whitelisted for vanilla resolution) */
-    private static final Set<String> serverPackKeys =
+    /** Server resource pack translation keys (whitelisted for vanilla resolution). Same atomic-swap rationale as {@link #vanillaTranslationKeys}. */
+    private static volatile Set<String> serverPackKeys =
         ConcurrentHashMap.newKeySet();
 
     /** Maps channel namespaces to their owning Fabric mod IDs (e.g., "jm" -> "journeymap") */
     private static final Map<String, Set<String>> namespaceToModIds =
         new ConcurrentHashMap<>();
 
-    /** Reverse index: translation key -> mod ID for O(1) lookup (P1/A4/A11) */
-    private static final Map<String, String> translationKeyToModId =
+    /** Reverse index: translation key -> mod ID for O(1) lookup (P1/A4/A11). Same atomic-swap rationale as {@link #vanillaTranslationKeys}. */
+    private static volatile Map<String, String> translationKeyToModId =
         new ConcurrentHashMap<>();
 
     /** Reverse index: keybind name -> mod ID for O(1) lookup (P1/A4/A11) */
@@ -177,6 +183,74 @@ public class ModRegistry {
     // ==================== TRANSLATION KEY TRACKING ====================
 
     /**
+     * Staging buffer for an in-progress language reload. While a rebuild is
+     * active on the current thread, the public record/remove methods write here
+     * instead of the live volatile fields, so concurrent readers never observe
+     * a partially-populated registry.
+     */
+    private static final class TranslationRebuildStaging {
+        final Set<String> vanilla = ConcurrentHashMap.newKeySet();
+        final Set<String> serverPack = ConcurrentHashMap.newKeySet();
+        final Map<String, String> translationKeyToModId = new ConcurrentHashMap<>();
+    }
+
+    /**
+     * Per-thread active staging. Set by {@link #beginTranslationRebuild()},
+     * consumed by {@link #commitTranslationRebuild()}. Other threads see
+     * {@code null} and write straight to live (the normal startup-path
+     * record* callers).
+     */
+    private static final ThreadLocal<TranslationRebuildStaging> rebuildStaging = new ThreadLocal<>();
+
+    /**
+     * Begin a language-reload rebuild on the current thread. Subsequent
+     * record/remove calls on this thread route to a fresh staging buffer;
+     * the live fields stay readable in their pre-reload state. Pair with
+     * {@link #commitTranslationRebuild()} (success) or
+     * {@link #abortTranslationRebuild()} (exception).
+     *
+     * <p>Defensive: if a prior rebuild was never committed (loadFrom threw),
+     * we discard the orphaned staging here rather than leaking it.</p>
+     */
+    public static void beginTranslationRebuild() {
+        rebuildStaging.remove();
+        rebuildStaging.set(new TranslationRebuildStaging());
+        // Per-ModInfo translationKeys is not atomically swapped — it's read
+        // only by /opsec info and the whitelist UI, not by the render hot path.
+        // Clear in place so the rebuild repopulates each mod's set cleanly.
+        for (ModInfo info : registry.values()) {
+            info.translationKeys.clear();
+        }
+    }
+
+    /**
+     * Atomically replace the live translation-key state with the staged one.
+     * No-op if no rebuild is active.
+     */
+    public static void commitTranslationRebuild() {
+        TranslationRebuildStaging s = rebuildStaging.get();
+        if (s == null) return;
+        // Three volatile writes — each is independently atomic; readers always
+        // see a fully-populated set/map (either the old or the new one).
+        vanillaTranslationKeys = s.vanilla;
+        serverPackKeys = s.serverPack;
+        translationKeyToModId = s.translationKeyToModId;
+        rebuildStaging.remove();
+        Opsec.LOGGER.debug(
+            "[ModRegistry] Committed translation rebuild: {} vanilla, {} server pack",
+            s.vanilla.size(), s.serverPack.size()
+        );
+    }
+
+    /**
+     * Discard the in-progress staging without affecting live state.
+     * Call from exception paths so a half-built rebuild doesn't leak.
+     */
+    public static void abortTranslationRebuild() {
+        rebuildStaging.remove();
+    }
+
+    /**
      * Record a translation key from a mod's language file.
      */
     public static void recordTranslationKey(String modId, String key) {
@@ -184,7 +258,12 @@ public class ModRegistry {
 
         ModInfo info = getOrCreateModInfo(modId);
         info.translationKeys.add(key);
-        translationKeyToModId.put(key, modId);
+        TranslationRebuildStaging s = rebuildStaging.get();
+        if (s != null) {
+            s.translationKeyToModId.put(key, modId);
+        } else {
+            translationKeyToModId.put(key, modId);
+        }
     }
 
     /**
@@ -193,7 +272,12 @@ public class ModRegistry {
     public static void recordVanillaTranslationKey(String key) {
         if (key == null) return;
 
-        vanillaTranslationKeys.add(key);
+        TranslationRebuildStaging s = rebuildStaging.get();
+        if (s != null) {
+            s.vanilla.add(key);
+        } else {
+            vanillaTranslationKeys.add(key);
+        }
     }
 
     /**
@@ -201,8 +285,14 @@ public class ModRegistry {
      */
     public static void removeVanillaTranslationKey(String key) {
         if (key == null) return;
-        vanillaTranslationKeys.remove(key);
-        translationKeyToModId.remove(key);
+        TranslationRebuildStaging s = rebuildStaging.get();
+        if (s != null) {
+            s.vanilla.remove(key);
+            s.translationKeyToModId.remove(key);
+        } else {
+            vanillaTranslationKeys.remove(key);
+            translationKeyToModId.remove(key);
+        }
     }
 
     /**
@@ -211,7 +301,12 @@ public class ModRegistry {
     public static void recordServerPackKey(String key) {
         if (key == null) return;
 
-        serverPackKeys.add(key);
+        TranslationRebuildStaging s = rebuildStaging.get();
+        if (s != null) {
+            s.serverPack.add(key);
+        } else {
+            serverPackKeys.add(key);
+        }
     }
 
     /**

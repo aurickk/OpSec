@@ -95,7 +95,6 @@
   "opsec.alert.portscan.summary.single": "偵測到 %d 次本機連接埠掃描，目標：%s",
   "opsec.alert.portscan.summary.multi": "偵測到 %d 次本機連接埠掃描：%s",
   "opsec.alert.portscan.summary.more": " 還有 +%d 次",
-  "opsec.alert.securechat.required": "伺服器要求安全聊天。已啟用聊天簽署。",
 
   "opsec.alert.keyresolution": "偵測到翻譯鍵解析探測",
   "opsec.toast.keyresolution": "偵測到翻譯鍵解析探測",
@@ -196,6 +195,5 @@
   "opsec.button.disableAll.tooltip": "從白名單移除所有模組",
 
   "opsec.chatSigning.sign.tooltip": "永遠簽署聊天訊息",
-  "opsec.chatSigning.off.tooltip": "永不簽署聊天訊息",
-  "opsec.chatSigning.onDemand.tooltip": "僅在伺服器要求時簽署聊天訊息"
+  "opsec.chatSigning.off.tooltip": "永不簽署聊天訊息"
 }

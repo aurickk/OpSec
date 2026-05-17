@@ -95,7 +95,6 @@
   "opsec.alert.portscan.summary.single": "%d lokale(r) Portscan(s) zu %s erkannt",
   "opsec.alert.portscan.summary.multi": "%d lokale(r) Portscan(s) erkannt: %s",
   "opsec.alert.portscan.summary.more": " +%d weitere",
-  "opsec.alert.securechat.required": "Server erfordert sichere Chats. Chat-Signierung aktiviert.",
 
   "opsec.alert.keyresolution": "Schlüsselauflösungs-Probe erkannt",
   "opsec.toast.keyresolution": "Schlüsselauflösungs-Probe erkannt",
@@ -191,6 +190,5 @@
   "opsec.button.disableAll.tooltip": "Alle Mods von der Whitelist entfernen",
 
   "opsec.chatSigning.sign.tooltip": "Chat-Nachrichten immer signieren",
-  "opsec.chatSigning.off.tooltip": "Chat-Nachrichten niemals signieren",
-  "opsec.chatSigning.onDemand.tooltip": "Chat-Nachrichten nur signieren, wenn der Server es erfordert"
+  "opsec.chatSigning.off.tooltip": "Chat-Nachrichten niemals signieren"
 }

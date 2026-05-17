@@ -95,7 +95,6 @@
   "opsec.alert.portscan.summary.single": "%d लोकल पोर्ट स्कैन का पता चला %s के लिए",
   "opsec.alert.portscan.summary.multi": "%d लोकल पोर्ट स्कैन का पता चला: %s",
   "opsec.alert.portscan.summary.more": " +%d और",
-  "opsec.alert.securechat.required": "सर्वर को सुरक्षित चैट की आवश्यकता है। चैट साइनिंग सक्षम।",
 
   "opsec.alert.keyresolution": "की रेज़ोल्यूशन प्रोब का पता चला",
   "opsec.toast.keyresolution": "की रेज़ोल्यूशन प्रोब का पता चला",
@@ -196,6 +195,5 @@
   "opsec.button.disableAll.tooltip": "सभी मॉड्स को व्हाइटलिस्ट से हटाएं",
 
   "opsec.chatSigning.sign.tooltip": "चैट संदेशों पर हमेशा साइन करें",
-  "opsec.chatSigning.off.tooltip": "चैट संदेशों पर कभी साइन न करें",
-  "opsec.chatSigning.onDemand.tooltip": "चैट संदेशों पर तभी साइन करें जब सर्वर को आवश्यकता हो"
+  "opsec.chatSigning.off.tooltip": "चैट संदेशों पर कभी साइन न करें"
 }

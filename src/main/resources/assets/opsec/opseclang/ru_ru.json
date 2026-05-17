@@ -95,7 +95,6 @@
   "opsec.alert.portscan.summary.single": "Обнаружено %d локальных сканирований портов на %s",
   "opsec.alert.portscan.summary.multi": "Обнаружено %d локальных сканирований портов: %s",
   "opsec.alert.portscan.summary.more": " +%d ещё",
-  "opsec.alert.securechat.required": "Сервер требует защищённый чат. Подпись чата включена.",
 
   "opsec.alert.keyresolution": "Обнаружено зондирование разрешения ключей",
   "opsec.toast.keyresolution": "Обнаружено зондирование разрешения ключей",
@@ -196,6 +195,5 @@
   "opsec.button.disableAll.tooltip": "Удалить все моды из белого списка",
 
   "opsec.chatSigning.sign.tooltip": "Всегда подписывать сообщения чата",
-  "opsec.chatSigning.off.tooltip": "Никогда не подписывать сообщения чата",
-  "opsec.chatSigning.onDemand.tooltip": "Подписывать сообщения чата только когда сервер этого требует"
+  "opsec.chatSigning.off.tooltip": "Никогда не подписывать сообщения чата"
 }

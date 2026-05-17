@@ -5,7 +5,6 @@ import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import aurick.opsec.mod.Opsec;
 import aurick.opsec.mod.PrivacyLogger;
 import aurick.opsec.mod.config.OpsecConfig;
-import aurick.opsec.mod.config.SpoofSettings;
 import aurick.opsec.mod.detection.PacketContext;
 import aurick.opsec.mod.protection.PackStripHandler;
 import aurick.opsec.mod.protection.PackStripOverlay;
@@ -13,11 +12,9 @@ import aurick.opsec.mod.protection.TranslationProtectionHandler;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientPacketListener;
 import net.minecraft.network.PacketListener;
-import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MessageSignature;
 import net.minecraft.network.chat.SignedMessageBody;
 import net.minecraft.network.chat.SignedMessageChain;
-import net.minecraft.network.chat.contents.TranslatableContents;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.game.ClientboundLoginPacket;
 //? if <1.20.2 {
@@ -29,14 +26,12 @@ import net.minecraft.network.protocol.game.ClientboundResourcePackPacket;
 //? if <1.20.5 {
 /*import net.minecraft.network.protocol.game.ClientboundServerDataPacket;
 *///?}
-import net.minecraft.network.protocol.game.ClientboundSystemChatPacket;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import java.util.Set;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
@@ -44,13 +39,13 @@ import java.util.concurrent.TimeUnit;
 
 /**
  * Tracks server connection events for OpSec.
- * Handles secure chat enforcement detection with on-the-fly approach:
  *
- * 1. Login: enforcesSecureChat flag enables signing immediately.
- * 2. sendChat: WrapOperation on Encoder.pack() prevents signing chain advancement
- *    when not signing — keeps the chain clean for later enabling.
- * 3. System chat: Detects signing-related errors, suppresses the error, enables signing,
- *    and automatically resends the message signed — fully transparent to the user.
+ * <p>Chat-signing scope here is limited to a single mechanism: the
+ * {@code opsec$skipSigningEncoder} {@code @WrapOperation} on the
+ * {@code SignedMessageChain.Encoder.pack(...)} call inside {@code sendChat},
+ * which prevents signing-chain advancement whenever the user has signing OFF.
+ * No server-state-triggered upgrades, no system-chat reactions, no auto-resends
+ * — those were removed because they uniformly fingerprinted OpSec users.</p>
  */
 @Mixin(ClientPacketListener.class)
 public abstract class ClientPacketListenerMixin {
@@ -60,25 +55,6 @@ public abstract class ClientPacketListenerMixin {
 
     @Unique
     private static volatile ScheduledFuture<?> opsec$pendingTask;
-
-    /** Stores the last message sent unsigned, for automatic resend if the server rejects it. */
-    @Unique
-    private String opsec$lastUnsignedMessage;
-
-    /** True only while waiting for a server response after sending an unsigned message. */
-    @Unique
-    private boolean opsec$awaitingSigningResponse;
-
-    @Unique
-    private static final Set<String> SIGNING_ERROR_KEYS = Set.of(
-            "multiplayer.disconnect.unsigned_chat",
-            "chat.disabled.missingProfileKey",
-            "chat.disabled.profile",
-            "chat.disabled.chain_broken",
-            "chat.disabled.expiredProfileKey",
-            "chat.disabled.invalid_signature",
-            "multiplayer.disconnect.chat_validation_failed"
-    );
 
     @Unique
     private static synchronized ScheduledExecutorService opsec$getScheduler() {
@@ -136,49 +112,11 @@ public abstract class ClientPacketListenerMixin {
 
         OpsecConfig.getInstance().setCurrentServer(serverAddress);
 
-        // Login packet flag: enable signing immediately if server declares it
-        SpoofSettings settings = OpsecConfig.getInstance().getSettings();
-        //? if >=1.20.5 {
-        if (packet.enforcesSecureChat()) {
-            Opsec.LOGGER.debug("[OpSec] Server enforces secure chat");
-
-            if (settings.isOnDemand()) {
-                settings.setTempSign(true);
-
-                if (!settings.isSigningToastShown()) {
-                    settings.setSigningToastShown(true);
-                    PrivacyLogger.alertSecureChatRequired();
-                }
-            }
-        }
-        //?} else {
-        /*// <1.20.5: enforcesSecureChat moved off the login packet; picked up via
-        // opsec$onServerData below.
-        *///?}
-
         // Schedule port scan summary after 2 seconds
         opsec$pendingTask = opsec$getScheduler().schedule(() -> {
             Minecraft.getInstance().execute(PrivacyLogger::showPortScanSummary);
         }, 2, TimeUnit.SECONDS);
     }
-
-    //? if <1.20.5 {
-    /*// <1.20.5 fallback for the 1.20.5+ handleLogin enforcesSecureChat path.
-    @Inject(method = "handleServerData", at = @At("HEAD"))
-    private void opsec$onServerData(ClientboundServerDataPacket packet, CallbackInfo ci) {
-        if (!packet.enforcesSecureChat()) return;
-        SpoofSettings settings = OpsecConfig.getInstance().getSettings();
-        if (!settings.isOnDemand() || settings.isTempSign()) return;
-
-        Opsec.LOGGER.debug("[OpSec] Server enforces secure chat (server data)");
-        settings.setTempSign(true);
-
-        if (!settings.isSigningToastShown()) {
-            settings.setSigningToastShown(true);
-            PrivacyLogger.alertSecureChatRequired();
-        }
-    }
-    *///?}
 
     //? if <1.20.2 {
     /*// <1.20.2: single-pack server packs come through ClientboundResourcePackPacket on
@@ -206,21 +144,6 @@ public abstract class ClientPacketListenerMixin {
     *///?}
 
     /**
-     * Capture the message text when sending unsigned, so we can resend it signed
-     * if the server rejects it.
-     */
-    @Inject(method = "sendChat", at = @At("HEAD"))
-    private void opsec$captureUnsignedMessage(String message, CallbackInfo ci) {
-        if (OpsecConfig.getInstance().shouldNotSign()) {
-            opsec$lastUnsignedMessage = message;
-            opsec$awaitingSigningResponse = true;
-        } else {
-            opsec$lastUnsignedMessage = null;
-            opsec$awaitingSigningResponse = false;
-        }
-    }
-
-    /**
      * Wrap the signing encoder call in sendChat() to prevent chain advancement when not signing.
      * Returns null instead of calling the encoder, keeping the chain clean.
      */
@@ -236,82 +159,12 @@ public abstract class ClientPacketListenerMixin {
         return original.call(encoder, body);
     }
 
-    /**
-     * Detect signing-related error messages from the server.
-     * When detected: suppress the error, enable signing, and automatically resend
-     * the original message — fully transparent to the user.
-     * The signing chain is clean because the WrapOperation above prevented advancement.
-     */
-    @Inject(method = "handleSystemChat", at = @At("HEAD"), cancellable = true)
-    private void opsec$onSystemChat(ClientboundSystemChatPacket packet, CallbackInfo ci) {
-        if (!opsec$awaitingSigningResponse) return;
-
-        SpoofSettings settings = OpsecConfig.getInstance().getSettings();
-        if (!settings.isOnDemand() || settings.isTempSign()) return;
-
-        Component content = packet.content();
-        if (content == null) return;
-
-        if (!opsec$isSigningErrorMessage(content)) return;
-
-        opsec$awaitingSigningResponse = false;
-
-        // Enable signing
-        Opsec.LOGGER.info("[OpSec] Detected signing error - enabling signing and resending");
-        settings.setTempSign(true);
-
-        // Suppress the error message from showing in chat
-        ci.cancel();
-
-        // Resend the captured message, now signed
-        String message = opsec$lastUnsignedMessage;
-        opsec$lastUnsignedMessage = null;
-        if (message != null) {
-            ((ClientPacketListener) (Object) this).sendChat(message);
-        }
-
-        if (!settings.isSigningToastShown()) {
-            settings.setSigningToastShown(true);
-            PrivacyLogger.alertSecureChatRequired();
-        }
-    }
-
-    @Unique
-    private static boolean opsec$isSigningErrorMessage(Component component) {
-        // Match only on TranslatableContents with a known signing-error key.
-        // The previous keyword-substring fallback let a hostile server force the
-        // client to resend its last unsigned chat as signed by sending any system
-        // chat containing "secure chat" / "unsigned_chat" / "invalid signature"
-        // within the awaitingSigningResponse window — defeating ON_DEMAND mode.
-        return opsec$hasSigningTranslationKey(component);
-    }
-
-    @Unique
-    private static boolean opsec$hasSigningTranslationKey(Component component) {
-        if (component.getContents() instanceof TranslatableContents translatable) {
-            if (SIGNING_ERROR_KEYS.contains(translatable.getKey())) {
-                return true;
-            }
-        }
-
-        for (Component sibling : component.getSiblings()) {
-            if (opsec$hasSigningTranslationKey(sibling)) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
     @Inject(method = "close", at = @At("HEAD"))
     private void onClose(CallbackInfo ci) {
         opsec$shutdownScheduler();
         PrivacyLogger.resetPortScanTracking();
         PrivacyLogger.clearCooldowns();
         OpsecConfig.getInstance().setCurrentServer(null);
-        OpsecConfig.getInstance().getSettings().resetSessionState();
-        opsec$lastUnsignedMessage = null;
-        opsec$awaitingSigningResponse = false;
         PackStripHandler.clearAll();
         PackStripOverlay.clearQueue();
     }

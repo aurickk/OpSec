@@ -67,11 +67,11 @@ public final class OpsecConstants {
         public static final long DETECTION_WINDOW_MS = 5000L;
         public static final long RAPID_WINDOW_MS = 1000L;
         public static final long RAPID_REQUEST_INTERVAL_MS = 200L;
-        public static final int FINGERPRINT_THRESHOLD = 5;
-        public static final int RAPID_REQUEST_THRESHOLD = 3;
+        public static final int FINGERPRINT_THRESHOLD = 10;
+        public static final int RAPID_REQUEST_THRESHOLD = 6;
         public static final int UNIQUE_HASH_THRESHOLD = 3;
-        public static final double HASH_PROBING_RATIO_THRESHOLD = 0.8;
-        public static final int MIN_REQUESTS_FOR_HASH_ANALYSIS = 2;
+        public static final double HASHES_PER_URL_THRESHOLD = 3.0;
+        public static final int MIN_REQUESTS_FOR_HASH_ANALYSIS = 3;
 
         private Detection() {}
     }

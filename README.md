@@ -8,10 +8,7 @@
 
 
 > [!WARNING]
-> This is a passion project mostly built with AI. Everything is tested, however if you want to rely on something written by real people, use [ExploitPreventer](https://github.com/NikOverflow/ExploitPreventer) (See [EP Compatibility](#exploitpreventer-compatibility) and [Meteor Client notes](#pre-patched-meteor-client)). OpSec offers more comprehensive protection and features on top of the basics.
-
-> [!IMPORTANT]
-> OpSec and ExploitPrevent are **seperate and independent** projects. Please do not contact the ExploitPreventer developer regarding OpSec issues and vice versa. Feel free to open an issue here or express your concern in our [official support Discord server](https://discord.com/invite/PJ853Mpa8W).
+> This is a passion project mostly built with AI.
 
 ## What it does 
 
@@ -19,7 +16,7 @@
 - **[Channel Spoofing](#channel-spoofing)** - Conditionally block mod network channels to prevent detection
 - **[Isolate Pack Cache](#isolate-pack-cache)** - Isolate resource packs per-account to prevent tracking
 - **[Block Local URLs](#block-local-urls)** - Block resource pack redirects to local/private addresses
-- **[Bypass Server Pack Requirement](#bypass-server-pack-requirement)** - Let the user toggle required server resource pack(s) like client packs
+- **[Bypass Server Pack Requirement](#bypass-server-pack-requirement)** - Let the user toggle required server resource pack(s) like client packs 
 - **[Key Resolution Protection](#key-resolution-protection)** - Protect against key resolution mod detection in any server packet
 - **[Meteor Fix](#meteor-fix)** - Disable Meteor Client's flawed key resolution protection
 - **[Mod Whitelist](#mod-whitelist)** - Automatically or manually exempt mods from channel spoofing and key resolution protection
@@ -230,12 +227,6 @@ For users that prefers [ExploitPreventer](https://github.com/NikOverflow/Exploit
 These settings are grayed out in the config screen but your saved preferences are preserved. If you remove EP later, they restore automatically.
 
 Features that don't overlap remain fully functional: alerts, chat signing, account manager, telemetry blocking, and [Meteor Fix](#meteor-fix).
-
-#### Pre-patched Meteor Client
-
-If you use Meteor Client with EP but **without** OpSec, you need a Meteor build that fixes the faulty sign translation protection such as [NikOverflow's patched build](https://github.com/NikOverflow/meteor-client/releases/tag/fix-sign) which removes the broken sign protection.
-
-If you use continued to use OpSec, this is handled automatically by [Meteor Fix](#meteor-fix) regardless of Meteor version.
 
 ---
 

@@ -1,28 +1,22 @@
 {
   "opsec.config.title": "OpSec सेटिंग्स",
-
   "opsec.tab.protection": "सुरक्षा",
   "opsec.tab.accounts": "अकाउंट्स",
   "opsec.tab.whitelist": "व्हाइटलिस्ट",
   "opsec.tab.misc": "अन्य",
-
   "opsec.option.spoofAsVanilla": "वैनिला के रूप में दिखाएं",
   "opsec.option.spoofAsVanilla.tooltip": "On: वैनिला ब्रांड दिखाता है और सभी मॉड्स को पहचान से रोकता है\nOff: असली Fabric ब्रांड दिखाता है और कुछ मॉड्स को अनुमति दे सकता है",
-
   "opsec.option.whitelistMode": "व्हाइटलिस्ट मोड",
   "opsec.option.whitelistMode.locked.tooltip": "'सभी ब्लॉक करें' पर लॉक है क्योंकि वैनिला के रूप में दिखाएं चालू है",
   "opsec.whitelist.search": "खोजें",
-
   "opsec.whitelist.mode.blockAll": "§eसभी ब्लॉक करें",
   "opsec.whitelist.mode.auto": "§aऑटो",
   "opsec.whitelist.mode.custom": "§bकस्टम",
   "opsec.whitelist.mode.blockAll.tooltip": "सभी मॉड चैनल ब्लॉक करें (कोई अपवाद नहीं)",
   "opsec.whitelist.mode.auto.tooltip": "नेटवर्क चैनल वाले मॉड्स अपने आप व्हाइटलिस्ट हो जाते हैं",
   "opsec.whitelist.mode.custom.tooltip": "मैन्युअल रूप से चुनें कि कौन से मॉड्स व्हाइटलिस्ट करने हैं",
-
   "opsec.ep.managed.header": "§7ExploitPreventer द्वारा प्रबंधित",
   "opsec.ep.managed.tooltip": "ExploitPreventer द्वारा प्रबंधित",
-
   "opsec.option.isolatePackCache": "पैक कैश अलग करें",
   "opsec.option.blockLocalPackUrls": "लोकल URL ब्लॉक करें",
   "opsec.option.clearCache": "कैश किए गए रिसोर्स पैक हटाएं",
@@ -30,23 +24,20 @@
   "opsec.option.fakeDefaultKeybinds": "नकली डिफ़ॉल्ट कीबाइंड",
   "opsec.option.meteorFix": "Meteor फिक्स",
   "opsec.option.packStripMode": "सर्वर पैक आवश्यकता बायपास करें",
-
-  "opsec.packstrip.mode.manual": "\u00A7eमैन्युअल",
-  "opsec.packstrip.mode.ask": "\u00A7aपूछें",
-  "opsec.packstrip.mode.alwaysOn": "\u00A7cहमेशा",
+  "opsec.packstrip.mode.manual": "§eमैन्युअल",
+  "opsec.packstrip.mode.ask": "§aपूछें",
+  "opsec.packstrip.mode.alwaysOn": "§cहमेशा",
   "opsec.packstrip.mode.manual.tooltip": "पुश पर डिफ़ॉल्ट वैनिला व्यवहार। आप किसी भी सर्वर पैक को टॉगल कर सकते हैं",
   "opsec.packstrip.mode.ask.tooltip": "सर्वर रिसोर्स पैक लागू नहीं किया जाता, लेकिन यह पूछने के लिए सहमति स्क्रीन दिखाई जाती है कि पैक लागू करना है या नहीं",
   "opsec.packstrip.mode.alwaysOn.tooltip": "सर्वर रिसोर्स पैक डिफ़ॉल्ट रूप से लागू नहीं किया जाता। आप किसी भी सर्वर पैक को टॉगल कर सकते हैं",
-
   "opsec.packstrip.title": "सर्वर रिसोर्स पैक",
   "opsec.packstrip.required": "इस सर्वर के लिए रिसोर्स पैक आवश्यक है।",
   "opsec.packstrip.optional": "इस सर्वर का एक वैकल्पिक रिसोर्स पैक है।",
-  "opsec.packstrip.stripped": "\u00A77OpSec ने इस पैक की सामग्री बायपास कर दी। आप इसे नीचे लागू कर सकते हैं।",
+  "opsec.packstrip.stripped": "§7OpSec ने इस पैक की सामग्री बायपास कर दी। आप इसे नीचे लागू कर सकते हैं।",
   "opsec.packstrip.continue": "जारी रखें",
   "opsec.packstrip.loadReal": "पैक असल में लोड करें",
   "opsec.option.chatSigning": "चैट साइनिंग",
   "opsec.option.disableTelemetry": "टेलीमेट्री बंद करें",
-
   "opsec.option.showAlerts": "चैट अलर्ट",
   "opsec.option.showToasts": "टोस्ट सूचना",
   "opsec.option.logDetections": "इवेंट लॉग करें",
@@ -55,37 +46,31 @@
   "opsec.option.hideModifiedIndicators": "'Modified' छिपाएं",
   "opsec.option.hideSystemMsgIndicators": "सिस्टम बार छिपाएं",
   "opsec.option.hideWarningToast": "चेतावनी टोस्ट छिपाएं",
-
   "opsec.brand.vanilla": "वैनिला",
   "opsec.brand.fabric": "Fabric",
-
   "opsec.translationMode.spoof": "स्पूफ",
   "opsec.translationMode.block": "ब्लॉक",
-
   "opsec.account.addSession": "सेशन टोकन जोड़ें",
   "opsec.account.addSession.tooltip": "सेशन टोकन का उपयोग करके नया अकाउंट जोड़ें",
   "opsec.account.addOffline": "ऑफ़लाइन अकाउंट जोड़ें",
   "opsec.account.addOffline.tooltip": "एक ऑफ़लाइन अकाउंट जोड़ें (केवल यूज़रनेम, कोई ऑथ नहीं)",
-
   "opsec.update.title": "OpSec अपडेट उपलब्ध",
   "opsec.update.message": "OpSec का नया संस्करण उपलब्ध है!",
-  "opsec.update.current": "\u00A7cवर्तमान: %s",
-  "opsec.update.latest": "\u00A7aनवीनतम: %s",
-  "opsec.update.download": "\u00A7aडाउनलोड करें",
+  "opsec.update.current": "§cवर्तमान: %s",
+  "opsec.update.latest": "§aनवीनतम: %s",
+  "opsec.update.download": "§aडाउनलोड करें",
   "opsec.update.skip": "इस संस्करण को छोड़ें",
   "opsec.update.cancel": "रद्द करें",
-
   "opsec.tamper.title": "OpSec इंटीग्रिटी चेतावनी",
-  "opsec.tamper.warning": "\u00A7c\u00A7lचेतावनी: JAR फ़ाइल इंटीग्रिटी जांच विफल!",
+  "opsec.tamper.warning": "§c§lचेतावनी: JAR फ़ाइल इंटीग्रिटी जांच विफल!",
   "opsec.tamper.mismatch": "चल रही JAR फ़ाइल आधिकारिक रिलीज़ से मेल नहीं खाती।",
   "opsec.tamper.malicious": "यह संकेत हो सकता है कि फ़ाइल को दुर्भावनापूर्ण कोड के साथ बदला गया है।",
-  "opsec.tamper.compromised": "\u00A7cआपका कंप्यूटर पहले से ही समझौता किया गया हो सकता है।",
-  "opsec.tamper.action": "\u00A7cयदि आपने इस फ़ाइल को स्वयं नहीं बदला है, तो तुरंत कार्रवाई करें।",
-  "opsec.tamper.expected": "\u00A78अपेक्षित: %s...",
-  "opsec.tamper.actual": "\u00A78वास्तविक: %s...",
-  "opsec.tamper.download": "\u00A7aआधिकारिक रिलीज़ डाउनलोड करें",
+  "opsec.tamper.compromised": "§cआपका कंप्यूटर पहले से ही समझौता किया गया हो सकता है।",
+  "opsec.tamper.action": "§cयदि आपने इस फ़ाइल को स्वयं नहीं बदला है, तो तुरंत कार्रवाई करें।",
+  "opsec.tamper.expected": "§8अपेक्षित: %s...",
+  "opsec.tamper.actual": "§8वास्तविक: %s...",
+  "opsec.tamper.download": "§aआधिकारिक रिलीज़ डाउनलोड करें",
   "opsec.tamper.dismiss_permanent": "मुझे पता है मैं क्या कर रहा हूं",
-
   "opsec.alert.trackpack.detected": "रिसोर्स पैक फ़िंगरप्रिंटिंग का पता चला! URL: %s",
   "opsec.alert.trackpack.pattern": "रिसोर्स पैक फ़िंगरप्रिंटिंग पैटर्न का पता चला!",
   "opsec.toast.trackpack": "रिसोर्स पैक फ़िंगरप्रिंटिंग का पता चला",
@@ -95,15 +80,12 @@
   "opsec.alert.portscan.summary.single": "%d लोकल पोर्ट स्कैन का पता चला %s के लिए",
   "opsec.alert.portscan.summary.multi": "%d लोकल पोर्ट स्कैन का पता चला: %s",
   "opsec.alert.portscan.summary.more": " +%d और",
-
   "opsec.alert.keyresolution": "की रेज़ोल्यूशन प्रोब का पता चला",
   "opsec.toast.keyresolution": "की रेज़ोल्यूशन प्रोब का पता चला",
   "opsec.hint.alertsCanBeDisabled": "चैट और टोस्ट अलर्ट को आप OpSec > अन्य सेटिंग्स में बंद कर सकते हैं।",
-
   "opsec.command.help.header": "OpSec कमांड्स",
   "opsec.command.help.info": "/opsec info [mod]  - ट्रैक किए गए मॉड्स या किसी विशिष्ट मॉड का विवरण दिखाएं",
   "opsec.command.help.channels": "/opsec channels    - सभी ट्रैक किए गए नेटवर्क चैनल दिखाएं",
-
   "opsec.command.overview.header": "OPSEC मॉड रजिस्ट्री",
   "opsec.command.overview.totalMods": "कुल ट्रैक किए गए मॉड्स: %d",
   "opsec.command.overview.vanillaKeys": "वैनिला ट्रांसलेशन कीज़: %d",
@@ -113,7 +95,6 @@
   "opsec.command.overview.modsHeader": "ट्रैक करने योग्य सामग्री वाले मॉड्स:",
   "opsec.command.overview.noMods": "ट्रैक करने योग्य सामग्री वाला कोई मॉड नहीं मिला।",
   "opsec.command.overview.useInfo": "विवरण के लिए /opsec info <mod> का उपयोग करें",
-
   "opsec.command.info.notFound": "मॉड नहीं मिला: %s",
   "opsec.command.info.useList": "उपलब्ध मॉड्स देखने के लिए /opsec info का उपयोग करें",
   "opsec.command.info.header": "मॉड जानकारी: %s",
@@ -123,22 +104,18 @@
   "opsec.command.info.more": "  ... और %d अधिक",
   "opsec.command.info.keybinds": "कीबाइंड्स (%d):",
   "opsec.command.info.channels": "नेटवर्क चैनल्स (%d):",
-  "opsec.command.info.statusAllowedFabric": "व्हाइटलिस्ट स्थिति: ALLOWED (डिफ़ॉल्ट Fabric API मॉड)",
   "opsec.command.info.statusAllowedAuto": "व्हाइटलिस्ट स्थिति: ALLOWED (AUTO मोड)",
   "opsec.command.info.statusBlockedAuto": "व्हाइटलिस्ट स्थिति: BLOCKED (AUTO मोड - कोई चैनल नहीं)",
   "opsec.command.info.statusAllowedCustom": "व्हाइटलिस्ट स्थिति: ALLOWED (CUSTOM मोड)",
   "opsec.command.info.statusBlockedCustom": "व्हाइटलिस्ट स्थिति: BLOCKED (CUSTOM मोड)",
   "opsec.command.info.statusBlockedOff": "व्हाइटलिस्ट स्थिति: BLOCKED (OFF)",
-
   "opsec.command.channels.header": "सभी ट्रैक किए गए चैनल्स",
   "opsec.command.channels.none": "अभी तक कोई चैनल ट्रैक नहीं हुआ। /opsec scan आज़माएं",
   "opsec.command.channels.total": "कुल: %d चैनल्स",
   "opsec.command.channels.legend": "✓ = व्हाइटलिस्टेड, ✗ = ब्लॉक्ड",
-
   "opsec.command.modEntry.keys": "%d कीज़",
   "opsec.command.modEntry.keybinds": "%d कीबाइंड्स",
   "opsec.command.modEntry.channels": "%d चैनल्स",
-
   "opsec.account.screen.session.title": "अकाउंट जोड़ें",
   "opsec.account.screen.sessionLabel": "सेशन टोकन",
   "opsec.account.screen.sessionHint": "सेशन/एक्सेस टोकन (आवश्यक)",
@@ -151,7 +128,6 @@
   "opsec.account.success.added": "§aजोड़ा गया: %s",
   "opsec.account.success.refreshSuffix": " §7(रिफ्रेश के साथ)",
   "opsec.account.error.invalidToken": "§cअमान्य या समाप्त हो चुका टोकन",
-
   "opsec.account.screen.offline.title": "ऑफ़लाइन अकाउंट जोड़ें",
   "opsec.account.screen.usernameLabel": "यूज़रनेम",
   "opsec.account.screen.usernameHint": "यूज़रनेम (आवश्यक)",
@@ -159,14 +135,11 @@
   "opsec.account.status.adding": "§eअकाउंट जोड़ा जा रहा है...",
   "opsec.account.success.addedOffline": "§aजोड़ा गया: %s §7(ऑफ़लाइन)",
   "opsec.account.error.failedToAdd": "§cअकाउंट जोड़ने में विफल",
-
   "opsec.button.settings.tooltip": "OpSec सेटिंग्स खोलें",
-
   "opsec.button.reset.tooltip": "सभी सेटिंग्स को डिफ़ॉल्ट पर रीसेट करें",
   "opsec.button.reset.disabled.tooltip": "अकाउंट्स टैब पर रीसेट अक्षम है",
   "opsec.version.tooltip.outdated": "नवीनतम: %s\nडाउनलोड के लिए क्लिक करें",
   "opsec.version.tooltip.upToDate": "अप टू डेट",
-
   "opsec.option.isolatePackCache.tooltip": "फ़िंगरप्रिंटिंग रोकने के लिए पैक्स को प्रति-अकाउंट संग्रहित करें",
   "opsec.option.blockLocalPackUrls.tooltip": "लोकल URL रिसोर्स पैक अनुरोधों को ब्लॉक करें",
   "opsec.option.clearCache.tooltip": "सभी कैश किए गए सर्वर रिसोर्स पैक्स को हटा देता है\nडाउनलोड क्यू स्थिति को भी रीसेट करता है",
@@ -178,7 +151,6 @@
   "opsec.option.showToasts.tooltip": "पॉपअप सूचनाएं दिखाएं",
   "opsec.option.logDetections.tooltip": "गेम लॉग में डिटेक्शन इवेंट लॉग करें",
   "opsec.option.debugAlerts.tooltip": "सभी प्रोब की गई कीज़ के लिए अलर्ट दिखाएं, यहां तक कि अपरिवर्तित ही क्यों न हों",
-
   "opsec.button.refreshAll": "सभी रिफ्रेश करें",
   "opsec.button.refreshing": "§7रिफ्रेश हो रहा है...",
   "opsec.button.refresh.tooltip": "सभी अकाउंट्स को पुनः सत्यापित करें\nअमान्य टोकन लाल रंग में चिह्नित किए जाएंगे",
@@ -188,12 +160,15 @@
   "opsec.button.import.tooltip": "JSON फ़ाइल से अकाउंट्स इम्पोर्ट करें",
   "opsec.button.export": "एक्सपोर्ट",
   "opsec.button.export.tooltip": "अकाउंट्स को JSON फ़ाइल में एक्सपोर्ट करें",
-
   "opsec.button.enableAll": "सभी सक्षम करें",
   "opsec.button.enableAll.tooltip": "सभी इंस्टॉल किए गए मॉड्स को व्हाइटलिस्ट करें",
   "opsec.button.disableAll": "सभी अक्षम करें",
   "opsec.button.disableAll.tooltip": "सभी मॉड्स को व्हाइटलिस्ट से हटाएं",
-
   "opsec.chatSigning.sign.tooltip": "चैट संदेशों पर हमेशा साइन करें",
-  "opsec.chatSigning.off.tooltip": "चैट संदेशों पर कभी साइन न करें"
+  "opsec.chatSigning.off.tooltip": "चैट संदेशों पर कभी साइन न करें",
+  "opsec.command.info.statusAllowedDep": "व्हाइटलिस्ट स्थिति: ALLOWED (%s द्वारा आवश्यक)",
+  "opsec.command.info.jij": "JIJ सबमॉड्यूल (%d):",
+  "opsec.whitelist.requiringFallback": "एक व्हाइटलिस्टेड मॉड",
+  "opsec.whitelist.tooltip.requiredBy": "%s — %s द्वारा आवश्यक (मुक्त करने के लिए डिपेंडर को अनचेक करें)",
+  "opsec.whitelist.suffix.required": " §8(आवश्यक)"
 }

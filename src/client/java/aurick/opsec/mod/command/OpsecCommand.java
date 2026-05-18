@@ -10,6 +10,7 @@ import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.suggestion.Suggestions;
 import com.mojang.brigadier.suggestion.SuggestionsBuilder;
+import net.fabricmc.loader.api.ModContainer;
 //? if >=26.1 {
 /*import net.fabricmc.fabric.api.client.command.v2.ClientCommands;
 */
@@ -166,56 +167,29 @@ public class OpsecCommand {
         source.sendFeedback(header(OpsecLang.tr(OpsecStrings.COMMAND_INFO_HEADER, info.getDisplayName())));
         source.sendFeedback(info(OpsecLang.tr(OpsecStrings.COMMAND_INFO_ID, info.getModId())));
 
-        // Translation keys
-        Set<String> keys = info.getTranslationKeys();
+        // Aggregate includes JIJ descendants so meta jars (e.g. fabric-api) report children's content.
+        String modId = info.getModId();
+        renderContentSection(source, OpsecStrings.COMMAND_INFO_TRANSLATION_KEYS,
+            ModRegistry.aggregateAllTranslationKeys(modId), 20);
+        renderContentSection(source, OpsecStrings.COMMAND_INFO_KEYBINDS,
+            ModRegistry.aggregateAllKeybinds(modId), 20);
+        renderContentSection(source, OpsecStrings.COMMAND_INFO_CHANNELS,
+            ModRegistry.aggregateAllChannelIds(modId), 20);
+
+        // Only list JIJ submodules with tracked content; pure library JIJs aren't queryable via /opsec info.
+        List<? extends ModContainer> trackedContained = ModRegistry.getContainedMods(info.getModId()).stream()
+            .filter(child -> ModRegistry.getModInfo(child.getMetadata().getId()) != null)
+            .toList();
         source.sendFeedback(Component.empty());
-        source.sendFeedback(subheader(OpsecLang.tr(OpsecStrings.COMMAND_INFO_TRANSLATION_KEYS, keys.size())));
-        if (keys.isEmpty()) {
+        source.sendFeedback(subheader(OpsecLang.tr(OpsecStrings.COMMAND_INFO_JIJ, trackedContained.size())));
+        if (trackedContained.isEmpty()) {
             source.sendFeedback(dim(OpsecLang.tr(OpsecStrings.COMMAND_INFO_NONE)));
         } else {
-            int shown = 0;
-            for (String key : keys) {
-                if (shown >= 20) {
-                    source.sendFeedback(dim(OpsecLang.tr(OpsecStrings.COMMAND_INFO_MORE, keys.size() - shown)));
-                    break;
-                }
-                source.sendFeedback(listItem(key));
-                shown++;
+            for (ModContainer child : trackedContained) {
+                source.sendFeedback(listItem(child.getMetadata().getId()));
             }
         }
 
-        // Keybinds
-        Set<String> keybinds = info.getKeybinds();
-        source.sendFeedback(Component.empty());
-        source.sendFeedback(subheader(OpsecLang.tr(OpsecStrings.COMMAND_INFO_KEYBINDS, keybinds.size())));
-        if (keybinds.isEmpty()) {
-            source.sendFeedback(dim(OpsecLang.tr(OpsecStrings.COMMAND_INFO_NONE)));
-        } else {
-            for (String keybind : keybinds) {
-                source.sendFeedback(listItem(keybind));
-            }
-        }
-
-        // Channels
-        //? if >=1.21.11 {
-        /*Set<Identifier> channels = info.getChannels();*/
-        //?} else {
-        Set<ResourceLocation> channels = info.getChannels();
-        //?}
-        source.sendFeedback(Component.empty());
-        source.sendFeedback(subheader(OpsecLang.tr(OpsecStrings.COMMAND_INFO_CHANNELS, channels.size())));
-        if (channels.isEmpty()) {
-            source.sendFeedback(dim(OpsecLang.tr(OpsecStrings.COMMAND_INFO_NONE)));
-        } else {
-            //? if >=1.21.11 {
-            /*for (Identifier channel : channels) {*/
-            //?} else {
-            for (ResourceLocation channel : channels) {
-            //?}
-                source.sendFeedback(listItem(channel.toString()));
-            }
-        }
-        
         // Whitelist status
         source.sendFeedback(Component.empty());
         OpsecConfig opsecConfig = OpsecConfig.getInstance();
@@ -225,30 +199,28 @@ public class OpsecCommand {
         String statusText;
         boolean isAllowed;
 
-        // Check if this is a default Fabric API mod (always allowed in Fabric mode)
-        if (opsecSettings.isFabricMode() && ModRegistry.DEFAULT_FABRIC_MODS.contains(info.getModId())) {
+        boolean directlyWhitelisted = switch (whitelistMode) {
+            case AUTO -> info.hasChannels();
+            case CUSTOM -> opsecSettings.isModWhitelisted(info.getModId());
+            default -> false;
+        };
+
+        if (directlyWhitelisted) {
             isAllowed = true;
-            statusText = OpsecLang.tr(OpsecStrings.COMMAND_INFO_STATUS_ALLOWED_FABRIC);
+            statusText = OpsecLang.tr(whitelistMode == SpoofSettings.WhitelistMode.AUTO
+                ? OpsecStrings.COMMAND_INFO_STATUS_ALLOWED_AUTO
+                : OpsecStrings.COMMAND_INFO_STATUS_ALLOWED_CUSTOM);
+        } else if (ModRegistry.isInDependencyClosure(info.getModId())) {
+            isAllowed = true;
+            statusText = OpsecLang.tr(OpsecStrings.COMMAND_INFO_STATUS_ALLOWED_DEP,
+                ModRegistry.resolveRequiringModName(info.getModId()));
         } else {
-            switch (whitelistMode) {
-                case AUTO:
-                    boolean hasChannels = info.hasChannels();
-                    isAllowed = hasChannels;
-                    statusText = OpsecLang.tr(isAllowed
-                        ? OpsecStrings.COMMAND_INFO_STATUS_ALLOWED_AUTO
-                        : OpsecStrings.COMMAND_INFO_STATUS_BLOCKED_AUTO);
-                    break;
-                case CUSTOM:
-                    isAllowed = opsecSettings.isModWhitelisted(info.getModId());
-                    statusText = OpsecLang.tr(isAllowed
-                        ? OpsecStrings.COMMAND_INFO_STATUS_ALLOWED_CUSTOM
-                        : OpsecStrings.COMMAND_INFO_STATUS_BLOCKED_CUSTOM);
-                    break;
-                default: // OFF
-                    isAllowed = false;
-                    statusText = OpsecLang.tr(OpsecStrings.COMMAND_INFO_STATUS_BLOCKED_OFF);
-                    break;
-            }
+            isAllowed = false;
+            statusText = OpsecLang.tr(switch (whitelistMode) {
+                case AUTO -> OpsecStrings.COMMAND_INFO_STATUS_BLOCKED_AUTO;
+                case CUSTOM -> OpsecStrings.COMMAND_INFO_STATUS_BLOCKED_CUSTOM;
+                default -> OpsecStrings.COMMAND_INFO_STATUS_BLOCKED_OFF;
+            });
         }
         source.sendFeedback(isAllowed ? success(statusText) : warning(statusText));
         
@@ -334,6 +306,30 @@ public class OpsecCommand {
         return null;
     }
     
+    /** Render a /opsec info section: subheader+count, then "(none)" or up to {@code limit} items (negative = unlimited). */
+    private static void renderContentSection(
+        FabricClientCommandSource source,
+        String headerKey,
+        List<String> items,
+        int limit
+    ) {
+        source.sendFeedback(Component.empty());
+        source.sendFeedback(subheader(OpsecLang.tr(headerKey, items.size())));
+        if (items.isEmpty()) {
+            source.sendFeedback(dim(OpsecLang.tr(OpsecStrings.COMMAND_INFO_NONE)));
+            return;
+        }
+        int shown = 0;
+        for (String item : items) {
+            if (limit >= 0 && shown >= limit) {
+                source.sendFeedback(dim(OpsecLang.tr(OpsecStrings.COMMAND_INFO_MORE, items.size() - shown)));
+                break;
+            }
+            source.sendFeedback(listItem(item));
+            shown++;
+        }
+    }
+
     // ==================== FORMATTING HELPERS ====================
 
     private static MutableComponent header(String text) {

@@ -3,9 +3,12 @@ package aurick.opsec.mod.tracking;
 import aurick.opsec.mod.Opsec;
 import aurick.opsec.mod.config.OpsecConfig;
 import aurick.opsec.mod.config.SpoofSettings;
+import aurick.opsec.mod.lang.OpsecLang;
+import aurick.opsec.mod.lang.OpsecStrings;
 import aurick.opsec.mod.util.KeybindDefaults;
 import net.fabricmc.loader.api.FabricLoader;
 import net.fabricmc.loader.api.ModContainer;
+import net.fabricmc.loader.api.metadata.ModDependency;
 //? if >=1.21.11 {
 /*import net.minecraft.resources.Identifier;
 */
@@ -15,6 +18,8 @@ import net.minecraft.resources.ResourceLocation;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -65,18 +70,17 @@ public class ModRegistry {
         new ConcurrentHashMap<>();
     //?}
 
-    /** Fabric API modules with production translation keys - auto-whitelisted in Fabric mode */
-    public static final Set<String> DEFAULT_FABRIC_MODS = Set.of(
-        "fabric",
-        "fabric-resource-loader-v0",
-        "fabric-resource-loader-v1",
-        "fabric-item-group-api-v1",
-        "fabric-creative-tab-api-v1",
-        "fabric-registry-sync-v0",
-        "fabric-convention-tags-v2",
-        "fabric-data-attachment-api-v1",
-        "fabric-screen-handler-api-v1"
-    );
+    /** Transitive required-dep closure of all whitelisted mods. Prevents the "depender resolves, required dep doesn't" fingerprint. Volatile + atomic-swap for lock-free reads. */
+    private static volatile Set<String> dependencyClosure =
+        ConcurrentHashMap.newKeySet();
+
+    /** modId → seed that pulled it into {@link #dependencyClosure}. First walker wins. Atomically swapped with the closure. */
+    private static volatile Map<String, String> implicitProvider =
+        new ConcurrentHashMap<>();
+
+    /** Platform mods skipped during dep walks — their presence is implied by the loader/brand. */
+    public static final Set<String> PLATFORM_MODS =
+        Set.of("minecraft", "java", "fabricloader", "opsec");
 
     private ModRegistry() {}
 
@@ -324,27 +328,183 @@ public class ModRegistry {
         return translationKeyToModId.get(key);
     }
 
+    // ==================== DEPENDENCY CLOSURE ====================
+
+    /** Recompute the closure from the current whitelist. Only DEPENDS edges — RECOMMENDS/SUGGESTS aren't guaranteed loaded and would themselves leak a "claimed-but-absent" fingerprint. */
+    public static void rebuildDependencyClosure() {
+        Set<String> seeds = collectWhitelistSeeds();
+        Set<String> closure = ConcurrentHashMap.newKeySet();
+        Map<String, String> providers = new ConcurrentHashMap<>();
+        for (String seed : seeds) {
+            walkDependencies(seed, seed, closure, providers);
+            walkUpToJijHost(seed, closure, providers);
+        }
+        dependencyClosure = closure;
+        implicitProvider = providers;
+        Opsec.LOGGER.debug(
+            "[ModRegistry] Dep closure rebuilt: {} seeds -> {} mods",
+            seeds.size(), closure.size()
+        );
+    }
+
+    private static Set<String> collectWhitelistSeeds() {
+        OpsecConfig config = OpsecConfig.getInstance();
+        SpoofSettings settings = config.getSettings();
+        Set<String> seeds = new HashSet<>();
+        switch (settings.getWhitelistMode()) {
+            case AUTO -> {
+                for (ModInfo info : registry.values()) {
+                    if (info.hasChannels()) seeds.add(info.getModId());
+                }
+            }
+            case CUSTOM -> seeds.addAll(settings.getWhitelistedMods());
+            default -> {}
+        }
+        return seeds;
+    }
+
+    /** Whether the given mod is in the transitive dep closure of any whitelisted mod. */
+    public static boolean isInDependencyClosure(String modId) {
+        return modId != null && dependencyClosure.contains(modId);
+    }
+
+    /** Seed that pulled {@code modId} into the closure, or null if it's a seed itself or not in the closure. */
+    public static String getRequiringMod(String modId) {
+        return modId == null ? null : implicitProvider.get(modId);
+    }
+
+    public static String getModDisplayName(String modId) {
+        if (modId == null) return null;
+        return FabricLoader.getInstance().getModContainer(modId)
+            .map(c -> c.getMetadata().getName()).orElse(modId);
+    }
+
+    /** Display name of the requiring mod, with a localized fallback for unattributed entries. */
+    public static String resolveRequiringModName(String modId) {
+        String requiringId = getRequiringMod(modId);
+        return requiringId != null
+            ? getModDisplayName(requiringId)
+            : OpsecLang.tr(OpsecStrings.WHITELIST_REQUIRING_FALLBACK);
+    }
+
+    public static Collection<? extends ModContainer> getContainedMods(String modId) {
+        if (modId == null) return List.of();
+        return FabricLoader.getInstance().getModContainer(modId)
+            .map(ModContainer::getContainedMods)
+            .orElseGet(List::of);
+    }
+
+    /** Trackable-content counts including JIJ descendants — meta jars (e.g. fabric-api) need this to register as "has content". */
+    public record ContentCounts(int translationKeys, int keybinds, int channels) {
+        public boolean isEmpty() {
+            return translationKeys == 0 && keybinds == 0 && channels == 0;
+        }
+    }
+
+    public static ContentCounts aggregateContent(String modId) {
+        if (modId == null) return new ContentCounts(0, 0, 0);
+        int tk = 0, kb = 0, ch = 0;
+        ModInfo info = registry.get(modId);
+        if (info != null) {
+            tk = info.getTranslationKeys().size();
+            kb = info.getKeybinds().size();
+            ch = info.getChannels().size();
+        }
+        for (ModContainer child : getContainedMods(modId)) {
+            ContentCounts sub = aggregateContent(child.getMetadata().getId());
+            tk += sub.translationKeys();
+            kb += sub.keybinds();
+            ch += sub.channels();
+        }
+        return new ContentCounts(tk, kb, ch);
+    }
+
+    /** Does this mod or any JIJ descendant have any trackable content? */
+    public static boolean hasTrackableContentIncludingJij(String modId) {
+        return !aggregateContent(modId).isEmpty();
+    }
+
+    // Channels pre-stringified so callers avoid the Stonecutter Identifier/ResourceLocation split.
+    public static List<String> aggregateAllTranslationKeys(String modId) {
+        List<String> out = new java.util.ArrayList<>();
+        aggregateRecursive(modId, info -> out.addAll(info.getTranslationKeys()));
+        return out;
+    }
+
+    public static List<String> aggregateAllKeybinds(String modId) {
+        List<String> out = new java.util.ArrayList<>();
+        aggregateRecursive(modId, info -> out.addAll(info.getKeybinds()));
+        return out;
+    }
+
+    public static List<String> aggregateAllChannelIds(String modId) {
+        List<String> out = new java.util.ArrayList<>();
+        aggregateRecursive(modId, info -> info.getChannels().forEach(c -> out.add(c.toString())));
+        return out;
+    }
+
+    private static void aggregateRecursive(String modId, java.util.function.Consumer<ModInfo> sink) {
+        if (modId == null) return;
+        ModInfo info = registry.get(modId);
+        if (info != null) sink.accept(info);
+        for (ModContainer child : getContainedMods(modId)) {
+            aggregateRecursive(child.getMetadata().getId(), sink);
+        }
+    }
+
+    private static void walkDependencies(String seedRoot, String modId, Set<String> closure, Map<String, String> providers) {
+        if (modId == null || PLATFORM_MODS.contains(modId)) return;
+        Optional<ModContainer> container =
+            FabricLoader.getInstance().getModContainer(modId);
+        if (container.isEmpty()) return;
+        String canonicalId = container.get().getMetadata().getId();
+        if (PLATFORM_MODS.contains(canonicalId)) return;
+        if (!closure.add(canonicalId)) return;
+        // ModInfo entries are keyed by namespace, which may be a "provides" alias rather than canonical id.
+        for (String alias : container.get().getMetadata().getProvides()) {
+            closure.add(alias);
+            if (!alias.equals(seedRoot)) providers.putIfAbsent(alias, seedRoot);
+        }
+        if (!canonicalId.equals(seedRoot)) providers.putIfAbsent(canonicalId, seedRoot);
+
+        for (ModContainer contained : container.get().getContainedMods()) {
+            walkDependencies(seedRoot, contained.getMetadata().getId(), closure, providers);
+        }
+        for (ModDependency dep : container.get().getMetadata().getDependencies()) {
+            if (dep.getKind() != ModDependency.Kind.DEPENDS) continue;
+            walkDependencies(seedRoot, dep.getModId(), closure, providers);
+        }
+    }
+
+    /** Walk a seed's JIJ host chain so co-shipped siblings of a tracked JIJ child also land in the closure. */
+    private static void walkUpToJijHost(String originalSeed, Set<String> closure, Map<String, String> providers) {
+        Optional<ModContainer> current = FabricLoader.getInstance().getModContainer(originalSeed);
+        while (current.isPresent()) {
+            Optional<ModContainer> host = current.get().getContainingMod();
+            if (host.isEmpty()) break;
+            String hostId = host.get().getMetadata().getId();
+            // Host attributed to the seed; siblings get attributed to the host via the descending walk.
+            providers.putIfAbsent(hostId, originalSeed);
+            walkDependencies(hostId, hostId, closure, providers);
+            current = host;
+        }
+    }
+
     // ==================== AUTO MODE HELPER ====================
 
-    /**
-     * Check if a mod is effectively whitelisted, considering AUTO mode.
-     * In AUTO mode, any mod with registered network channels is whitelisted.
-     * In CUSTOM mode, delegates to manual whitelist check.
-     * Default Fabric API mods are always whitelisted in Fabric mode.
-     */
+    /** Direct membership (AUTO channels / CUSTOM toggle) OR transitive via the dep/JIJ-host closure. */
     private static boolean isModEffectivelyWhitelisted(
         String modId,
         SpoofSettings settings
     ) {
         if (modId == null) return false;
-        if (settings.isFabricMode() && DEFAULT_FABRIC_MODS.contains(modId)) {
-            return true;
-        }
         if (settings.getWhitelistMode() == SpoofSettings.WhitelistMode.AUTO) {
             ModInfo info = getModInfo(modId);
-            return info != null && info.hasChannels();
+            if (info != null && info.hasChannels()) return true;
+        } else if (settings.isModWhitelisted(modId)) {
+            return true;
         }
-        return settings.isModWhitelisted(modId);
+        return dependencyClosure.contains(modId);
     }
 
     // ==================== CENTRALIZED WHITELIST CHECK ====================
@@ -362,16 +522,6 @@ public class ModRegistry {
 
         OpsecConfig config = OpsecConfig.getInstance();
         SpoofSettings settings = config.getSettings();
-
-        // Default Fabric API module keys always allowed in Fabric mode
-        if (settings.isFabricMode() && isDefaultFabricModKey(key)) {
-            Opsec.LOGGER.debug(
-                "[Whitelist] ALLOWED {} '{}' - default Fabric API mod in Fabric mode",
-                source,
-                key
-            );
-            return true;
-        }
 
         // Whitelist must be enabled for mod-specific checks
         if (!settings.isWhitelistEnabled()) {
@@ -431,17 +581,6 @@ public class ModRegistry {
      */
     public static boolean isWhitelistedKeybind(String keybindName) {
         return isWhitelistedKey(keybindName, "keybind");
-    }
-
-    /**
-     * Check if a key belongs to one of the default-whitelisted Fabric API modules.
-     * Used in Fabric mode to auto-allow Fabric API keys without manual whitelisting.
-     */
-    private static boolean isDefaultFabricModKey(String key) {
-        if (key == null) return false;
-        String modId = getModForTranslationKey(key);
-        if (modId == null) modId = getModForKeybind(key);
-        return modId != null && DEFAULT_FABRIC_MODS.contains(modId);
     }
 
     /**
@@ -589,51 +728,20 @@ public class ModRegistry {
         OpsecConfig config = OpsecConfig.getInstance();
         SpoofSettings settings = config.getSettings();
 
-        // Default Fabric API module channels always allowed in Fabric mode
-        // This check MUST come before the whitelist-enabled guard, so that
-        // Fabric's own channels pass through even when whitelist mode is OFF or CUSTOM.
-        if (settings.isFabricMode()) {
-            // Check 1a: Does a DEFAULT_FABRIC_MODS mod own this channel? (O(1) reverse index)
-            String fabricOwner = channelToModId.get(channel);
-            if (
-                fabricOwner != null && DEFAULT_FABRIC_MODS.contains(fabricOwner)
-            ) {
-                return true;
-            }
-            // Check 1b: Is the namespace itself a DEFAULT_FABRIC_MODS entry? (e.g., "fabric")
-            if (DEFAULT_FABRIC_MODS.contains(namespace)) {
-                return true;
-            }
-            // Check 1c: Resolve namespace to mod ID(s) — handles aliases
-            Set<String> resolvedIds = resolveModIdsForNamespace(namespace);
-            for (String resolvedId : resolvedIds) {
-                if (DEFAULT_FABRIC_MODS.contains(resolvedId)) {
-                    return true;
-                }
-            }
-        }
-
         if (!settings.isWhitelistEnabled()) {
             return false;
         }
 
-        // Check 2: Does a whitelisted mod own this channel? (O(1) reverse index)
         String channelOwner = channelToModId.get(channel);
-        if (
-            channelOwner != null &&
-            isModEffectivelyWhitelisted(channelOwner, settings)
-        ) {
+        if (channelOwner != null && isModEffectivelyWhitelisted(channelOwner, settings)) {
             return true;
         }
 
-        // Check 3: Is the namespace itself whitelisted? (exact match, backwards compat)
-        // Handles users who whitelisted "jm" directly instead of "journeymap"
         if (isModEffectivelyWhitelisted(namespace, settings)) {
             return true;
         }
 
-        // Check 4: Resolve namespace to mod ID(s) via alias table (exact match)
-        // Handles: user whitelisted "journeymap" but channel namespace is "jm"
+        // Alias resolution: user whitelisted "journeymap" but channel namespace is "jm" (or vice versa).
         Set<String> resolvedModIds = resolveModIdsForNamespace(namespace);
         for (String resolvedModId : resolvedModIds) {
             if (isModEffectivelyWhitelisted(resolvedModId, settings)) {

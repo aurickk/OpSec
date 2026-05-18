@@ -137,10 +137,14 @@ public final class OpsecStrings {
     public static final String COMMAND_INFO_MORE = "opsec.command.info.more";
     public static final String COMMAND_INFO_KEYBINDS = "opsec.command.info.keybinds";
     public static final String COMMAND_INFO_CHANNELS = "opsec.command.info.channels";
-    public static final String COMMAND_INFO_STATUS_ALLOWED_FABRIC = "opsec.command.info.statusAllowedFabric";
+    public static final String COMMAND_INFO_JIJ = "opsec.command.info.jij";
+    public static final String WHITELIST_REQUIRING_FALLBACK = "opsec.whitelist.requiringFallback";
+    public static final String WHITELIST_SUFFIX_REQUIRED = "opsec.whitelist.suffix.required";
+    public static final String WHITELIST_TOOLTIP_REQUIRED_BY = "opsec.whitelist.tooltip.requiredBy";
     public static final String COMMAND_INFO_STATUS_ALLOWED_AUTO = "opsec.command.info.statusAllowedAuto";
     public static final String COMMAND_INFO_STATUS_BLOCKED_AUTO = "opsec.command.info.statusBlockedAuto";
     public static final String COMMAND_INFO_STATUS_ALLOWED_CUSTOM = "opsec.command.info.statusAllowedCustom";
+    public static final String COMMAND_INFO_STATUS_ALLOWED_DEP = "opsec.command.info.statusAllowedDep";
     public static final String COMMAND_INFO_STATUS_BLOCKED_CUSTOM = "opsec.command.info.statusBlockedCustom";
     public static final String COMMAND_INFO_STATUS_BLOCKED_OFF = "opsec.command.info.statusBlockedOff";
 

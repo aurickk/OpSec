@@ -1,28 +1,22 @@
 {
   "opsec.config.title": "Настройки OpSec",
-
   "opsec.tab.protection": "Защита",
   "opsec.tab.accounts": "Аккаунты",
   "opsec.tab.whitelist": "Белый список",
   "opsec.tab.misc": "Прочее",
-
   "opsec.option.spoofAsVanilla": "Маскировка под Ваниллу",
   "opsec.option.spoofAsVanilla.tooltip": "Вкл: выдавать себя за ванильный клиент и блокировать обнаружение ВСЕХ модов\nВыкл: выдавать себя за реальный клиент Fabric и опционально разрешать некоторые моды",
-
   "opsec.option.whitelistMode": "Режим белого списка",
   "opsec.option.whitelistMode.locked.tooltip": "Заблокировано в режиме «Блокировать всё», так как включена маскировка под Ваниллу",
   "opsec.whitelist.search": "Поиск",
-
   "opsec.whitelist.mode.blockAll": "§eБЛОКИРОВАТЬ ВСЁ",
   "opsec.whitelist.mode.auto": "§aАВТО",
   "opsec.whitelist.mode.custom": "§bВРУЧНУЮ",
   "opsec.whitelist.mode.blockAll.tooltip": "Блокировать все каналы модов (без исключений)",
   "opsec.whitelist.mode.auto.tooltip": "Моды с сетевыми каналами автоматически добавляются в белый список",
   "opsec.whitelist.mode.custom.tooltip": "Вручную выбирать, какие моды добавить в белый список",
-
   "opsec.ep.managed.header": "§7Управляется ExploitPreventer",
   "opsec.ep.managed.tooltip": "Управляется ExploitPreventer",
-
   "opsec.option.isolatePackCache": "Изолировать кеш наборов",
   "opsec.option.blockLocalPackUrls": "Блокировать локальные URL",
   "opsec.option.clearCache": "Очистить кеш наборов ресурсов",
@@ -30,23 +24,20 @@
   "opsec.option.fakeDefaultKeybinds": "Подделка стандартных сочетаний клавиш",
   "opsec.option.meteorFix": "Исправление Meteor",
   "opsec.option.packStripMode": "Обход требования набора сервера",
-
-  "opsec.packstrip.mode.manual": "\u00A7eВРУЧНУЮ",
-  "opsec.packstrip.mode.ask": "\u00A7aСПРАШИВАТЬ",
-  "opsec.packstrip.mode.alwaysOn": "\u00A7cВСЕГДА",
+  "opsec.packstrip.mode.manual": "§eВРУЧНУЮ",
+  "opsec.packstrip.mode.ask": "§aСПРАШИВАТЬ",
+  "opsec.packstrip.mode.alwaysOn": "§cВСЕГДА",
   "opsec.packstrip.mode.manual.tooltip": "Стандартное ванильное поведение при отправке. Вы по-прежнему можете включить любой набор сервера",
   "opsec.packstrip.mode.ask.tooltip": "Набор ресурсов сервера не применяется, но появляется экран согласия с вопросом, применять ли его",
   "opsec.packstrip.mode.alwaysOn.tooltip": "Набор ресурсов сервера не применяется по умолчанию. Вы по-прежнему можете включить любой набор сервера",
-
   "opsec.packstrip.title": "Набор ресурсов сервера",
   "opsec.packstrip.required": "На этом сервере требуется набор ресурсов.",
   "opsec.packstrip.optional": "На этом сервере есть необязательный набор ресурсов.",
-  "opsec.packstrip.stripped": "\u00A77OpSec обошёл содержимое этого набора. Вы можете применить его ниже.",
+  "opsec.packstrip.stripped": "§7OpSec обошёл содержимое этого набора. Вы можете применить его ниже.",
   "opsec.packstrip.continue": "Продолжить",
   "opsec.packstrip.loadReal": "Загрузить набор полностью",
   "opsec.option.chatSigning": "Подпись чата",
   "opsec.option.disableTelemetry": "Отключить телеметрию",
-
   "opsec.option.showAlerts": "Оповещения в чате",
   "opsec.option.showToasts": "Всплывающие уведомления",
   "opsec.option.logDetections": "Записывать события",
@@ -55,37 +46,31 @@
   "opsec.option.hideModifiedIndicators": "Скрыть «Изменено»",
   "opsec.option.hideSystemMsgIndicators": "Скрыть системную панель",
   "opsec.option.hideWarningToast": "Скрыть уведомление с предупреждением",
-
   "opsec.brand.vanilla": "Ванилла",
   "opsec.brand.fabric": "Fabric",
-
   "opsec.translationMode.spoof": "Подменять",
   "opsec.translationMode.block": "Блокировать",
-
   "opsec.account.addSession": "Добавить токен сессии",
   "opsec.account.addSession.tooltip": "Добавить новый аккаунт, используя токен сессии",
   "opsec.account.addOffline": "Добавить офлайн-аккаунт",
   "opsec.account.addOffline.tooltip": "Добавить офлайн-аккаунт (только имя, без авторизации)",
-
   "opsec.update.title": "Доступно обновление OpSec",
   "opsec.update.message": "Доступна новая версия OpSec!",
-  "opsec.update.current": "\u00A7cТекущая: %s",
-  "opsec.update.latest": "\u00A7aПоследняя: %s",
-  "opsec.update.download": "\u00A7aСкачать",
+  "opsec.update.current": "§cТекущая: %s",
+  "opsec.update.latest": "§aПоследняя: %s",
+  "opsec.update.download": "§aСкачать",
   "opsec.update.skip": "Пропустить эту версию",
   "opsec.update.cancel": "Отмена",
-
   "opsec.tamper.title": "Предупреждение о целостности OpSec",
-  "opsec.tamper.warning": "\u00A7c\u00A7lВНИМАНИЕ: проверка целостности JAR-файла не пройдена!",
+  "opsec.tamper.warning": "§c§lВНИМАНИЕ: проверка целостности JAR-файла не пройдена!",
   "opsec.tamper.mismatch": "Запущенный JAR-файл не соответствует официальному релизу.",
   "opsec.tamper.malicious": "Это может означать, что файл был изменён с внедрением вредоносного кода.",
-  "opsec.tamper.compromised": "\u00A7cВаш компьютер уже может быть скомпрометирован.",
-  "opsec.tamper.action": "\u00A7cЕсли вы не изменяли этот файл сами, немедленно примите меры.",
-  "opsec.tamper.expected": "\u00A78Ожидалось: %s...",
-  "opsec.tamper.actual": "\u00A78Фактически: %s...",
-  "opsec.tamper.download": "\u00A7aСкачать официальный релиз",
+  "opsec.tamper.compromised": "§cВаш компьютер уже может быть скомпрометирован.",
+  "opsec.tamper.action": "§cЕсли вы не изменяли этот файл сами, немедленно примите меры.",
+  "opsec.tamper.expected": "§8Ожидалось: %s...",
+  "opsec.tamper.actual": "§8Фактически: %s...",
+  "opsec.tamper.download": "§aСкачать официальный релиз",
   "opsec.tamper.dismiss_permanent": "Я знаю, что делаю",
-
   "opsec.alert.trackpack.detected": "Обнаружен фингерпринтинг через набор ресурсов! URL: %s",
   "opsec.alert.trackpack.pattern": "Обнаружен шаблон фингерпринтинга набора ресурсов!",
   "opsec.toast.trackpack": "Обнаружен фингерпринтинг набора ресурсов",
@@ -95,15 +80,12 @@
   "opsec.alert.portscan.summary.single": "Обнаружено %d локальных сканирований портов на %s",
   "opsec.alert.portscan.summary.multi": "Обнаружено %d локальных сканирований портов: %s",
   "opsec.alert.portscan.summary.more": " +%d ещё",
-
   "opsec.alert.keyresolution": "Обнаружено зондирование разрешения ключей",
   "opsec.toast.keyresolution": "Обнаружено зондирование разрешения ключей",
   "opsec.hint.alertsCanBeDisabled": "Оповещения в чате и всплывающие уведомления можно отключить в OpSec > Прочее.",
-
   "opsec.command.help.header": "Команды OpSec",
   "opsec.command.help.info": "/opsec info [mod]  - Показать отслеживаемые моды или сведения о конкретном моде",
   "opsec.command.help.channels": "/opsec channels    - Показать все отслеживаемые сетевые каналы",
-
   "opsec.command.overview.header": "Реестр модов OPSEC",
   "opsec.command.overview.totalMods": "Всего отслеживается модов: %d",
   "opsec.command.overview.vanillaKeys": "Ванильных ключей перевода: %d",
@@ -113,7 +95,6 @@
   "opsec.command.overview.modsHeader": "Моды с отслеживаемым содержимым:",
   "opsec.command.overview.noMods": "Моды с отслеживаемым содержимым не найдены.",
   "opsec.command.overview.useInfo": "Используйте /opsec info <mod> для подробностей",
-
   "opsec.command.info.notFound": "Мод не найден: %s",
   "opsec.command.info.useList": "Используйте /opsec info, чтобы увидеть доступные моды",
   "opsec.command.info.header": "Сведения о моде: %s",
@@ -123,22 +104,18 @@
   "opsec.command.info.more": "  ... и ещё %d",
   "opsec.command.info.keybinds": "Сочетания клавиш (%d):",
   "opsec.command.info.channels": "Сетевые каналы (%d):",
-  "opsec.command.info.statusAllowedFabric": "Статус белого списка: ALLOWED (стандартный мод Fabric API)",
   "opsec.command.info.statusAllowedAuto": "Статус белого списка: ALLOWED (режим AUTO)",
   "opsec.command.info.statusBlockedAuto": "Статус белого списка: BLOCKED (режим AUTO — нет каналов)",
   "opsec.command.info.statusAllowedCustom": "Статус белого списка: ALLOWED (режим CUSTOM)",
   "opsec.command.info.statusBlockedCustom": "Статус белого списка: BLOCKED (режим CUSTOM)",
   "opsec.command.info.statusBlockedOff": "Статус белого списка: BLOCKED (OFF)",
-
   "opsec.command.channels.header": "Все отслеживаемые каналы",
   "opsec.command.channels.none": "Каналы пока не отслеживаются. Попробуйте /opsec scan",
   "opsec.command.channels.total": "Всего: %d каналов",
   "opsec.command.channels.legend": "✓ = в белом списке, ✗ = заблокирован",
-
   "opsec.command.modEntry.keys": "%d ключей",
   "opsec.command.modEntry.keybinds": "%d сочетаний",
   "opsec.command.modEntry.channels": "%d каналов",
-
   "opsec.account.screen.session.title": "Добавить аккаунт",
   "opsec.account.screen.sessionLabel": "Токен сессии",
   "opsec.account.screen.sessionHint": "Токен сессии/доступа (обязательно)",
@@ -151,7 +128,6 @@
   "opsec.account.success.added": "§aДобавлен: %s",
   "opsec.account.success.refreshSuffix": " §7(с токеном обновления)",
   "opsec.account.error.invalidToken": "§cНедействительный или просроченный токен",
-
   "opsec.account.screen.offline.title": "Добавить офлайн-аккаунт",
   "opsec.account.screen.usernameLabel": "Имя пользователя",
   "opsec.account.screen.usernameHint": "Имя пользователя (обязательно)",
@@ -159,14 +135,11 @@
   "opsec.account.status.adding": "§eДобавление аккаунта...",
   "opsec.account.success.addedOffline": "§aДобавлен: %s §7(офлайн)",
   "opsec.account.error.failedToAdd": "§cНе удалось добавить аккаунт",
-
   "opsec.button.settings.tooltip": "Открыть настройки OpSec",
-
   "opsec.button.reset.tooltip": "Сбросить все настройки до значений по умолчанию",
   "opsec.button.reset.disabled.tooltip": "Сброс отключён на вкладке «Аккаунты»",
   "opsec.version.tooltip.outdated": "Последняя: %s\nНажмите, чтобы скачать",
   "opsec.version.tooltip.upToDate": "Актуальная версия",
-
   "opsec.option.isolatePackCache.tooltip": "Хранить наборы отдельно для каждого аккаунта, чтобы предотвратить фингерпринтинг",
   "opsec.option.blockLocalPackUrls.tooltip": "Блокировать запросы наборов ресурсов с локальных URL",
   "opsec.option.clearCache.tooltip": "Удаляет все кешированные наборы ресурсов сервера\nТакже сбрасывает состояние очереди загрузки",
@@ -178,7 +151,6 @@
   "opsec.option.showToasts.tooltip": "Показывать всплывающие уведомления",
   "opsec.option.logDetections.tooltip": "Записывать события обнаружения в журнал игры",
   "opsec.option.debugAlerts.tooltip": "Показывать оповещения для всех зондируемых ключей, даже неизменённых",
-
   "opsec.button.refreshAll": "Обновить все",
   "opsec.button.refreshing": "§7Обновление...",
   "opsec.button.refresh.tooltip": "Перепроверить все аккаунты\nНедействительные токены будут отмечены красным",
@@ -188,12 +160,15 @@
   "opsec.button.import.tooltip": "Импортировать аккаунты из JSON-файла",
   "opsec.button.export": "Экспорт",
   "opsec.button.export.tooltip": "Экспортировать аккаунты в JSON-файл",
-
   "opsec.button.enableAll": "Включить все",
   "opsec.button.enableAll.tooltip": "Добавить все установленные моды в белый список",
   "opsec.button.disableAll": "Отключить все",
   "opsec.button.disableAll.tooltip": "Удалить все моды из белого списка",
-
   "opsec.chatSigning.sign.tooltip": "Всегда подписывать сообщения чата",
-  "opsec.chatSigning.off.tooltip": "Никогда не подписывать сообщения чата"
+  "opsec.chatSigning.off.tooltip": "Никогда не подписывать сообщения чата",
+  "opsec.command.info.statusAllowedDep": "Статус белого списка: ALLOWED (требуется для %s)",
+  "opsec.command.info.jij": "Вложенные модули JIJ (%d):",
+  "opsec.whitelist.requiringFallback": "разрешённым модом",
+  "opsec.whitelist.tooltip.requiredBy": "%s — требуется для %s (снимите отметку с зависящего, чтобы освободить)",
+  "opsec.whitelist.suffix.required": " §8(требуется)"
 }

@@ -58,6 +58,8 @@ public class OpsecClient implements ClientModInitializer {
 			scanRegisteredChannels();
 			// Fallback: scan mods for language files if mixin didn't catch them
 			scanModsForLanguageFiles();
+			// Initial closure seed; further rebuilds run via OpsecConfig.save().
+			ModRegistry.rebuildDependencyClosure();
 		});
 
 		ClientTickEvents.END_CLIENT_TICK.register(PackStripOverlay::tryShowNext);
@@ -119,19 +121,10 @@ public class OpsecClient implements ClientModInitializer {
 		
 		for (ModContainer mod : FabricLoader.getInstance().getAllMods()) {
 			String modId = mod.getMetadata().getId();
-			
-			// Skip system mods
-			if (modId.equals("minecraft") || modId.equals("java") || modId.equals("fabricloader")) {
-				continue;
-			}
-			// Skip fabric API modules
-			if (modId.startsWith("fabric-") || modId.equals("fabric-api")) {
-				continue;
-			}
-			// Skip our own mod and mixinsquared
-			if (modId.equals("opsec") || modId.equals("mixinsquared")) {
-				continue;
-			}
+
+			if (ModRegistry.PLATFORM_MODS.contains(modId)) continue;
+			// Skip JIJ children: their lang already loads via their host's mixin.
+			if (mod.getContainingMod().isPresent()) continue;
 			
 			// Check if this mod already has translation keys tracked
 			ModRegistry.ModInfo existingInfo = ModRegistry.getModInfo(modId);

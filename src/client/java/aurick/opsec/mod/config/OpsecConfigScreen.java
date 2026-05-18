@@ -1027,14 +1027,16 @@ public class OpsecConfigScreen extends Screen {
                     }));
 
             if (settings.getWhitelistMode() == SpoofSettings.WhitelistMode.AUTO) {
-                // AUTO mode: read-only list of mods that have channels (auto-whitelisted)
                 List<ModContainer> whitelistableMods = getWhitelistableMods();
                 for (ModContainer mod : whitelistableMods) {
                     String modId = mod.getMetadata().getId();
                     String modName = mod.getMetadata().getName();
                     ModRegistry.ModInfo info = ModRegistry.getModInfo(modId);
-                    if (info != null && info.hasChannels()) {
+                    boolean hasChannels = info != null && info.hasChannels();
+                    if (hasChannels) {
                         widgets.add(createSectionHeader("\u00A7a" + modName + " \u00A77(" + info.getChannels().size() + " channels)"));
+                    } else if (ModRegistry.isInDependencyClosure(modId)) {
+                        widgets.add(createSectionHeader("\u00A7a" + modName + OpsecLang.tr(OpsecStrings.WHITELIST_SUFFIX_REQUIRED)));
                     }
                 }
             } else if (settings.getWhitelistMode() == SpoofSettings.WhitelistMode.CUSTOM) {
@@ -1061,10 +1063,18 @@ public class OpsecConfigScreen extends Screen {
                     String modId = mod.getMetadata().getId();
                     String modName = mod.getMetadata().getName();
 
-                    boolean isWhitelisted = settings.getWhitelistedMods().contains(modId);
+                    boolean isExplicit = settings.getWhitelistedMods().contains(modId);
+                    // Locked ON when pulled in via dep closure; user must release via the depender.
+                    boolean isImplicit = !isExplicit && ModRegistry.isInDependencyClosure(modId);
                     final String finalModId = modId;
-                    CycleButton<Boolean> modButton = cycleBuilder(COLORED_BOOL_TO_TEXT, List.of(Boolean.TRUE, Boolean.FALSE), isWhitelisted)
-                        .withTooltip(v -> Tooltip.create(Component.literal(finalModId)))
+
+                    Component tooltip = isImplicit
+                        ? OpsecLang.component(OpsecStrings.WHITELIST_TOOLTIP_REQUIRED_BY,
+                            finalModId, ModRegistry.resolveRequiringModName(modId))
+                        : Component.literal(finalModId);
+
+                    CycleButton<Boolean> modButton = cycleBuilder(COLORED_BOOL_TO_TEXT, List.of(Boolean.TRUE, Boolean.FALSE), isExplicit || isImplicit)
+                        .withTooltip(v -> Tooltip.create(tooltip))
                         .create(0, 0, 230, 20, Component.literal(modName),
                             (button, value) -> {
                                 if (value) {
@@ -1073,8 +1083,9 @@ public class OpsecConfigScreen extends Screen {
                                     settings.getWhitelistedMods().remove(finalModId);
                                 }
                                 config.save();
+                                refreshScreen();
                         });
-
+                    if (isImplicit) modButton.active = false;
                     widgets.add(modButton);
                 }
             }
@@ -1096,26 +1107,10 @@ public class OpsecConfigScreen extends Screen {
         List<ModContainer> result = FabricLoader.getInstance().getAllMods().stream()
             .filter(mod -> {
                 String id = mod.getMetadata().getId();
-                // Skip Minecraft, Java, Fabric internals
-                if (id.equals("minecraft") || id.equals("java") || id.equals("fabricloader")) {
-                    return false;
-                }
-                // Skip ALL fabric-* modules (fabric-api submodules, fabric-language-*, etc.)
-                // These channels are auto-whitelisted anyway
-                if (id.startsWith("fabric-") || id.equals("fabric-api")) {
-                    return false;
-                }
-                // Skip OpSec itself and mixinsquared
-                if (id.equals("opsec") || id.equals("mixinsquared")) {
-                    return false;
-                }
-                
-                // Only show mods with translation keys OR network channels
-                ModRegistry.ModInfo info = ModRegistry.getModInfo(id);
-                if (info == null) {
-                    return false;
-                }
-                return info.hasTrackableContent();
+                if (ModRegistry.PLATFORM_MODS.contains(id)) return false;
+                // Only top-level installed jars; JIJ children show up via their host's aggregate.
+                if (mod.getContainingMod().isPresent()) return false;
+                return ModRegistry.hasTrackableContentIncludingJij(id);
             })
             .sorted(Comparator.comparing(mod -> mod.getMetadata().getName(), String.CASE_INSENSITIVE_ORDER))
             .toList();
@@ -1131,19 +1126,10 @@ public class OpsecConfigScreen extends Screen {
     private static void ensureModsScanned() {
         for (ModContainer mod : FabricLoader.getInstance().getAllMods()) {
             String modId = mod.getMetadata().getId();
-            
-            // Skip system mods
-            if (modId.equals("minecraft") || modId.equals("java") || modId.equals("fabricloader")) {
-                continue;
-            }
-            // Skip fabric API modules
-            if (modId.startsWith("fabric-") || modId.equals("fabric-api")) {
-                continue;
-            }
-            // Skip our own mod and mixinsquared
-            if (modId.equals("opsec") || modId.equals("mixinsquared")) {
-                continue;
-            }
+
+            if (ModRegistry.PLATFORM_MODS.contains(modId)) continue;
+            // Skip JIJ children: their lang already loads via their host's mixin.
+            if (mod.getContainingMod().isPresent()) continue;
             
             // Check if this mod already has translation keys tracked
             ModRegistry.ModInfo existingInfo = ModRegistry.getModInfo(modId);

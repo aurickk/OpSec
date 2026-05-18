@@ -1,28 +1,22 @@
 {
   "opsec.config.title": "OpSec 設定",
-
   "opsec.tab.protection": "防護",
   "opsec.tab.accounts": "帳號",
   "opsec.tab.whitelist": "白名單",
   "opsec.tab.misc": "其他",
-
   "opsec.option.spoofAsVanilla": "偽裝為原版",
   "opsec.option.spoofAsVanilla.tooltip": "開啟：宣告為原版客戶端，並阻擋所有模組被偵測\n關閉：宣告為真實的 Fabric 客戶端，可選擇性允許部分模組",
-
   "opsec.option.whitelistMode": "白名單模式",
   "opsec.option.whitelistMode.locked.tooltip": "因為已啟用「偽裝為原版」，鎖定為「全部阻擋」",
   "opsec.whitelist.search": "搜尋",
-
   "opsec.whitelist.mode.blockAll": "§e全部阻擋",
   "opsec.whitelist.mode.auto": "§a自動",
   "opsec.whitelist.mode.custom": "§b自訂",
   "opsec.whitelist.mode.blockAll.tooltip": "阻擋所有模組頻道（無例外）",
   "opsec.whitelist.mode.auto.tooltip": "具有網路頻道的模組會自動加入白名單",
   "opsec.whitelist.mode.custom.tooltip": "手動選擇要加入白名單的模組",
-
   "opsec.ep.managed.header": "§7由 ExploitPreventer 管理",
   "opsec.ep.managed.tooltip": "由 ExploitPreventer 管理",
-
   "opsec.option.isolatePackCache": "隔離資源包快取",
   "opsec.option.blockLocalPackUrls": "阻擋本機網址",
   "opsec.option.clearCache": "清除已快取的資源包",
@@ -30,23 +24,20 @@
   "opsec.option.fakeDefaultKeybinds": "偽造預設按鍵綁定",
   "opsec.option.meteorFix": "Meteor 修正",
   "opsec.option.packStripMode": "繞過伺服器資源包要求",
-
-  "opsec.packstrip.mode.manual": "\u00A7e手動",
-  "opsec.packstrip.mode.ask": "\u00A7a詢問",
-  "opsec.packstrip.mode.alwaysOn": "\u00A7c永遠",
+  "opsec.packstrip.mode.manual": "§e手動",
+  "opsec.packstrip.mode.ask": "§a詢問",
+  "opsec.packstrip.mode.alwaysOn": "§c永遠",
   "opsec.packstrip.mode.manual.tooltip": "推送時採用原版預設行為。你仍可手動切換任何伺服器資源包",
   "opsec.packstrip.mode.ask.tooltip": "不套用伺服器資源包，但會顯示同意畫面詢問是否套用",
   "opsec.packstrip.mode.alwaysOn.tooltip": "預設不套用伺服器資源包。你仍可手動切換任何伺服器資源包",
-
   "opsec.packstrip.title": "伺服器資源包",
   "opsec.packstrip.required": "此伺服器有必須使用的資源包。",
   "opsec.packstrip.optional": "此伺服器有可選用的資源包。",
-  "opsec.packstrip.stripped": "\u00A77OpSec 已繞過此資源包的內容。你可在下方套用它。",
+  "opsec.packstrip.stripped": "§7OpSec 已繞過此資源包的內容。你可在下方套用它。",
   "opsec.packstrip.continue": "繼續",
   "opsec.packstrip.loadReal": "實際載入資源包",
   "opsec.option.chatSigning": "聊天簽署",
   "opsec.option.disableTelemetry": "停用遙測",
-
   "opsec.option.showAlerts": "聊天警示",
   "opsec.option.showToasts": "提示彈出",
   "opsec.option.logDetections": "記錄事件",
@@ -55,37 +46,31 @@
   "opsec.option.hideModifiedIndicators": "隱藏「已修改」標示",
   "opsec.option.hideSystemMsgIndicators": "隱藏系統訊息列",
   "opsec.option.hideWarningToast": "隱藏警告提示",
-
   "opsec.brand.vanilla": "原版",
   "opsec.brand.fabric": "Fabric",
-
   "opsec.translationMode.spoof": "偽裝",
   "opsec.translationMode.block": "阻擋",
-
   "opsec.account.addSession": "新增工作階段權杖",
   "opsec.account.addSession.tooltip": "使用工作階段權杖新增帳號",
   "opsec.account.addOffline": "新增離線帳號",
   "opsec.account.addOffline.tooltip": "新增離線帳號（僅使用者名稱，不進行驗證）",
-
   "opsec.update.title": "OpSec 有可用更新",
   "opsec.update.message": "OpSec 推出了新版本！",
-  "opsec.update.current": "\u00A7c目前版本：%s",
-  "opsec.update.latest": "\u00A7a最新版本：%s",
-  "opsec.update.download": "\u00A7a下載",
+  "opsec.update.current": "§c目前版本：%s",
+  "opsec.update.latest": "§a最新版本：%s",
+  "opsec.update.download": "§a下載",
   "opsec.update.skip": "略過此版本",
   "opsec.update.cancel": "取消",
-
   "opsec.tamper.title": "OpSec 完整性警告",
-  "opsec.tamper.warning": "\u00A7c\u00A7l警告：JAR 檔案完整性檢查失敗！",
+  "opsec.tamper.warning": "§c§l警告：JAR 檔案完整性檢查失敗！",
   "opsec.tamper.mismatch": "執行中的 JAR 檔案與官方發行版本不符。",
   "opsec.tamper.malicious": "這可能表示檔案已被植入惡意程式碼。",
-  "opsec.tamper.compromised": "\u00A7c你的電腦可能已遭入侵。",
-  "opsec.tamper.action": "\u00A7c如果不是你自行修改此檔案，請立即採取行動。",
-  "opsec.tamper.expected": "\u00A78預期：%s...",
-  "opsec.tamper.actual": "\u00A78實際：%s...",
-  "opsec.tamper.download": "\u00A7a下載官方發行版本",
+  "opsec.tamper.compromised": "§c你的電腦可能已遭入侵。",
+  "opsec.tamper.action": "§c如果不是你自行修改此檔案，請立即採取行動。",
+  "opsec.tamper.expected": "§8預期：%s...",
+  "opsec.tamper.actual": "§8實際：%s...",
+  "opsec.tamper.download": "§a下載官方發行版本",
   "opsec.tamper.dismiss_permanent": "我清楚自己在做什麼",
-
   "opsec.alert.trackpack.detected": "偵測到資源包指紋追蹤！網址：%s",
   "opsec.alert.trackpack.pattern": "偵測到資源包指紋追蹤模式！",
   "opsec.toast.trackpack": "偵測到資源包指紋追蹤",
@@ -95,15 +80,12 @@
   "opsec.alert.portscan.summary.single": "偵測到 %d 次本機連接埠掃描，目標：%s",
   "opsec.alert.portscan.summary.multi": "偵測到 %d 次本機連接埠掃描：%s",
   "opsec.alert.portscan.summary.more": " 還有 +%d 次",
-
   "opsec.alert.keyresolution": "偵測到翻譯鍵解析探測",
   "opsec.toast.keyresolution": "偵測到翻譯鍵解析探測",
   "opsec.hint.alertsCanBeDisabled": "可在 OpSec > 其他設定中停用聊天與彈出通知警示。",
-
   "opsec.command.help.header": "OpSec 指令",
   "opsec.command.help.info": "/opsec info [mod]  - 顯示已追蹤的模組或特定模組的詳細資訊",
   "opsec.command.help.channels": "/opsec channels    - 顯示所有已追蹤的網路頻道",
-
   "opsec.command.overview.header": "OPSEC 模組登錄表",
   "opsec.command.overview.totalMods": "已追蹤模組總數：%d",
   "opsec.command.overview.vanillaKeys": "原版翻譯鍵：%d",
@@ -113,7 +95,6 @@
   "opsec.command.overview.modsHeader": "具可追蹤內容的模組：",
   "opsec.command.overview.noMods": "找不到具可追蹤內容的模組。",
   "opsec.command.overview.useInfo": "使用 /opsec info <mod> 以查看詳細資訊",
-
   "opsec.command.info.notFound": "找不到模組：%s",
   "opsec.command.info.useList": "使用 /opsec info 以查看可用的模組",
   "opsec.command.info.header": "模組資訊：%s",
@@ -123,22 +104,18 @@
   "opsec.command.info.more": "  ... 還有 %d 個",
   "opsec.command.info.keybinds": "按鍵綁定 (%d)：",
   "opsec.command.info.channels": "網路頻道 (%d)：",
-  "opsec.command.info.statusAllowedFabric": "白名單狀態：ALLOWED（預設 Fabric API 模組）",
   "opsec.command.info.statusAllowedAuto": "白名單狀態：ALLOWED（AUTO 模式）",
   "opsec.command.info.statusBlockedAuto": "白名單狀態：BLOCKED（AUTO 模式 - 無頻道）",
   "opsec.command.info.statusAllowedCustom": "白名單狀態：ALLOWED（CUSTOM 模式）",
   "opsec.command.info.statusBlockedCustom": "白名單狀態：BLOCKED（CUSTOM 模式）",
   "opsec.command.info.statusBlockedOff": "白名單狀態：BLOCKED（OFF）",
-
   "opsec.command.channels.header": "所有已追蹤的頻道",
   "opsec.command.channels.none": "尚未追蹤任何頻道。請嘗試 /opsec scan",
   "opsec.command.channels.total": "總計：%d 個頻道",
   "opsec.command.channels.legend": "✓ = 已加入白名單，✗ = 已阻擋",
-
   "opsec.command.modEntry.keys": "%d 個翻譯鍵",
   "opsec.command.modEntry.keybinds": "%d 個按鍵綁定",
   "opsec.command.modEntry.channels": "%d 個頻道",
-
   "opsec.account.screen.session.title": "新增帳號",
   "opsec.account.screen.sessionLabel": "工作階段權杖",
   "opsec.account.screen.sessionHint": "工作階段／存取權杖（必填）",
@@ -151,7 +128,6 @@
   "opsec.account.success.added": "§a已新增：%s",
   "opsec.account.success.refreshSuffix": " §7（含更新權杖）",
   "opsec.account.error.invalidToken": "§c權杖無效或已過期",
-
   "opsec.account.screen.offline.title": "新增離線帳號",
   "opsec.account.screen.usernameLabel": "使用者名稱",
   "opsec.account.screen.usernameHint": "使用者名稱（必填）",
@@ -159,14 +135,11 @@
   "opsec.account.status.adding": "§e正在新增帳號...",
   "opsec.account.success.addedOffline": "§a已新增：%s §7（離線）",
   "opsec.account.error.failedToAdd": "§c無法新增帳號",
-
   "opsec.button.settings.tooltip": "開啟 OpSec 設定",
-
   "opsec.button.reset.tooltip": "將所有設定重設為預設值",
   "opsec.button.reset.disabled.tooltip": "在帳號分頁無法使用重設",
   "opsec.version.tooltip.outdated": "最新版本：%s\n點擊以下載",
   "opsec.version.tooltip.upToDate": "已是最新版本",
-
   "opsec.option.isolatePackCache.tooltip": "依帳號分別儲存資源包，以防止指紋追蹤",
   "opsec.option.blockLocalPackUrls.tooltip": "阻擋本機網址的資源包請求",
   "opsec.option.clearCache.tooltip": "刪除所有已快取的伺服器資源包\n同時重設下載佇列狀態",
@@ -178,7 +151,6 @@
   "opsec.option.showToasts.tooltip": "顯示彈出通知",
   "opsec.option.logDetections.tooltip": "將偵測事件記錄至遊戲日誌",
   "opsec.option.debugAlerts.tooltip": "顯示所有探測翻譯鍵的警示，即使內容未變更",
-
   "opsec.button.refreshAll": "全部重新整理",
   "opsec.button.refreshing": "§7正在重新整理...",
   "opsec.button.refresh.tooltip": "重新驗證所有帳號\n無效的權杖會被標示為紅色",
@@ -188,12 +160,15 @@
   "opsec.button.import.tooltip": "從 JSON 檔案匯入帳號",
   "opsec.button.export": "匯出",
   "opsec.button.export.tooltip": "將帳號匯出為 JSON 檔案",
-
   "opsec.button.enableAll": "全部啟用",
   "opsec.button.enableAll.tooltip": "將所有已安裝的模組加入白名單",
   "opsec.button.disableAll": "全部停用",
   "opsec.button.disableAll.tooltip": "從白名單移除所有模組",
-
   "opsec.chatSigning.sign.tooltip": "永遠簽署聊天訊息",
-  "opsec.chatSigning.off.tooltip": "永不簽署聊天訊息"
+  "opsec.chatSigning.off.tooltip": "永不簽署聊天訊息",
+  "opsec.command.info.statusAllowedDep": "白名單狀態：ALLOWED（被 %s 需要）",
+  "opsec.command.info.jij": "JIJ 子模組（%d）：",
+  "opsec.whitelist.requiringFallback": "一個已允許的模組",
+  "opsec.whitelist.tooltip.requiredBy": "%s — 被 %s 需要（取消選擇依賴方以釋放）",
+  "opsec.whitelist.suffix.required": " §8(必需)"
 }

@@ -1,6 +1,7 @@
 package aurick.opsec.mod.config;
 
 import aurick.opsec.mod.Opsec;
+import aurick.opsec.mod.tracking.ModRegistry;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
@@ -215,6 +216,10 @@ public class OpsecConfig {
                 CONFIG_PATH,
                 e.getMessage()
             );
+        }
+        // Null-guard avoids constructor's save→getInstance recursion; OpsecClient seeds the first build.
+        if (INSTANCE != null) {
+            ModRegistry.rebuildDependencyClosure();
         }
     }
 

@@ -1,28 +1,22 @@
 {
   "opsec.config.title": "OpSec Settings",
-
   "opsec.tab.protection": "Protection",
   "opsec.tab.accounts": "Accounts",
   "opsec.tab.whitelist": "Whitelist",
   "opsec.tab.misc": "Misc",
-
   "opsec.option.spoofAsVanilla": "Spoof as Vanilla",
   "opsec.option.spoofAsVanilla.tooltip": "On: advertise a vanilla brand and block ALL mod(s) from detection\nOff: advertise as real Fabric brand and optionally allow some mod(s)",
-
   "opsec.option.whitelistMode": "Whitelist Mode",
   "opsec.option.whitelistMode.locked.tooltip": "Locked to 'Block All' because Spoof as Vanilla is on",
   "opsec.whitelist.search": "Search",
-
   "opsec.whitelist.mode.blockAll": "§eBLOCK ALL",
   "opsec.whitelist.mode.auto": "§aAUTO",
   "opsec.whitelist.mode.custom": "§bCUSTOM",
   "opsec.whitelist.mode.blockAll.tooltip": "Block all mod channels (no exceptions)",
   "opsec.whitelist.mode.auto.tooltip": "Mods with network channels are automatically whitelisted",
   "opsec.whitelist.mode.custom.tooltip": "Manually select which mods to whitelist",
-
   "opsec.ep.managed.header": "§7Managed by ExploitPreventer",
   "opsec.ep.managed.tooltip": "Managed by ExploitPreventer",
-
   "opsec.option.isolatePackCache": "Isolate Pack Cache",
   "opsec.option.blockLocalPackUrls": "Block Local URLs",
   "opsec.option.clearCache": "Clear Cached Resource Packs",
@@ -30,23 +24,20 @@
   "opsec.option.fakeDefaultKeybinds": "Fake Default Keybinds",
   "opsec.option.meteorFix": "Meteor Fix",
   "opsec.option.packStripMode": "Bypass Server Pack Requirement",
-
-  "opsec.packstrip.mode.manual": "\u00A7eMANUAL",
-  "opsec.packstrip.mode.ask": "\u00A7aASK",
-  "opsec.packstrip.mode.alwaysOn": "\u00A7cALWAYS",
+  "opsec.packstrip.mode.manual": "§eMANUAL",
+  "opsec.packstrip.mode.ask": "§aASK",
+  "opsec.packstrip.mode.alwaysOn": "§cALWAYS",
   "opsec.packstrip.mode.manual.tooltip": "Default vanilla behavior on push. You can still toggle any server pack",
   "opsec.packstrip.mode.ask.tooltip": "Server resource pack not applied but with consent screen to ask if the pack(s) should be applied",
   "opsec.packstrip.mode.alwaysOn.tooltip": "Server resource pack not applied by default. You can still toggle any server pack",
-
   "opsec.packstrip.title": "Server Resource Pack",
   "opsec.packstrip.required": "This server has a required resource pack.",
   "opsec.packstrip.optional": "This server has an optional resource pack.",
-  "opsec.packstrip.stripped": "\u00A77OpSec bypassed this pack's content. You may apply it below.",
+  "opsec.packstrip.stripped": "§7OpSec bypassed this pack's content. You may apply it below.",
   "opsec.packstrip.continue": "Continue",
   "opsec.packstrip.loadReal": "Load Pack For Real",
   "opsec.option.chatSigning": "Chat Signing",
   "opsec.option.disableTelemetry": "Disable Telemetry",
-
   "opsec.option.showAlerts": "Chat Alerts",
   "opsec.option.showToasts": "Toast Popups",
   "opsec.option.logDetections": "Log Events",
@@ -55,37 +46,31 @@
   "opsec.option.hideModifiedIndicators": "Hide 'Modified'",
   "opsec.option.hideSystemMsgIndicators": "Hide System Bar",
   "opsec.option.hideWarningToast": "Hide Warning Toast",
-
   "opsec.brand.vanilla": "Vanilla",
   "opsec.brand.fabric": "Fabric",
-
   "opsec.translationMode.spoof": "Spoof",
   "opsec.translationMode.block": "Block",
-
   "opsec.account.addSession": "Add Session Token",
   "opsec.account.addSession.tooltip": "Add a new account using a session token",
   "opsec.account.addOffline": "Add Offline Account",
   "opsec.account.addOffline.tooltip": "Add an offline account (username only, no auth)",
-
   "opsec.update.title": "OpSec Update Available",
   "opsec.update.message": "A new version of OpSec is available!",
-  "opsec.update.current": "\u00A7cCurrent: %s",
-  "opsec.update.latest": "\u00A7aLatest: %s",
-  "opsec.update.download": "\u00A7aDownload",
+  "opsec.update.current": "§cCurrent: %s",
+  "opsec.update.latest": "§aLatest: %s",
+  "opsec.update.download": "§aDownload",
   "opsec.update.skip": "Skip This Version",
   "opsec.update.cancel": "Cancel",
-
   "opsec.tamper.title": "OpSec Integrity Warning",
-  "opsec.tamper.warning": "\u00A7c\u00A7lWARNING: Jar integrity check failed!",
+  "opsec.tamper.warning": "§c§lWARNING: Jar integrity check failed!",
   "opsec.tamper.mismatch": "The running jar does not match the official release.",
   "opsec.tamper.malicious": "This may indicate the file has been modified with malicious code.",
-  "opsec.tamper.compromised": "\u00A7cYour computer may have already been compromised.",
-  "opsec.tamper.action": "\u00A7cIf you did not modify this file yourself, take immediate action.",
-  "opsec.tamper.expected": "\u00A78Expected: %s...",
-  "opsec.tamper.actual": "\u00A78Actual: %s...",
-  "opsec.tamper.download": "\u00A7aDownload Official Release",
+  "opsec.tamper.compromised": "§cYour computer may have already been compromised.",
+  "opsec.tamper.action": "§cIf you did not modify this file yourself, take immediate action.",
+  "opsec.tamper.expected": "§8Expected: %s...",
+  "opsec.tamper.actual": "§8Actual: %s...",
+  "opsec.tamper.download": "§aDownload Official Release",
   "opsec.tamper.dismiss_permanent": "I Know What I'm Doing",
-
   "opsec.alert.trackpack.detected": "Resource pack fingerprinting detected! URL: %s",
   "opsec.alert.trackpack.pattern": "Resource pack fingerprinting pattern detected!",
   "opsec.toast.trackpack": "Resource Pack Fingerprinting Detected",
@@ -95,15 +80,12 @@
   "opsec.alert.portscan.summary.single": "Detected %d local port scan(s) to %s",
   "opsec.alert.portscan.summary.multi": "Detected %d local port scan(s): %s",
   "opsec.alert.portscan.summary.more": " +%d more",
-
   "opsec.alert.keyresolution": "Key resolution probe detected",
   "opsec.toast.keyresolution": "Key Resolution Probe Detected",
   "opsec.hint.alertsCanBeDisabled": "Chat and toast alerts can be disabled in OpSec > Misc settings.",
-
   "opsec.command.help.header": "OpSec Commands",
   "opsec.command.help.info": "/opsec info [mod]  - Show tracked mods or details for a specific mod",
   "opsec.command.help.channels": "/opsec channels    - Show all tracked network channels",
-
   "opsec.command.overview.header": "OPSEC Mod Registry",
   "opsec.command.overview.totalMods": "Total mods tracked: %d",
   "opsec.command.overview.vanillaKeys": "Vanilla translation keys: %d",
@@ -113,7 +95,6 @@
   "opsec.command.overview.modsHeader": "Mods with trackable content:",
   "opsec.command.overview.noMods": "No mods with trackable content found.",
   "opsec.command.overview.useInfo": "Use /opsec info <mod> for details",
-
   "opsec.command.info.notFound": "Mod not found: %s",
   "opsec.command.info.useList": "Use /opsec info to see available mods",
   "opsec.command.info.header": "Mod Info: %s",
@@ -123,22 +104,22 @@
   "opsec.command.info.more": "  ... and %d more",
   "opsec.command.info.keybinds": "Keybinds (%d):",
   "opsec.command.info.channels": "Network Channels (%d):",
-  "opsec.command.info.statusAllowedFabric": "Whitelist Status: ALLOWED (default Fabric API mod)",
+  "opsec.command.info.jij": "JIJ Submodules (%d):",
+  "opsec.whitelist.requiringFallback": "a whitelisted mod",
+  "opsec.whitelist.tooltip.requiredBy": "%s — required by %s (uncheck the depender to release)",
   "opsec.command.info.statusAllowedAuto": "Whitelist Status: ALLOWED (AUTO mode)",
   "opsec.command.info.statusBlockedAuto": "Whitelist Status: BLOCKED (AUTO mode - no channels)",
   "opsec.command.info.statusAllowedCustom": "Whitelist Status: ALLOWED (CUSTOM mode)",
+  "opsec.command.info.statusAllowedDep": "Whitelist Status: ALLOWED (required by %s)",
   "opsec.command.info.statusBlockedCustom": "Whitelist Status: BLOCKED (CUSTOM mode)",
   "opsec.command.info.statusBlockedOff": "Whitelist Status: BLOCKED (OFF)",
-
   "opsec.command.channels.header": "All Tracked Channels",
   "opsec.command.channels.none": "No channels tracked yet. Try /opsec scan",
   "opsec.command.channels.total": "Total: %d channels",
   "opsec.command.channels.legend": "✓ = whitelisted, ✗ = blocked",
-
   "opsec.command.modEntry.keys": "%d keys",
   "opsec.command.modEntry.keybinds": "%d keybinds",
   "opsec.command.modEntry.channels": "%d channels",
-
   "opsec.account.screen.session.title": "Add Account",
   "opsec.account.screen.sessionLabel": "Session Token",
   "opsec.account.screen.sessionHint": "Session/Access token (required)",
@@ -151,7 +132,6 @@
   "opsec.account.success.added": "§aAdded: %s",
   "opsec.account.success.refreshSuffix": " §7(with refresh)",
   "opsec.account.error.invalidToken": "§cInvalid or expired token",
-
   "opsec.account.screen.offline.title": "Add Offline Account",
   "opsec.account.screen.usernameLabel": "Username",
   "opsec.account.screen.usernameHint": "Username (required)",
@@ -159,14 +139,11 @@
   "opsec.account.status.adding": "§eAdding account...",
   "opsec.account.success.addedOffline": "§aAdded: %s §7(offline)",
   "opsec.account.error.failedToAdd": "§cFailed to add account",
-
   "opsec.button.settings.tooltip": "Open OpSec settings",
-
   "opsec.button.reset.tooltip": "Reset all settings to defaults",
   "opsec.button.reset.disabled.tooltip": "Reset is disabled on Accounts tab",
   "opsec.version.tooltip.outdated": "Latest: %s\nClick to download",
   "opsec.version.tooltip.upToDate": "Up to date",
-
   "opsec.option.isolatePackCache.tooltip": "Store packs per-account to prevent fingerprinting",
   "opsec.option.blockLocalPackUrls.tooltip": "Block local URL resource pack requests",
   "opsec.option.clearCache.tooltip": "Deletes all cached server resource packs\nAlso resets download queue state",
@@ -178,7 +155,6 @@
   "opsec.option.showToasts.tooltip": "Show popup notifications",
   "opsec.option.logDetections.tooltip": "Log detection events to game log",
   "opsec.option.debugAlerts.tooltip": "Show alerts for all probed keys, even unchanged ones",
-
   "opsec.button.refreshAll": "Refresh All",
   "opsec.button.refreshing": "§7Refreshing...",
   "opsec.button.refresh.tooltip": "Revalidate all accounts\nInvalid tokens will be marked red",
@@ -188,12 +164,11 @@
   "opsec.button.import.tooltip": "Import accounts from JSON file",
   "opsec.button.export": "Export",
   "opsec.button.export.tooltip": "Export accounts to JSON file",
-
   "opsec.button.enableAll": "Enable All",
   "opsec.button.enableAll.tooltip": "Whitelist all installed mods",
   "opsec.button.disableAll": "Disable All",
   "opsec.button.disableAll.tooltip": "Remove all mods from whitelist",
-
   "opsec.chatSigning.sign.tooltip": "Always sign chat messages",
-  "opsec.chatSigning.off.tooltip": "Never sign chat messages"
+  "opsec.chatSigning.off.tooltip": "Never sign chat messages",
+  "opsec.whitelist.suffix.required": " §8(required)"
 }

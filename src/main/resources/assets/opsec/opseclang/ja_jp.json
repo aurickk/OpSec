@@ -1,28 +1,22 @@
 {
   "opsec.config.title": "OpSec 設定",
-
   "opsec.tab.protection": "保護",
   "opsec.tab.accounts": "アカウント",
   "opsec.tab.whitelist": "ホワイトリスト",
   "opsec.tab.misc": "その他",
-
   "opsec.option.spoofAsVanilla": "バニラとして偽装",
   "opsec.option.spoofAsVanilla.tooltip": "On: バニラのブランドとして通知し、すべてのMODの検出をブロックします\nOff: 本物のFabricブランドとして通知し、一部のMODを許可できます",
-
   "opsec.option.whitelistMode": "ホワイトリストモード",
   "opsec.option.whitelistMode.locked.tooltip": "「バニラとして偽装」が有効なため「すべてブロック」に固定されています",
   "opsec.whitelist.search": "検索",
-
   "opsec.whitelist.mode.blockAll": "§eすべてブロック",
   "opsec.whitelist.mode.auto": "§a自動",
   "opsec.whitelist.mode.custom": "§bカスタム",
   "opsec.whitelist.mode.blockAll.tooltip": "すべてのMODチャンネルをブロックします（例外なし）",
   "opsec.whitelist.mode.auto.tooltip": "ネットワークチャンネルを持つMODは自動的にホワイトリストに追加されます",
   "opsec.whitelist.mode.custom.tooltip": "ホワイトリストに追加するMODを手動で選択します",
-
   "opsec.ep.managed.header": "§7ExploitPreventer により管理中",
   "opsec.ep.managed.tooltip": "ExploitPreventer により管理されています",
-
   "opsec.option.isolatePackCache": "パックキャッシュを分離",
   "opsec.option.blockLocalPackUrls": "ローカルURLをブロック",
   "opsec.option.clearCache": "リソースパックのキャッシュをクリア",
@@ -30,23 +24,20 @@
   "opsec.option.fakeDefaultKeybinds": "デフォルトのキーバインドを偽装",
   "opsec.option.meteorFix": "Meteor 修正",
   "opsec.option.packStripMode": "サーバーリソースパックの要件をバイパス",
-
-  "opsec.packstrip.mode.manual": "\u00A7e手動",
-  "opsec.packstrip.mode.ask": "\u00A7a確認",
-  "opsec.packstrip.mode.alwaysOn": "\u00A7c常時オン",
+  "opsec.packstrip.mode.manual": "§e手動",
+  "opsec.packstrip.mode.ask": "§a確認",
+  "opsec.packstrip.mode.alwaysOn": "§c常時オン",
   "opsec.packstrip.mode.manual.tooltip": "サーバーからのパック送信時はバニラのデフォルト動作です。サーバーパックの適用は引き続き切り替えられます",
   "opsec.packstrip.mode.ask.tooltip": "サーバーリソースパックは適用されませんが、適用するか確認する画面が表示されます",
   "opsec.packstrip.mode.alwaysOn.tooltip": "サーバーリソースパックはデフォルトで適用されません。サーバーパックの適用は引き続き切り替えられます",
-
   "opsec.packstrip.title": "サーバーリソースパック",
   "opsec.packstrip.required": "このサーバーには必須のリソースパックがあります。",
   "opsec.packstrip.optional": "このサーバーには任意のリソースパックがあります。",
-  "opsec.packstrip.stripped": "\u00A77OpSec がこのパックの内容をバイパスしました。下から適用できます。",
+  "opsec.packstrip.stripped": "§7OpSec がこのパックの内容をバイパスしました。下から適用できます。",
   "opsec.packstrip.continue": "続ける",
   "opsec.packstrip.loadReal": "パックを実際に読み込む",
   "opsec.option.chatSigning": "チャット署名",
   "opsec.option.disableTelemetry": "テレメトリを無効化",
-
   "opsec.option.showAlerts": "チャットアラート",
   "opsec.option.showToasts": "トースト通知",
   "opsec.option.logDetections": "イベントをログ出力",
@@ -55,37 +46,31 @@
   "opsec.option.hideModifiedIndicators": "「Modified」を非表示",
   "opsec.option.hideSystemMsgIndicators": "システムバーを非表示",
   "opsec.option.hideWarningToast": "警告トーストを非表示",
-
   "opsec.brand.vanilla": "バニラ",
   "opsec.brand.fabric": "Fabric",
-
   "opsec.translationMode.spoof": "偽装",
   "opsec.translationMode.block": "ブロック",
-
   "opsec.account.addSession": "セッショントークンを追加",
   "opsec.account.addSession.tooltip": "セッショントークンを使って新しいアカウントを追加します",
   "opsec.account.addOffline": "オフラインアカウントを追加",
   "opsec.account.addOffline.tooltip": "オフラインアカウントを追加します（ユーザー名のみ、認証なし）",
-
   "opsec.update.title": "OpSec のアップデートが利用可能",
   "opsec.update.message": "OpSec の新しいバージョンが利用可能です！",
-  "opsec.update.current": "\u00A7c現在: %s",
-  "opsec.update.latest": "\u00A7a最新: %s",
-  "opsec.update.download": "\u00A7aダウンロード",
+  "opsec.update.current": "§c現在: %s",
+  "opsec.update.latest": "§a最新: %s",
+  "opsec.update.download": "§aダウンロード",
   "opsec.update.skip": "このバージョンをスキップ",
   "opsec.update.cancel": "キャンセル",
-
   "opsec.tamper.title": "OpSec 整合性の警告",
-  "opsec.tamper.warning": "\u00A7c\u00A7l警告: JARファイルの整合性チェックに失敗しました！",
+  "opsec.tamper.warning": "§c§l警告: JARファイルの整合性チェックに失敗しました！",
   "opsec.tamper.mismatch": "実行中のJARファイルが公式リリースと一致しません。",
   "opsec.tamper.malicious": "これは、ファイルが悪意のあるコードで改変されている可能性を示しています。",
-  "opsec.tamper.compromised": "\u00A7cお使いのコンピューターはすでに侵害されている可能性があります。",
-  "opsec.tamper.action": "\u00A7cご自身でこのファイルを変更していない場合は、直ちに対処してください。",
-  "opsec.tamper.expected": "\u00A78想定値: %s...",
-  "opsec.tamper.actual": "\u00A78実際の値: %s...",
-  "opsec.tamper.download": "\u00A7a公式リリースをダウンロード",
+  "opsec.tamper.compromised": "§cお使いのコンピューターはすでに侵害されている可能性があります。",
+  "opsec.tamper.action": "§cご自身でこのファイルを変更していない場合は、直ちに対処してください。",
+  "opsec.tamper.expected": "§8想定値: %s...",
+  "opsec.tamper.actual": "§8実際の値: %s...",
+  "opsec.tamper.download": "§a公式リリースをダウンロード",
   "opsec.tamper.dismiss_permanent": "理解した上で続行する",
-
   "opsec.alert.trackpack.detected": "リソースパックによるフィンガープリンティングを検出しました！ URL: %s",
   "opsec.alert.trackpack.pattern": "リソースパックのフィンガープリンティングパターンを検出しました！",
   "opsec.toast.trackpack": "リソースパックのフィンガープリンティングを検出",
@@ -95,15 +80,12 @@
   "opsec.alert.portscan.summary.single": "%d 件のローカルポートスキャンを %s に対して検出しました",
   "opsec.alert.portscan.summary.multi": "%d 件のローカルポートスキャンを検出しました: %s",
   "opsec.alert.portscan.summary.more": " +%d 件以上",
-
   "opsec.alert.keyresolution": "キー解決の探査を検出しました",
   "opsec.toast.keyresolution": "キー解決の探査を検出",
   "opsec.hint.alertsCanBeDisabled": "チャットおよびトーストのアラートは OpSec > その他 設定で無効化できます。",
-
   "opsec.command.help.header": "OpSec コマンド",
   "opsec.command.help.info": "/opsec info [mod]  - 追跡中のMOD一覧、または指定したMODの詳細を表示",
   "opsec.command.help.channels": "/opsec channels    - 追跡中のすべてのネットワークチャンネルを表示",
-
   "opsec.command.overview.header": "OPSEC MOD レジストリ",
   "opsec.command.overview.totalMods": "追跡中のMOD総数: %d",
   "opsec.command.overview.vanillaKeys": "バニラの翻訳キー数: %d",
@@ -113,7 +95,6 @@
   "opsec.command.overview.modsHeader": "追跡可能な要素を持つMOD:",
   "opsec.command.overview.noMods": "追跡可能な要素を持つMODが見つかりません。",
   "opsec.command.overview.useInfo": "詳細を表示するには /opsec info <mod> を使用してください",
-
   "opsec.command.info.notFound": "MODが見つかりません: %s",
   "opsec.command.info.useList": "利用可能なMODを表示するには /opsec info を使用してください",
   "opsec.command.info.header": "MOD 情報: %s",
@@ -123,22 +104,18 @@
   "opsec.command.info.more": "  ... 他 %d 件",
   "opsec.command.info.keybinds": "キーバインド (%d):",
   "opsec.command.info.channels": "ネットワークチャンネル (%d):",
-  "opsec.command.info.statusAllowedFabric": "ホワイトリスト状態: ALLOWED (デフォルトの Fabric API MOD)",
   "opsec.command.info.statusAllowedAuto": "ホワイトリスト状態: ALLOWED (AUTO モード)",
   "opsec.command.info.statusBlockedAuto": "ホワイトリスト状態: BLOCKED (AUTO モード - チャンネルなし)",
   "opsec.command.info.statusAllowedCustom": "ホワイトリスト状態: ALLOWED (CUSTOM モード)",
   "opsec.command.info.statusBlockedCustom": "ホワイトリスト状態: BLOCKED (CUSTOM モード)",
   "opsec.command.info.statusBlockedOff": "ホワイトリスト状態: BLOCKED (OFF)",
-
   "opsec.command.channels.header": "追跡中のすべてのチャンネル",
   "opsec.command.channels.none": "まだチャンネルは追跡されていません。/opsec scan を試してください",
   "opsec.command.channels.total": "合計: %d チャンネル",
   "opsec.command.channels.legend": "✓ = ホワイトリスト登録済み, ✗ = ブロック",
-
   "opsec.command.modEntry.keys": "%d キー",
   "opsec.command.modEntry.keybinds": "%d キーバインド",
   "opsec.command.modEntry.channels": "%d チャンネル",
-
   "opsec.account.screen.session.title": "アカウントを追加",
   "opsec.account.screen.sessionLabel": "セッショントークン",
   "opsec.account.screen.sessionHint": "セッション/アクセストークン（必須）",
@@ -151,7 +128,6 @@
   "opsec.account.success.added": "§a追加しました: %s",
   "opsec.account.success.refreshSuffix": " §7（リフレッシュ付き）",
   "opsec.account.error.invalidToken": "§c無効または期限切れのトークンです",
-
   "opsec.account.screen.offline.title": "オフラインアカウントを追加",
   "opsec.account.screen.usernameLabel": "ユーザー名",
   "opsec.account.screen.usernameHint": "ユーザー名（必須）",
@@ -159,14 +135,11 @@
   "opsec.account.status.adding": "§eアカウントを追加中...",
   "opsec.account.success.addedOffline": "§a追加しました: %s §7（オフライン）",
   "opsec.account.error.failedToAdd": "§cアカウントの追加に失敗しました",
-
   "opsec.button.settings.tooltip": "OpSec の設定を開きます",
-
   "opsec.button.reset.tooltip": "すべての設定を初期値にリセットします",
   "opsec.button.reset.disabled.tooltip": "アカウントタブではリセットは無効です",
   "opsec.version.tooltip.outdated": "最新: %s\nクリックでダウンロード",
   "opsec.version.tooltip.upToDate": "最新の状態です",
-
   "opsec.option.isolatePackCache.tooltip": "フィンガープリンティングを防ぐため、パックをアカウントごとに保存します",
   "opsec.option.blockLocalPackUrls.tooltip": "ローカルURLのリソースパックリクエストをブロックします",
   "opsec.option.clearCache.tooltip": "キャッシュされたサーバーリソースパックをすべて削除します\nダウンロードキューの状態もリセットします",
@@ -178,7 +151,6 @@
   "opsec.option.showToasts.tooltip": "ポップアップ通知を表示します",
   "opsec.option.logDetections.tooltip": "検出イベントをゲームログに出力します",
   "opsec.option.debugAlerts.tooltip": "変更がないものも含め、すべての探査されたキーに対してアラートを表示します",
-
   "opsec.button.refreshAll": "すべて更新",
   "opsec.button.refreshing": "§7更新中...",
   "opsec.button.refresh.tooltip": "すべてのアカウントを再検証します\n無効なトークンは赤色で表示されます",
@@ -188,12 +160,15 @@
   "opsec.button.import.tooltip": "JSONファイルからアカウントをインポートします",
   "opsec.button.export": "エクスポート",
   "opsec.button.export.tooltip": "アカウントをJSONファイルにエクスポートします",
-
   "opsec.button.enableAll": "すべて有効",
   "opsec.button.enableAll.tooltip": "インストール済みのすべてのMODをホワイトリストに登録します",
   "opsec.button.disableAll": "すべて無効",
   "opsec.button.disableAll.tooltip": "ホワイトリストからすべてのMODを削除します",
-
   "opsec.chatSigning.sign.tooltip": "チャットメッセージを常に署名します",
-  "opsec.chatSigning.off.tooltip": "チャットメッセージを署名しません"
+  "opsec.chatSigning.off.tooltip": "チャットメッセージを署名しません",
+  "opsec.command.info.statusAllowedDep": "ホワイトリスト状態: ALLOWED (%s により必要)",
+  "opsec.command.info.jij": "JIJ サブモジュール (%d):",
+  "opsec.whitelist.requiringFallback": "ホワイトリスト登録された MOD",
+  "opsec.whitelist.tooltip.requiredBy": "%s — %s により必要 (依存元のチェックを外して解放)",
+  "opsec.whitelist.suffix.required": " §8(必須)"
 }

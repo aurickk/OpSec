@@ -254,6 +254,11 @@ public class OpsecConfig {
         return !EXPLOIT_PREVENTER_LOADED;
     }
 
+    /** Same EP gate as {@link #shouldSpoofChannels()} — kept distinct so the two can diverge without churn. */
+    public boolean shouldSpoofKnownPacks() {
+        return !EXPLOIT_PREVENTER_LOADED;
+    }
+
     public String getEffectiveBrand() {
         return settings.getEffectiveBrand();
     }

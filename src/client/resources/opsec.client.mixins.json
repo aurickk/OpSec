@@ -28,6 +28,7 @@
 		"ClientLanguageMixin",
 		"DeprecatedTranslationsInfoMixin",
 		"KeyBindingRegistryImplMixin",
+		"ResourceLoaderBuiltinPackMixin",${known_packs_mixin_entry}
 		"KeybindContentsMixin",
 		"TranslatableContentsMixin",
 		"ComponentSerializationMixin",

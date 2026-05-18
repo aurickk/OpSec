@@ -55,9 +55,11 @@ public class OpsecClient implements ClientModInitializer {
 
 		// Scan for registered channels after all mods have initialized
 		ClientLifecycleEvents.CLIENT_STARTED.register(client -> {
+			ModRegistry.inferJijNamespaceAliases();  // must run before scanRegisteredChannels
 			scanRegisteredChannels();
 			// Fallback: scan mods for language files if mixin didn't catch them
 			scanModsForLanguageFiles();
+			ModRegistry.indexKnownPackOwners();
 			// Initial closure seed; further rebuilds run via OpsecConfig.save().
 			ModRegistry.rebuildDependencyClosure();
 		});
@@ -99,7 +101,7 @@ public class OpsecClient implements ClientModInitializer {
 			for (var channel : source.get()) {
 				String namespace = channel.getNamespace();
 				if (!"minecraft".equals(namespace)) {
-					ModRegistry.recordChannel(namespace, channel);
+					ModRegistry.recordChannel(ModRegistry.resolveOwningModForNamespace(namespace), channel);
 					count++;
 				}
 			}

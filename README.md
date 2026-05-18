@@ -14,6 +14,7 @@
 
 - **[Spoof as Vanilla](#spoof-as-vanilla)** - Set brand name to vanilla and block all mod detections
 - **[Channel Spoofing](#channel-spoofing)** - Conditionally block mod network channels to prevent detection
+- **[Known-Pack Filtering](#known-pack-filtering)** - Conditionally strip built-in pack identifiers from the configuration handshake
 - **[Isolate Pack Cache](#isolate-pack-cache)** - Isolate resource packs per-account to prevent tracking
 - **[Block Local URLs](#block-local-urls)** - Block resource pack redirects to local/private addresses
 - **[Bypass Server Pack Requirement](#bypass-server-pack-requirement)** - Let the user toggle required server resource pack(s) like client packs 
@@ -97,7 +98,7 @@ Use `/opsec` in-game to access debug information:
 |---------|-------------|
 | `/opsec` | Show available commands |
 | `/opsec info` | Show overview of all tracked mods |
-| `/opsec info <mod>` | Show details for a specific mod (translation keys, key-bind key, channels) |
+| `/opsec info <mod>` | Show details for a specific mod (translation keys, key-bind key, channels, known packs) |
 | `/opsec channels` | Show all tracked network channels with whitelist status |
 
 ### Understanding Alerts
@@ -110,7 +111,7 @@ Use `/opsec` in-game to access debug information:
 
 ### Spoof as Vanilla
 
-Servers can query your client brand to detect whether you're running a modded client. OpSec provides true vanilla spoofing by blocking all mod key resolutions and network channels (whilst keeping vanilla ones).
+Servers can query your client brand to detect whether you're running a modded client. OpSec provides true vanilla spoofing by blocking all mod key resolutions, network channels, and known-pack identifiers (whilst keeping vanilla ones).
 
 - **ON** - Appear as an unmodified Minecraft client
 - **OFF** - Appear as a standard Fabric client (default)
@@ -219,6 +220,7 @@ For users that prefers [ExploitPreventer](https://github.com/NikOverflow/Exploit
 
 - [Brand Spoofing](#brand-spoofing)
 - [Channel Spoofing](#channel-spoofing)
+- [Known-Pack Filtering](#known-pack-filtering)
 - [Isolate Pack Cache](#isolate-pack-cache)
 - [Block Local URLs](#block-local-urls)
 - [Key Resolution Protection](#key-resolution-protection)
@@ -239,9 +241,24 @@ This is enabled by default, its behavior is controlled by the mod whitelist and
 
 ---
 
+### Known-Pack Filtering
+
+Servers can probe your mod-injected pack identifiers that certain mods exposes to detect whether you're running a modded client or using certain mods. 
+OpSec intercepts the outgoing `ServerboundSelectKnownPacks` response and strips entries belonging to non-whitelisted mods. Real vanilla and auto whitelisted packs still pass through.
+
+#### Spoof as Vanilla Behavior
+
+- **ON**: Strips all mod-injected packs.
+- **OFF**: Keeps packs for whitelisted mods, strips the rest.
+
+> [!NOTE]
+> Only active on clients where Fabric's known-packs hook is present (MC 1.21.11+ with modern fabric-api).
+
+---
+
 ### Mod Whitelist
 
-Some mods require server communication to function properly (e.g., VoiceChat, Xaero's Minimap quick travel). The whitelist allows you to exempt specific mods from channel spoofing and key resolution protection.
+Some mods require server communication to function properly (e.g., VoiceChat, Xaero's Minimap quick travel). The whitelist allows you to exempt specific mods from channel spoofing, key resolution protection, and known-pack filtering.
 
 <img width="853" height="478" alt="whitelist settings menu" src="https://github.com/user-attachments/assets/6ae423de-dd98-47c1-a617-f6df747c9293" />
 
@@ -253,7 +270,7 @@ Some mods require server communication to function properly (e.g., VoiceChat, Xa
 When the whitelist is active (AUTO or CUSTOM), [Spoof as Vanilla](#spoof-as-vanilla) will be disabled as exposing Fabric mods would need the client brand to match accordingly.
 
 > [!NOTE]
-> Only mods that register network channels, translatable keys and keybind keys are shown in the whitelist.
+> Only mods that register network channels, translatable keys, keybind keys, or known-pack identifiers are shown in the whitelist.
 
 ---
 

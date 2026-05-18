@@ -10,6 +10,7 @@ import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.suggestion.Suggestions;
 import com.mojang.brigadier.suggestion.SuggestionsBuilder;
+import net.fabricmc.loader.api.FabricLoader;
 import net.fabricmc.loader.api.ModContainer;
 //? if >=26.1 {
 /*import net.fabricmc.fabric.api.client.command.v2.ClientCommands;
@@ -97,21 +98,25 @@ public class OpsecCommand {
     }
     
     /**
-     * Suggest mod names that have trackable content.
+     * Suggest mod ids that have any trackable content (translation keys,
+     * channels, keybinds, or known-pack triples). Includes JIJ submodules —
+     * {@code /opsec info} is a debug command, so granularity matters; the
+     * whitelist UI is the one that only shows top-level mods.
      */
     private static CompletableFuture<Suggestions> suggestModNames(
-            CommandContext<FabricClientCommandSource> context, 
+            CommandContext<FabricClientCommandSource> context,
             SuggestionsBuilder builder) {
-        
+
         Set<String> modNames = new LinkedHashSet<>();
-        
-        for (ModRegistry.ModInfo info : ModRegistry.getAllMods()) {
-            if (info.hasTrackableContent()) {
-                // Only add mod ID (unique identifier)
-                modNames.add(info.getModId());
+
+        for (ModContainer mod : FabricLoader.getInstance().getAllMods()) {
+            String modId = mod.getMetadata().getId();
+            if (ModRegistry.PLATFORM_MODS.contains(modId)) continue;
+            if (ModRegistry.hasTrackableContentIncludingJij(modId)) {
+                modNames.add(modId);
             }
         }
-        
+
         return SharedSuggestionProvider.suggest(modNames, builder);
     }
     
@@ -120,27 +125,39 @@ public class OpsecCommand {
      */
     private static int showOverview(CommandContext<FabricClientCommandSource> ctx) {
         FabricClientCommandSource source = ctx.getSource();
-        
+
+        // Pre-scan: gather displayable mods + per-mod counts in one pass so the
+        // header total and the body loop never disagree.
+        List<MutableComponent> entries = new ArrayList<>();
+        for (ModContainer mod : FabricLoader.getInstance().getAllMods()) {
+            String modId = mod.getMetadata().getId();
+            if (ModRegistry.PLATFORM_MODS.contains(modId)) continue;
+            if (mod.getContainingMod().isPresent()) continue; // JIJ children roll up to host
+            ModRegistry.ContentCounts counts = ModRegistry.aggregateContent(modId);
+            if (counts.isEmpty()) continue;
+            entries.add(modEntry(mod.getMetadata().getName(), counts));
+        }
+
         source.sendFeedback(header(OpsecLang.tr(OpsecStrings.COMMAND_OVERVIEW_HEADER)));
-        source.sendFeedback(info(OpsecLang.tr(OpsecStrings.COMMAND_OVERVIEW_TOTAL_MODS, ModRegistry.getAllMods().size())));
+        source.sendFeedback(info(OpsecLang.tr(OpsecStrings.COMMAND_OVERVIEW_TOTAL_MODS, entries.size())));
         source.sendFeedback(info(OpsecLang.tr(OpsecStrings.COMMAND_OVERVIEW_VANILLA_KEYS, ModRegistry.getVanillaKeyCount())));
         source.sendFeedback(info(OpsecLang.tr(OpsecStrings.COMMAND_OVERVIEW_SERVER_KEYS, ModRegistry.getServerPackKeyCount())));
         source.sendFeedback(info(OpsecLang.tr(OpsecStrings.COMMAND_OVERVIEW_TOTAL_KEYS, ModRegistry.getTranslationKeyCount())));
         source.sendFeedback(info(OpsecLang.tr(OpsecStrings.COMMAND_OVERVIEW_TOTAL_KEYBINDS, ModRegistry.getKeybindCount())));
+        // Known-packs total is only meaningful where the leak exists. Suppressed on hook-absent clients (same gate as /opsec info).
+        if (ModRegistry.isKnownPacksHookPresent()) {
+            source.sendFeedback(info(OpsecLang.tr(OpsecStrings.COMMAND_OVERVIEW_TOTAL_KNOWN_PACKS, ModRegistry.getKnownPackCount())));
+        }
 
         source.sendFeedback(Component.empty());
         source.sendFeedback(subheader(OpsecLang.tr(OpsecStrings.COMMAND_OVERVIEW_MODS_HEADER)));
 
-        int count = 0;
-        for (ModRegistry.ModInfo info : ModRegistry.getAllMods()) {
-            if (info.hasTrackableContent()) {
-                source.sendFeedback(modEntry(info));
-                count++;
-            }
-        }
-
-        if (count == 0) {
+        if (entries.isEmpty()) {
             source.sendFeedback(warning(OpsecLang.tr(OpsecStrings.COMMAND_OVERVIEW_NO_MODS)));
+        } else {
+            for (MutableComponent entry : entries) {
+                source.sendFeedback(entry);
+            }
         }
 
         source.sendFeedback(Component.empty());
@@ -154,21 +171,19 @@ public class OpsecCommand {
      */
     private static int showModInfo(CommandContext<FabricClientCommandSource> ctx, String modName) {
         FabricClientCommandSource source = ctx.getSource();
-        
-        // Find the mod by ID or display name
-        ModRegistry.ModInfo info = findMod(modName);
-        
-        if (info == null) {
+
+        Resolved resolved = findMod(modName);
+        if (resolved == null) {
             source.sendFeedback(error(OpsecLang.tr(OpsecStrings.COMMAND_INFO_NOT_FOUND, modName)));
             source.sendFeedback(info(OpsecLang.tr(OpsecStrings.COMMAND_INFO_USE_LIST)));
             return 0;
         }
 
-        source.sendFeedback(header(OpsecLang.tr(OpsecStrings.COMMAND_INFO_HEADER, info.getDisplayName())));
-        source.sendFeedback(info(OpsecLang.tr(OpsecStrings.COMMAND_INFO_ID, info.getModId())));
+        String modId = resolved.modId();
+        source.sendFeedback(header(OpsecLang.tr(OpsecStrings.COMMAND_INFO_HEADER, resolved.displayName())));
+        source.sendFeedback(info(OpsecLang.tr(OpsecStrings.COMMAND_INFO_ID, modId)));
 
         // Aggregate includes JIJ descendants so meta jars (e.g. fabric-api) report children's content.
-        String modId = info.getModId();
         renderContentSection(source, OpsecStrings.COMMAND_INFO_TRANSLATION_KEYS,
             ModRegistry.aggregateAllTranslationKeys(modId), 20);
         renderContentSection(source, OpsecStrings.COMMAND_INFO_KEYBINDS,
@@ -176,8 +191,22 @@ public class OpsecCommand {
         renderContentSection(source, OpsecStrings.COMMAND_INFO_CHANNELS,
             ModRegistry.aggregateAllChannelIds(modId), 20);
 
+        // Suppressed when the Fabric hook is absent — the vector is dead there.
+        if (ModRegistry.isKnownPacksHookPresent()) {
+            List<String> knownPacks = ModRegistry.aggregateAllKnownPackStrings(modId);
+            source.sendFeedback(Component.empty());
+            source.sendFeedback(subheader(OpsecLang.tr(OpsecStrings.COMMAND_INFO_KNOWN_PACKS, knownPacks.size())));
+            if (knownPacks.isEmpty()) {
+                source.sendFeedback(dim(OpsecLang.tr(OpsecStrings.COMMAND_INFO_NONE)));
+            } else {
+                for (String pack : knownPacks) {
+                    source.sendFeedback(listItem(pack));
+                }
+            }
+        }
+
         // Only list JIJ submodules with tracked content; pure library JIJs aren't queryable via /opsec info.
-        List<? extends ModContainer> trackedContained = ModRegistry.getContainedMods(info.getModId()).stream()
+        List<? extends ModContainer> trackedContained = ModRegistry.getContainedMods(modId).stream()
             .filter(child -> ModRegistry.getModInfo(child.getMetadata().getId()) != null)
             .toList();
         source.sendFeedback(Component.empty());
@@ -195,13 +224,15 @@ public class OpsecCommand {
         OpsecConfig opsecConfig = OpsecConfig.getInstance();
         SpoofSettings opsecSettings = opsecConfig.getSettings();
         SpoofSettings.WhitelistMode whitelistMode = opsecSettings.getWhitelistMode();
+        ModRegistry.ModInfo info = ModRegistry.getModInfo(modId);
+        boolean hasChannels = info != null && info.hasChannels();
 
         String statusText;
         boolean isAllowed;
 
         boolean directlyWhitelisted = switch (whitelistMode) {
-            case AUTO -> info.hasChannels();
-            case CUSTOM -> opsecSettings.isModWhitelisted(info.getModId());
+            case AUTO -> hasChannels;
+            case CUSTOM -> opsecSettings.isModWhitelisted(modId);
             default -> false;
         };
 
@@ -210,10 +241,10 @@ public class OpsecCommand {
             statusText = OpsecLang.tr(whitelistMode == SpoofSettings.WhitelistMode.AUTO
                 ? OpsecStrings.COMMAND_INFO_STATUS_ALLOWED_AUTO
                 : OpsecStrings.COMMAND_INFO_STATUS_ALLOWED_CUSTOM);
-        } else if (ModRegistry.isInDependencyClosure(info.getModId())) {
+        } else if (ModRegistry.isInDependencyClosure(modId)) {
             isAllowed = true;
             statusText = OpsecLang.tr(OpsecStrings.COMMAND_INFO_STATUS_ALLOWED_DEP,
-                ModRegistry.resolveRequiringModName(info.getModId()));
+                ModRegistry.resolveRequiringModName(modId));
         } else {
             isAllowed = false;
             statusText = OpsecLang.tr(switch (whitelistMode) {
@@ -275,34 +306,53 @@ public class OpsecCommand {
     }
     
     
+    /** Resolution result for {@link #findMod}. {@code modId} is canonical; {@code displayName} comes from ModInfo when present, else the mod's metadata name. */
+    private record Resolved(String modId, String displayName) {}
+
     /**
-     * Find a mod by ID or display name.
+     * Find a mod by id or display name. Resolves both tracked mods (with a
+     * {@link ModRegistry.ModInfo}) and meta-mods (no ModInfo of their own,
+     * content only via JIJ descendants — e.g. fabric-api). The exact-id
+     * branch hits ModContainer when no ModInfo exists, gated on
+     * {@link ModRegistry#hasTrackableContentIncludingJij}.
      */
-    private static ModRegistry.ModInfo findMod(String query) {
+    private static Resolved findMod(String query) {
         if (query == null || query.isEmpty()) return null;
-        
-        String queryLower = query.toLowerCase();
-        
-        // First try exact ID match
+
+        // Exact id: prefer tracked ModInfo, then meta-mod via ModContainer.
         ModRegistry.ModInfo info = ModRegistry.getModInfo(query);
-        if (info != null) return info;
-        
-        // Then try case-insensitive ID or display name match
+        if (info != null) return new Resolved(info.getModId(), info.getDisplayName());
+        var container = FabricLoader.getInstance().getModContainer(query);
+        if (container.isPresent()) {
+            // Canonicalize provides aliases — `getModContainer("fabric")` on older
+            // fabric-api returns the fabric-api container; we want subsequent
+            // aggregation to use the real id so JIJ walks find everything.
+            var meta = container.get().getMetadata();
+            String realId = meta.getId();
+            if (ModRegistry.hasTrackableContentIncludingJij(realId)) {
+                return new Resolved(realId, meta.getName());
+            }
+        }
+
+        // Case-insensitive id / display-name match against tracked mods.
         for (ModRegistry.ModInfo mod : ModRegistry.getAllMods()) {
             if (mod.getModId().equalsIgnoreCase(query) ||
                 mod.getDisplayName().equalsIgnoreCase(query)) {
-                return mod;
+                return new Resolved(mod.getModId(), mod.getDisplayName());
             }
         }
-        
-        // Finally try partial match
-        for (ModRegistry.ModInfo mod : ModRegistry.getAllMods()) {
-            if (mod.getModId().toLowerCase().contains(queryLower) ||
-                mod.getDisplayName().toLowerCase().contains(queryLower)) {
-                return mod;
+        // Same against top-level meta-mods (catches "Fabric API" by name when fabric-api itself has no ModInfo).
+        for (ModContainer mod : FabricLoader.getInstance().getAllMods()) {
+            String id = mod.getMetadata().getId();
+            if (mod.getContainingMod().isPresent()) continue;
+            if (ModRegistry.PLATFORM_MODS.contains(id)) continue;
+            if (!ModRegistry.hasTrackableContentIncludingJij(id)) continue;
+            String name = mod.getMetadata().getName();
+            if (id.equalsIgnoreCase(query) || name.equalsIgnoreCase(query)) {
+                return new Resolved(id, name);
             }
         }
-        
+
         return null;
     }
     
@@ -368,19 +418,21 @@ public class OpsecCommand {
                 .append(Component.literal(text).withStyle(ChatFormatting.WHITE));
     }
 
-    private static MutableComponent modEntry(ModRegistry.ModInfo info) {
-        MutableComponent component = Component.literal(info.getDisplayName())
-                .withStyle(ChatFormatting.WHITE);
+    private static MutableComponent modEntry(String displayName, ModRegistry.ContentCounts counts) {
+        MutableComponent component = Component.literal(displayName).withStyle(ChatFormatting.WHITE);
 
         List<String> details = new ArrayList<>();
-        if (info.hasTranslationKeys()) {
-            details.add(OpsecLang.tr(OpsecStrings.COMMAND_MODENTRY_KEYS, info.getTranslationKeys().size()));
+        if (counts.translationKeys() > 0) {
+            details.add(OpsecLang.tr(OpsecStrings.COMMAND_MODENTRY_KEYS, counts.translationKeys()));
         }
-        if (info.hasKeybinds()) {
-            details.add(OpsecLang.tr(OpsecStrings.COMMAND_MODENTRY_KEYBINDS, info.getKeybinds().size()));
+        if (counts.keybinds() > 0) {
+            details.add(OpsecLang.tr(OpsecStrings.COMMAND_MODENTRY_KEYBINDS, counts.keybinds()));
         }
-        if (info.hasChannels()) {
-            details.add(OpsecLang.tr(OpsecStrings.COMMAND_MODENTRY_CHANNELS, info.getChannels().size()));
+        if (counts.channels() > 0) {
+            details.add(OpsecLang.tr(OpsecStrings.COMMAND_MODENTRY_CHANNELS, counts.channels()));
+        }
+        if (counts.knownPacks() > 0) {
+            details.add(OpsecLang.tr(OpsecStrings.COMMAND_MODENTRY_KNOWN_PACKS, counts.knownPacks()));
         }
 
         if (!details.isEmpty()) {

@@ -14,6 +14,27 @@ def minecraft_version_range = findProperty("minecraft_version_range") ?: ">=1.21
 def version_suffix = findProperty("version_suffix") ?: minecraft_version
 def isUnobfuscated = (findProperty("minecraft_version")?.toString() ?: "").startsWith("26")
 
+// Numeric semver compare for Stonecutter-style gating in resources.
+// Stonecutter handles per-file directives in .java, but its default config
+// doesn't process .json — so version-gated mixin entries get templated in
+// via the ProcessResources `expand(...)` step below.
+def isAtLeast = { String currentVer, String minVer ->
+    def cur = currentVer.tokenize('.').collect { (it as String).isInteger() ? (it as int) : 0 }
+    def min = minVer.tokenize('.').collect { (it as String).isInteger() ? (it as int) : 0 }
+    for (int i = 0; i < Math.max(cur.size(), min.size()); i++) {
+        int a = i < cur.size() ? cur[i] : 0
+        int b = i < min.size() ? min[i] : 0
+        if (a != b) return a > b
+    }
+    return true
+}
+
+// KnownPacksManager class first ships in MC 1.20.5. On older targets we
+// strip the mixin entry so the (no-op stub) class doesn't get loaded by
+// Mixin and crash with "no @Mixin annotation".
+def hasKnownPacksManager = isAtLeast(minecraft_version.toString(), "1.20.5")
+def knownPacksMixinEntry = hasKnownPacksManager ? '\n\t\t"KnownPacksManagerMixin",' : ''
+
 // Apply the correct Loom plugin variant per version target:
 // - net.fabricmc.fabric-loom (non-remap) for unobfuscated MC 26.1+
 // - fabric-loom (legacy/remap) for obfuscated MC <=1.21.11
@@ -114,7 +135,8 @@ tasks.withType(ProcessResources).configureEach {
             "version": project.version,
             "minecraft_version_range": minecraft_version_range,
             "mixin_compat_level": mixinCompatLevel,
-            "java_version": javaVersion.toString()
+            "java_version": javaVersion.toString(),
+            "known_packs_mixin_entry": knownPacksMixinEntry
         )
     }
 }

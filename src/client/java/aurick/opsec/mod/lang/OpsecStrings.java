@@ -124,6 +124,7 @@ public final class OpsecStrings {
     public static final String COMMAND_OVERVIEW_SERVER_KEYS = "opsec.command.overview.serverKeys";
     public static final String COMMAND_OVERVIEW_TOTAL_KEYS = "opsec.command.overview.totalKeys";
     public static final String COMMAND_OVERVIEW_TOTAL_KEYBINDS = "opsec.command.overview.totalKeybinds";
+    public static final String COMMAND_OVERVIEW_TOTAL_KNOWN_PACKS = "opsec.command.overview.totalKnownPacks";
     public static final String COMMAND_OVERVIEW_MODS_HEADER = "opsec.command.overview.modsHeader";
     public static final String COMMAND_OVERVIEW_NO_MODS = "opsec.command.overview.noMods";
     public static final String COMMAND_OVERVIEW_USE_INFO = "opsec.command.overview.useInfo";
@@ -137,6 +138,7 @@ public final class OpsecStrings {
     public static final String COMMAND_INFO_MORE = "opsec.command.info.more";
     public static final String COMMAND_INFO_KEYBINDS = "opsec.command.info.keybinds";
     public static final String COMMAND_INFO_CHANNELS = "opsec.command.info.channels";
+    public static final String COMMAND_INFO_KNOWN_PACKS = "opsec.command.info.knownPacks";
     public static final String COMMAND_INFO_JIJ = "opsec.command.info.jij";
     public static final String WHITELIST_REQUIRING_FALLBACK = "opsec.whitelist.requiringFallback";
     public static final String WHITELIST_SUFFIX_REQUIRED = "opsec.whitelist.suffix.required";
@@ -156,6 +158,7 @@ public final class OpsecStrings {
     public static final String COMMAND_MODENTRY_KEYS = "opsec.command.modEntry.keys";
     public static final String COMMAND_MODENTRY_KEYBINDS = "opsec.command.modEntry.keybinds";
     public static final String COMMAND_MODENTRY_CHANNELS = "opsec.command.modEntry.channels";
+    public static final String COMMAND_MODENTRY_KNOWN_PACKS = "opsec.command.modEntry.knownPacks";
 
     // AddAccountScreen (session token)
     public static final String ACCOUNT_SCREEN_SESSION_TITLE = "opsec.account.screen.session.title";

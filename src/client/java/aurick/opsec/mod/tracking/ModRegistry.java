@@ -80,7 +80,12 @@ public class ModRegistry {
 
     /** Platform mods skipped during dep walks — their presence is implied by the loader/brand. */
     public static final Set<String> PLATFORM_MODS =
-        Set.of("minecraft", "java", "fabricloader", "opsec");
+        Set.of("minecraft", "java", "fabricloader");
+
+    /** Real-vanilla {@code KnownPack} namespace ({@code KnownPack.VANILLA_NAMESPACE}). Never strip these. */
+    private static final String VANILLA_PACK_NAMESPACE = "minecraft";
+    /** Fabric mod-pack namespace — Fabric's confusingly-named {@code ModResourcePackCreator.VANILLA} constant. */
+    private static final String FABRIC_PACK_NAMESPACE = "vanilla";
 
     private ModRegistry() {}
 
@@ -395,14 +400,14 @@ public class ModRegistry {
     }
 
     /** Trackable-content counts including JIJ descendants — meta jars (e.g. fabric-api) need this to register as "has content". */
-    public record ContentCounts(int translationKeys, int keybinds, int channels) {
+    public record ContentCounts(int translationKeys, int keybinds, int channels, int knownPacks) {
         public boolean isEmpty() {
-            return translationKeys == 0 && keybinds == 0 && channels == 0;
+            return translationKeys == 0 && keybinds == 0 && channels == 0 && knownPacks == 0;
         }
     }
 
     public static ContentCounts aggregateContent(String modId) {
-        if (modId == null) return new ContentCounts(0, 0, 0);
+        if (modId == null) return new ContentCounts(0, 0, 0, 0);
         int tk = 0, kb = 0, ch = 0;
         ModInfo info = registry.get(modId);
         if (info != null) {
@@ -410,13 +415,15 @@ public class ModRegistry {
             kb = info.getKeybinds().size();
             ch = info.getChannels().size();
         }
+        int kp = getKnownPackStrings(modId).size();
         for (ModContainer child : getContainedMods(modId)) {
             ContentCounts sub = aggregateContent(child.getMetadata().getId());
             tk += sub.translationKeys();
             kb += sub.keybinds();
             ch += sub.channels();
+            kp += sub.knownPacks();
         }
-        return new ContentCounts(tk, kb, ch);
+        return new ContentCounts(tk, kb, ch, kp);
     }
 
     /** Does this mod or any JIJ descendant have any trackable content? */
@@ -443,6 +450,28 @@ public class ModRegistry {
         return out;
     }
 
+    /**
+     * Known-pack triples for this mod and every JIJ descendant unioned.
+     *
+     * <p>Walks {@code getContainedMods} directly rather than via
+     * {@link #aggregateRecursive} — known-pack strings aren't stored on
+     * {@link ModInfo}, they're computed from filesystem inspection + builtin
+     * registrations.</p>
+     */
+    public static List<String> aggregateAllKnownPackStrings(String modId) {
+        if (modId == null || !KNOWN_PACKS_HOOK_PRESENT) return List.of();
+        List<String> out = new java.util.ArrayList<>();
+        aggregateKnownPacksRecursive(modId, out);
+        return out;
+    }
+
+    private static void aggregateKnownPacksRecursive(String modId, List<String> out) {
+        out.addAll(getKnownPackStrings(modId));
+        for (ModContainer child : getContainedMods(modId)) {
+            aggregateKnownPacksRecursive(child.getMetadata().getId(), out);
+        }
+    }
+
     private static void aggregateRecursive(String modId, java.util.function.Consumer<ModInfo> sink) {
         if (modId == null) return;
         ModInfo info = registry.get(modId);
@@ -450,6 +479,142 @@ public class ModRegistry {
         for (ModContainer child : getContainedMods(modId)) {
             aggregateRecursive(child.getMetadata().getId(), sink);
         }
+    }
+
+    /** modId → set of builtin pack ids registered with non-null SERVER_DATA. Captured by {@code ResourceLoaderBuiltinPackMixin}. */
+    private static final Map<String, Set<String>> builtinPackIds = new ConcurrentHashMap<>();
+
+    /** Reverse index: {@code "vanilla:id:version"} triple → owning modId. Mirrors {@link #channelToModId}. */
+    private static final Map<String, String> knownPackToModId = new ConcurrentHashMap<>();
+
+    /**
+     * True iff Fabric's modded known-packs machinery is on the classpath.
+     * Probes {@code ModPackResourcesUtil} (the impl class) rather than
+     * {@code KnownPacksManagerMixin} itself — Sponge Mixin's classloader
+     * rejects {@code Class.forName} on registered mixin classes with
+     * {@code IllegalClassLoadError}. Both ship together in
+     * fabric-resource-loader-v1 from MC 1.21.11.
+     */
+    private static final boolean KNOWN_PACKS_HOOK_PRESENT = probeKnownPacksHook();
+
+    private static boolean probeKnownPacksHook() {
+        try {
+            Class.forName("net.fabricmc.fabric.impl.resource.pack.ModPackResourcesUtil",
+                    false, ModRegistry.class.getClassLoader());
+            return true;
+        } catch (Throwable t) {
+            return false;
+        }
+    }
+
+    /** @return whether mod packs would actually be exposed in the known-packs handshake on this client. */
+    public static boolean isKnownPacksHookPresent() {
+        return KNOWN_PACKS_HOOK_PRESENT;
+    }
+
+    /**
+     * Caller must filter out resource-only builtin packs ({@code dataPack == null})
+     * — those don't ride the known-packs handshake. The mixin handles that.
+     */
+    public static void recordBuiltinPack(String registeringModId, String packIdToString) {
+        if (registeringModId == null || packIdToString == null) return;
+        builtinPackIds.computeIfAbsent(registeringModId, k -> ConcurrentHashMap.newKeySet())
+                .add(packIdToString);
+        // Mirror to the reverse index for any registrations that arrive after the eager indexer ran.
+        FabricLoader.getInstance().getModContainer(registeringModId).ifPresent(c -> {
+            String version = c.getMetadata().getVersion().getFriendlyString();
+            knownPackToModId.put(formatKnownPackTriple(packIdToString, version), registeringModId);
+        });
+    }
+
+    /**
+     * The {@code (namespace, id, version)} triples this mod would advertise
+     * in {@code ServerboundSelectKnownPacks}. Server match is strict byte
+     * equality on the full triple — version comes from {@code fabric.mod.json}.
+     */
+    public static List<String> getKnownPackStrings(String modId) {
+        if (modId == null) return List.of();
+        if (!KNOWN_PACKS_HOOK_PRESENT) return List.of();
+        Optional<ModContainer> opt = FabricLoader.getInstance().getModContainer(modId);
+        if (opt.isEmpty()) return List.of();
+        ModContainer container = opt.get();
+        if ("builtin".equals(container.getMetadata().getType())) return List.of();
+
+        List<String> out = new java.util.ArrayList<>();
+        collectKnownPackTriples(container, out::add);
+        return out;
+    }
+
+    /** Single source of truth for the triple shape — display and indexer share this so they can't drift. */
+    private static void collectKnownPackTriples(ModContainer container, java.util.function.Consumer<String> sink) {
+        String modId = container.getMetadata().getId();
+        String version = container.getMetadata().getVersion().getFriendlyString();
+
+        if (hasServerDataContent(container)) {
+            sink.accept(formatKnownPackTriple(modId, version));
+        }
+
+        Set<String> builtins = builtinPackIds.get(modId);
+        if (builtins != null) {
+            for (String packId : builtins) {
+                sink.accept(formatKnownPackTriple(packId, version));
+            }
+        }
+    }
+
+    private static String formatKnownPackTriple(String id, String version) {
+        return FABRIC_PACK_NAMESPACE + ":" + id + ":" + version;
+    }
+
+    /** Populates {@link #knownPackToModId}. Call once at client start. No-op when the Fabric hook is absent. */
+    public static void indexKnownPackOwners() {
+        if (!KNOWN_PACKS_HOOK_PRESENT) return;
+        for (ModContainer container : FabricLoader.getInstance().getAllMods()) {
+            if ("builtin".equals(container.getMetadata().getType())) continue;
+            String modId = container.getMetadata().getId();
+            collectKnownPackTriples(container, triple -> knownPackToModId.put(triple, modId));
+        }
+        Opsec.LOGGER.debug("[OpSec] Indexed {} known-pack triples across all mods", knownPackToModId.size());
+    }
+
+    public static String resolveModForKnownPack(String namespace, String id, String version) {
+        if (!FABRIC_PACK_NAMESPACE.equals(namespace)) return null;
+        return knownPackToModId.get(formatKnownPackTriple(id, version));
+    }
+
+    /**
+     * True iff the mod ships any {@code data/<namespace>/} directory in any of
+     * its root paths. This matches Fabric's
+     * {@code ModNioPackResources.readNamespaces(...).get(SERVER_DATA).isEmpty()}
+     * check that gates whether the mod gets enumerated in the known-packs
+     * repository at all.
+     */
+    /** modId → {@link #computeServerDataContent} result. Per-session immutable. */
+    private static final Map<String, Boolean> serverDataContentCache = new ConcurrentHashMap<>();
+
+    /**
+     * True iff the mod ships any {@code data/<namespace>/} directory in any of
+     * its root paths. Matches Fabric's
+     * {@code ModNioPackResources.readNamespaces(...).get(SERVER_DATA).isEmpty()}
+     * check that gates known-packs participation.
+     */
+    private static boolean hasServerDataContent(ModContainer container) {
+        return serverDataContentCache.computeIfAbsent(
+                container.getMetadata().getId(),
+                id -> computeServerDataContent(container));
+    }
+
+    private static boolean computeServerDataContent(ModContainer container) {
+        for (java.nio.file.Path root : container.getRootPaths()) {
+            java.nio.file.Path dataDir = root.resolve("data");
+            if (!java.nio.file.Files.isDirectory(dataDir)) continue;
+            try (var stream = java.nio.file.Files.list(dataDir)) {
+                if (stream.anyMatch(java.nio.file.Files::isDirectory)) return true;
+            } catch (java.io.IOException ignored) {
+                // permission / FS error → treat as no data, same as Fabric would
+            }
+        }
+        return false;
     }
 
     private static void walkDependencies(String seedRoot, String modId, Set<String> closure, Map<String, String> providers) {
@@ -505,6 +670,15 @@ public class ModRegistry {
             return true;
         }
         return dependencyClosure.contains(modId);
+    }
+
+    /** Mirrors {@link #isWhitelistedChannel} for known packs. Real-vanilla namespace always allowed; unattributed mod packs blocked. */
+    public static boolean isWhitelistedKnownPack(String namespace, String id, String version) {
+        if (VANILLA_PACK_NAMESPACE.equals(namespace)) return true;
+        String modId = resolveModForKnownPack(namespace, id, version);
+        if (modId == null) return false;
+        SpoofSettings settings = OpsecConfig.getInstance().getSettings();
+        return isModEffectivelyWhitelisted(modId, settings);
     }
 
     // ==================== CENTRALIZED WHITELIST CHECK ====================
@@ -647,9 +821,10 @@ public class ModRegistry {
     public static Set<String> resolveModIdsForNamespace(String namespace) {
         if (namespace == null) return Set.of();
 
-        // If the namespace IS a registered Fabric mod ID, return it directly
-        if (FabricLoader.getInstance().getModContainer(namespace).isPresent()) {
-            return Set.of(namespace);
+        // Canonicalize provides aliases (e.g. "fabric" → "fabric-api") via container metadata.
+        var container = FabricLoader.getInstance().getModContainer(namespace);
+        if (container.isPresent()) {
+            return Set.of(container.get().getMetadata().getId());
         }
 
         // Check cached namespace-to-modId mappings
@@ -660,6 +835,59 @@ public class ModRegistry {
 
         return Set.of();
     }
+
+    /**
+     * Single-result variant: returns the canonical mod id that owns this
+     * channel namespace, or {@code namespace} itself when nothing matches.
+     * Used by the channel scanner to avoid creating orphan ModInfo entries
+     * for namespaces (like {@code "fabric"}) that are shared by multiple JIJ
+     * submodules of a single umbrella mod.
+     */
+    public static String resolveOwningModForNamespace(String namespace) {
+        if (namespace == null) return null;
+        Set<String> resolved = resolveModIdsForNamespace(namespace);
+        if (!resolved.isEmpty()) return resolved.iterator().next();
+        return namespace;
+    }
+
+    /**
+     * Synthesize the equivalent of a dropped {@code provides} alias by
+     * inspecting JIJ structure. Fabric API on older MC declared
+     * {@code "provides": ["fabric"]}; on newer it doesn't, but its JIJ tree
+     * still contains 40+ children whose ids all start with {@code "fabric-"}
+     * and that all register channels under the {@code "fabric:"} namespace.
+     * Without an alias, those channels can't be attributed to any real mod —
+     * they end up as an orphan {@code ModInfo} keyed by the bare namespace.
+     */
+    public static void inferJijNamespaceAliases() {
+        for (ModContainer top : FabricLoader.getInstance().getAllMods()) {
+            if (top.getContainingMod().isPresent()) continue;
+            String topId = top.getMetadata().getId();
+            if (PLATFORM_MODS.contains(topId)) continue;
+
+            Map<String, Integer> prefixCounts = new java.util.HashMap<>();
+            for (ModContainer child : top.getContainedMods()) {
+                String childId = child.getMetadata().getId();
+                int dash = childId.indexOf('-');
+                if (dash > 0) {
+                    prefixCounts.merge(childId.substring(0, dash), 1, Integer::sum);
+                }
+            }
+            for (Map.Entry<String, Integer> e : prefixCounts.entrySet()) {
+                String prefix = e.getKey();
+                // Structural guard: only treat the prefix as the umbrella's own namespace
+                // when it's also a prefix of the umbrella's id — prevents two unrelated
+                // umbrellas with `common-*` children from racing to claim "common".
+                if (e.getValue() >= MIN_CHILDREN_FOR_PREFIX_ALIAS
+                        && topId.startsWith(prefix)
+                        && !FabricLoader.getInstance().getModContainer(prefix).isPresent()) {
+                    recordNamespaceMapping(prefix, topId);
+                }
+            }
+        }
+    }
+
+    private static final int MIN_CHILDREN_FOR_PREFIX_ALIAS = 2;
 
     /**
      * Record a mapping from a channel namespace to its owning mod ID.
@@ -777,5 +1005,9 @@ public class ModRegistry {
         int count = KeybindDefaults.size();
         for (ModInfo info : registry.values()) count += info.keybinds.size();
         return count;
+    }
+
+    public static int getKnownPackCount() {
+        return knownPackToModId.size();
     }
 }

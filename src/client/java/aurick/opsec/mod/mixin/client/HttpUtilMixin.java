@@ -15,6 +15,7 @@ import org.spongepowered.asm.mixin.injection.At;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.Authenticator;
 import java.net.HttpURLConnection;
 import java.net.InetSocketAddress;
 import java.net.MalformedURLException;
@@ -26,11 +27,16 @@ import java.util.Map;
 /**
  * Vanilla-aligned redirect handling with per-hop local-address rejection.
  *
- * <p>Follows 301/302/303/307 normally and handles 305 by re-issuing the original
- * request through the proxy named in {@code Location} — same observable behavior
- * as JDK auto-follow, so the hop counts match vanilla exactly. The local-address
- * check runs against every destination, including 305 proxies. HTTPS→HTTP
- * downgrades are rejected; HTTP→HTTPS upgrades are followed, matching JDK.
+ * <p>Follows 300/301/302/303/307. 305 is re-issued through the named proxy via
+ * {@link Proxy.Type#HTTP}. Cross-protocol redirects are rejected.
+ *
+ * <p>Each new redirect connection sets a unique {@link Authenticator}. JDK's
+ * {@code HttpClient.New} compatibility check rejects any cached
+ * {@code HttpClient} whose {@code AuthCache} does not match the new
+ * connection's, closing the cached socket and creating a fresh one — so each
+ * hop uses a fresh TCP socket, matching vanilla MC's
+ * {@code setInstanceFollowRedirects(true)} behavior. The {@code Authenticator}
+ * is never invoked unless the server responds with 401/407.
  */
 @Mixin(HttpUtil.class)
 public class HttpUtilMixin {
@@ -80,7 +86,7 @@ public class HttpUtilMixin {
         int status = instance.getResponseCode();
 
         while (instance.getHeaderField("Location") != null
-                && (status == 301 || status == 302 || status == 303 || status == 305 || status == 307)) {
+                && (status == 300 || status == 301 || status == 302 || status == 303 || status == 305 || status == 307)) {
             if (redirects >= maxRedirects - 1)
                 throw new ProtocolException("Server redirected too many times (" + maxRedirects + ")");
 
@@ -104,18 +110,20 @@ public class HttpUtilMixin {
                 int proxyPort = proxyUrl.getPort() == -1 ? proxyUrl.getDefaultPort() : proxyUrl.getPort();
                 Proxy hopProxy = new Proxy(Proxy.Type.HTTP,
                     InetSocketAddress.createUnresolved(proxyUrl.getHost(), proxyPort));
-                instance = (HttpURLConnection) instance.getURL().openConnection(hopProxy);
+                URL originalUrl = instance.getURL();
+                instance = (HttpURLConnection) originalUrl.openConnection(hopProxy);
+                instance.setAuthenticator(new Authenticator() {});
             } else {
                 URL url;
                 try {
                     url = new URL(instance.getHeaderField("Location"));
-                    if (instance.getURL().getProtocol().equalsIgnoreCase("https")
-                            && url.getProtocol().equalsIgnoreCase("http")) break;
+                    if (!instance.getURL().getProtocol().equalsIgnoreCase(url.getProtocol())) break;
                 } catch (MalformedURLException exception) {
                     url = new URL(instance.getURL(), instance.getHeaderField("Location"));
                 }
 
                 instance = (HttpURLConnection) url.openConnection(proxy);
+                instance.setAuthenticator(new Authenticator() {});
 
                 if (!LocalAddressUtil.isLocalAddress(LocalAddressUtil.serverAddress)
                         && LocalAddressUtil.isLocalAddress(instance.getURL().getHost())) {

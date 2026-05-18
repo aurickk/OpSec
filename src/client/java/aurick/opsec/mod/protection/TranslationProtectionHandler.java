@@ -7,14 +7,13 @@ import aurick.opsec.mod.config.SpoofSettings;
 import aurick.opsec.mod.detection.PacketContext;
 import aurick.opsec.mod.lang.OpsecLang;
 import aurick.opsec.mod.lang.OpsecStrings;
+import java.util.Set;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
-
-import java.util.Set;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Centralized handler for key resolution protection alerts.
@@ -38,19 +37,33 @@ public class TranslationProtectionHandler {
         KEYBIND("Keybind");
 
         private final String displayName;
-        InterceptionType(String displayName) { this.displayName = displayName; }
-        public String getDisplayName() { return displayName; }
+
+        InterceptionType(String displayName) {
+            this.displayName = displayName;
+        }
+
+        public String getDisplayName() {
+            return displayName;
+        }
     }
 
     /** Dedup key for detail alerts — type + key name, since Translation and Keybind produce different details */
     private record AlertDedupeKey(InterceptionType type, String keyName) {}
 
     /** Dedup key for logs — full tuple to preserve log accuracy */
-    private record LogDedupeKey(InterceptionType type, String packetName, String keyName, String originalValue, String spoofedValue) {}
+    private record LogDedupeKey(
+        InterceptionType type,
+        String packetName,
+        String keyName,
+        String originalValue,
+        String spoofedValue
+    ) {}
 
     // Separate deduplication sets for alerts and logging
-    private static final Set<AlertDedupeKey> alertedKeys = ConcurrentHashMap.newKeySet();
-    private static final Set<LogDedupeKey> loggedKeys = ConcurrentHashMap.newKeySet();
+    private static final Set<AlertDedupeKey> alertedKeys =
+        ConcurrentHashMap.newKeySet();
+    private static final Set<LogDedupeKey> loggedKeys =
+        ConcurrentHashMap.newKeySet();
 
     // Size limits to prevent unbounded growth
     private static final int MAX_DEDUPE_ENTRIES = 500;
@@ -58,7 +71,7 @@ public class TranslationProtectionHandler {
     private static volatile long lastHeaderTime = 0;
     private static volatile boolean headerPending = false;
 
-    private static final long HEADER_COOLDOWN_MS = 5000;  // 5 seconds between headers
+    private static final long HEADER_COOLDOWN_MS = 5000; // 5 seconds between headers
 
     private TranslationProtectionHandler() {}
 
@@ -96,16 +109,24 @@ public class TranslationProtectionHandler {
             Minecraft mc = Minecraft.getInstance();
             Runnable sendAlert = () -> {
                 if (mc.player != null) {
-                    String alertText = OpsecLang.tr(OpsecStrings.ALERT_KEYRESOLUTION);
+                    String alertText = OpsecLang.tr(
+                        OpsecStrings.ALERT_KEYRESOLUTION
+                    );
                     //? if >=26.1 {
                     /*mc.player.sendSystemMessage(
                         Component.literal("[OpSec] ").withStyle(ChatFormatting.DARK_PURPLE)
                             .append(Component.literal(alertText).withStyle(ChatFormatting.RED)));*/
                     //?} else {
                     mc.player.displayClientMessage(
-                        Component.literal("[OpSec] ").withStyle(ChatFormatting.DARK_PURPLE)
-                            .append(Component.literal(alertText).withStyle(ChatFormatting.RED)),
-                        false);
+                        Component.literal("[OpSec] ")
+                            .withStyle(ChatFormatting.DARK_PURPLE)
+                            .append(
+                                Component.literal(alertText).withStyle(
+                                    ChatFormatting.RED
+                                )
+                            ),
+                        false
+                    );
                     //?}
                 }
             };
@@ -119,31 +140,45 @@ public class TranslationProtectionHandler {
         // Toast notification: red, no emoji icon
         if (OpsecConfig.getInstance().shouldShowToasts()) {
             PrivacyLogger.showToastRaw(
-                Component.literal(OpsecLang.tr(OpsecStrings.TOAST_KEYRESOLUTION)).withStyle(ChatFormatting.RED),
-                null);
+                Component.literal(
+                    OpsecLang.tr(OpsecStrings.TOAST_KEYRESOLUTION)
+                ).withStyle(ChatFormatting.RED),
+                null
+            );
         }
 
-        // Log with source
         if (OpsecConfig.getInstance().isLogDetections()) {
-            Opsec.LOGGER.info("[OpSec] Key resolution exploit detected via {}", source);
+            Opsec.logInfoAsync(
+                "[OpSec] Key resolution exploit detected via {}",
+                source
+            );
         }
 
-        // One-time hint about disabling alerts (delayed so it appears after the first alert)
+        // One-time hint, delayed so it appears after the first alert.
         SpoofSettings settings = OpsecConfig.getInstance().getSettings();
         if (!settings.isAlertHintShown()) {
             settings.setAlertHintShown(true);
-            OpsecConfig.getInstance().save();
-            CompletableFuture.delayedExecutor(2, java.util.concurrent.TimeUnit.SECONDS).execute(() -> {
+            CompletableFuture.runAsync(() -> OpsecConfig.getInstance().save());
+            CompletableFuture.delayedExecutor(
+                2,
+                java.util.concurrent.TimeUnit.SECONDS
+            ).execute(() -> {
                 Minecraft mc = Minecraft.getInstance();
                 mc.execute(() -> {
                     if (mc.player != null) {
-                        String hintText = OpsecLang.tr(OpsecStrings.HINT_ALERTS_CAN_BE_DISABLED);
+                        String hintText = OpsecLang.tr(
+                            OpsecStrings.HINT_ALERTS_CAN_BE_DISABLED
+                        );
                         //? if >=26.1 {
                         /*mc.player.sendSystemMessage(
                             Component.literal(hintText).withStyle(ChatFormatting.AQUA));*/
                         //?} else {
                         mc.player.displayClientMessage(
-                            Component.literal(hintText).withStyle(ChatFormatting.AQUA), false);
+                            Component.literal(hintText).withStyle(
+                                ChatFormatting.AQUA
+                            ),
+                            false
+                        );
                         //?}
                     }
                 });
@@ -162,7 +197,12 @@ public class TranslationProtectionHandler {
      * @param originalValue What Minecraft would have resolved it to
      * @param spoofedValue What we're returning instead
      */
-    public static void sendDetail(InterceptionType type, String keyName, String originalValue, String spoofedValue) {
+    public static void sendDetail(
+        InterceptionType type,
+        String keyName,
+        String originalValue,
+        String spoofedValue
+    ) {
         if (!OpsecConfig.getInstance().shouldShowAlerts()) {
             return;
         }
@@ -188,12 +228,32 @@ public class TranslationProtectionHandler {
         // In debug mode, prepend [Type:packetName] in purple
         if (OpsecConfig.getInstance().isDebugAlerts()) {
             String packetName = PacketContext.getPacketName();
-            MutableComponent detail = Component.literal("[" + type.getDisplayName() + ":" + packetName + "] ").withStyle(ChatFormatting.DARK_PURPLE)
-                .append(Component.literal("[" + keyName + "] '" + originalValue + "'→'" + spoofedValue + "'").withStyle(ChatFormatting.DARK_GRAY));
+            MutableComponent detail = Component.literal(
+                "[" + type.getDisplayName() + ":" + packetName + "] "
+            )
+                .withStyle(ChatFormatting.DARK_PURPLE)
+                .append(
+                    Component.literal(
+                        "[" +
+                            keyName +
+                            "] '" +
+                            originalValue +
+                            "'→'" +
+                            spoofedValue +
+                            "'"
+                    ).withStyle(ChatFormatting.DARK_GRAY)
+                );
             PrivacyLogger.sendKeybindDetail(detail);
         } else {
             PrivacyLogger.sendKeybindDetail(
-                "[" + keyName + "] '" + originalValue + "'→'" + spoofedValue + "'");
+                "[" +
+                    keyName +
+                    "] '" +
+                    originalValue +
+                    "'→'" +
+                    spoofedValue +
+                    "'"
+            );
         }
     }
 
@@ -207,7 +267,12 @@ public class TranslationProtectionHandler {
      * @param originalValue What Minecraft would have resolved it to
      * @param spoofedValue What we're returning (may be same as original)
      */
-    public static void sendDetailDebug(InterceptionType type, String keyName, String originalValue, String spoofedValue) {
+    public static void sendDetailDebug(
+        InterceptionType type,
+        String keyName,
+        String originalValue,
+        String spoofedValue
+    ) {
         if (!OpsecConfig.getInstance().isDebugAlerts()) return;
         sendDetail(type, keyName, originalValue, spoofedValue);
     }
@@ -221,7 +286,12 @@ public class TranslationProtectionHandler {
      * @param originalValue What Minecraft would have resolved it to
      * @param spoofedValue What we're returning (may be same as original)
      */
-    public static void logDetection(InterceptionType type, String keyName, String originalValue, String spoofedValue) {
+    public static void logDetection(
+        InterceptionType type,
+        String keyName,
+        String originalValue,
+        String spoofedValue
+    ) {
         if (!OpsecConfig.getInstance().isLogDetections()) {
             return;
         }
@@ -234,12 +304,28 @@ public class TranslationProtectionHandler {
         }
 
         // Dedupe by full tuple to preserve log accuracy
-        if (!loggedKeys.add(new LogDedupeKey(type, packetName, keyName, originalValue, spoofedValue))) {
+        if (
+            !loggedKeys.add(
+                new LogDedupeKey(
+                    type,
+                    packetName,
+                    keyName,
+                    originalValue,
+                    spoofedValue
+                )
+            )
+        ) {
             return;
         }
 
-        Opsec.LOGGER.info("[{}:{}] '{}' '{}' -> '{}'",
-            type.getDisplayName(), packetName, keyName, originalValue, spoofedValue);
+        Opsec.logInfoAsync(
+            "[{}:{}] '{}' '{}' -> '{}'",
+            type.getDisplayName(),
+            packetName,
+            keyName,
+            originalValue,
+            spoofedValue
+        );
     }
 
     /**
@@ -247,8 +333,10 @@ public class TranslationProtectionHandler {
      * When both alerts AND logging are disabled, skip everything.
      */
     private static boolean shouldProcess() {
-        return OpsecConfig.getInstance().shouldShowAlerts()
-            || OpsecConfig.getInstance().isLogDetections();
+        return (
+            OpsecConfig.getInstance().shouldShowAlerts() ||
+            OpsecConfig.getInstance().isLogDetections()
+        );
     }
 
     /**

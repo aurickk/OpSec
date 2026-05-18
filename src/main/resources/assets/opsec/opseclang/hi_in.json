@@ -71,7 +71,6 @@
   "opsec.tamper.actual": "§8वास्तविक: %s...",
   "opsec.tamper.download": "§aआधिकारिक रिलीज़ डाउनलोड करें",
   "opsec.tamper.dismiss_permanent": "मुझे पता है मैं क्या कर रहा हूं",
-  "opsec.alert.trackpack.detected": "रिसोर्स पैक फ़िंगरप्रिंटिंग का पता चला! URL: %s",
   "opsec.alert.trackpack.pattern": "रिसोर्स पैक फ़िंगरप्रिंटिंग पैटर्न का पता चला!",
   "opsec.toast.trackpack": "रिसोर्स पैक फ़िंगरप्रिंटिंग का पता चला",
   "opsec.alert.portscan.blocked": "पोर्ट स्कैन ब्लॉक किया गया: %s",

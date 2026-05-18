@@ -71,7 +71,6 @@
   "opsec.tamper.actual": "§8實際：%s...",
   "opsec.tamper.download": "§a下載官方發行版本",
   "opsec.tamper.dismiss_permanent": "我清楚自己在做什麼",
-  "opsec.alert.trackpack.detected": "偵測到資源包指紋追蹤！網址：%s",
   "opsec.alert.trackpack.pattern": "偵測到資源包指紋追蹤模式！",
   "opsec.toast.trackpack": "偵測到資源包指紋追蹤",
   "opsec.alert.portscan.blocked": "已阻擋連接埠掃描：%s",

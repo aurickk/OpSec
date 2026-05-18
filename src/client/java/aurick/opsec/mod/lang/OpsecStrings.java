@@ -98,7 +98,6 @@ public final class OpsecStrings {
     public static final String TAMPER_DISMISS_PERMANENT = "opsec.tamper.dismiss_permanent";
 
     // Chat alerts + toast titles (user-visible runtime messages)
-    public static final String ALERT_TRACKPACK_DETECTED = "opsec.alert.trackpack.detected";
     public static final String ALERT_TRACKPACK_PATTERN = "opsec.alert.trackpack.pattern";
     public static final String TOAST_TRACKPACK = "opsec.toast.trackpack";
     public static final String ALERT_PORTSCAN_BLOCKED = "opsec.alert.portscan.blocked";

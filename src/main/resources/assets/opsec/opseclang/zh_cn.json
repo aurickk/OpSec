@@ -71,7 +71,6 @@
   "opsec.tamper.actual": "§8实际值：%s...",
   "opsec.tamper.download": "§a下载官方发布版",
   "opsec.tamper.dismiss_permanent": "我清楚自己在做什么",
-  "opsec.alert.trackpack.detected": "检测到资源包指纹追踪！URL：%s",
   "opsec.alert.trackpack.pattern": "检测到资源包指纹追踪模式！",
   "opsec.toast.trackpack": "检测到资源包指纹追踪",
   "opsec.alert.portscan.blocked": "已阻止端口扫描：%s",

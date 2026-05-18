@@ -71,7 +71,6 @@
   "opsec.tamper.actual": "§8Actual: %s...",
   "opsec.tamper.download": "§aDownload Official Release",
   "opsec.tamper.dismiss_permanent": "I Know What I'm Doing",
-  "opsec.alert.trackpack.detected": "Resource pack fingerprinting detected! URL: %s",
   "opsec.alert.trackpack.pattern": "Resource pack fingerprinting pattern detected!",
   "opsec.toast.trackpack": "Resource Pack Fingerprinting Detected",
   "opsec.alert.portscan.blocked": "Port scan blocked: %s",

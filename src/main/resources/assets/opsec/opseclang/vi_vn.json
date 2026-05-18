@@ -71,7 +71,6 @@
   "opsec.tamper.actual": "§8Thực tế: %s...",
   "opsec.tamper.download": "§aTải Bản Phát Hành Chính Thức",
   "opsec.tamper.dismiss_permanent": "Tôi Biết Mình Đang Làm Gì",
-  "opsec.alert.trackpack.detected": "Phát hiện lấy dấu vân tay qua gói tài nguyên! URL: %s",
   "opsec.alert.trackpack.pattern": "Phát hiện mẫu lấy dấu vân tay qua gói tài nguyên!",
   "opsec.toast.trackpack": "Phát hiện Lấy dấu vân tay qua Gói tài nguyên",
   "opsec.alert.portscan.blocked": "Đã chặn quét cổng: %s",

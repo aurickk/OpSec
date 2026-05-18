@@ -213,18 +213,17 @@ public class PrivacyLogger {
         Opsec.LOGGER.info("[Detection:{}] {}", category, details);
     }
     
-    public static void alertTrackPackDetected(String url) {
-        logDetection("TrackPack", "Suspicious URL: " + url);
-        alert(AlertType.DANGER, OpsecLang.tr(OpsecStrings.ALERT_TRACKPACK_DETECTED, url));
-        toastWithCooldown(AlertType.DANGER, OpsecLang.tr(OpsecStrings.TOAST_TRACKPACK),
-            null, "trackpack_detected", OpsecConstants.Timeouts.DEFAULT_TOAST_COOLDOWN_MS);
-    }
-    
     /**
      * Alert for local port scan detection.
      * Detection always happens, blocking is optional based on protection setting.
      */
     public static void alertLocalPortScanDetected(String url, boolean blocked) {
+        // Port 0 is a guaranteed-failed TCP connect — not a real local scan target.
+        // The TrackPack pattern detector already catches port-0 hash-probing.
+        try {
+            if (new URI(url).getPort() == 0) return;
+        } catch (Exception ignored) {}
+
         String hostPort = extractHostPort(url);
         String action = blocked ? "Blocked" : "Detected (protection OFF)";
         logDetection("LocalPack", action + " local URL probe: " + url);

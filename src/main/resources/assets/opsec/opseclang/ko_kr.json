@@ -71,7 +71,6 @@
   "opsec.tamper.actual": "§8실제: %s...",
   "opsec.tamper.download": "§a공식 릴리스 다운로드",
   "opsec.tamper.dismiss_permanent": "내가 무엇을 하는지 알고 있습니다",
-  "opsec.alert.trackpack.detected": "리소스 팩 핑거프린팅이 감지되었습니다! URL: %s",
   "opsec.alert.trackpack.pattern": "리소스 팩 핑거프린팅 패턴이 감지되었습니다!",
   "opsec.toast.trackpack": "리소스 팩 핑거프린팅 감지됨",
   "opsec.alert.portscan.blocked": "포트 스캔이 차단되었습니다: %s",

@@ -3,8 +3,6 @@ package aurick.opsec.mod.detection;
 import aurick.opsec.mod.PrivacyLogger;
 import aurick.opsec.mod.config.OpsecConstants;
 
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.HashSet;
@@ -25,15 +23,12 @@ public class TrackPackDetector {
 
     private static final AtomicLong lastRequestTime = new AtomicLong(0);
     private static final AtomicInteger consecutiveRapidRequests = new AtomicInteger(0);
-    private static final AtomicBoolean notifiedSuspiciousOnce = new AtomicBoolean(false);
     private static final AtomicBoolean notifiedPatternOnce = new AtomicBoolean(false);
 
     public record RequestRecord(String url, String hash, long timestamp) {}
 
-    // Returns true if the URL is a direct exploit signal (port 0); pattern checks are separate.
-    public static boolean recordRequest(String url, String hash) {
+    public static void recordRequest(String url, String hash) {
         long now = System.currentTimeMillis();
-        boolean directSignal = hasPortZero(url);
 
         synchronized (LOCK) {
             while (!recentRequests.isEmpty() &&
@@ -73,7 +68,6 @@ public class TrackPackDetector {
         lastRequestTime.set(now);
 
         analyzePatterns();
-        return directSignal;
     }
 
     private static void analyzePatterns() {
@@ -90,15 +84,6 @@ public class TrackPackDetector {
             }
             PrivacyLogger.logDetection("TrackPack",
                 "Hash probing: " + hashCount + " hashes across " + urlCount + " URL(s)");
-        }
-    }
-
-    private static boolean hasPortZero(String url) {
-        if (url == null || url.isEmpty()) return false;
-        try {
-            return new URI(url).getPort() == 0;
-        } catch (URISyntaxException e) {
-            return false;
         }
     }
 
@@ -142,10 +127,6 @@ public class TrackPackDetector {
         }
     }
 
-    public static boolean consumeNotifySuspiciousOnce() {
-        return notifiedSuspiciousOnce.compareAndSet(false, true);
-    }
-
     public static boolean consumeNotifyPatternOnce() {
         return notifiedPatternOnce.compareAndSet(false, true);
     }
@@ -158,7 +139,6 @@ public class TrackPackDetector {
         }
         consecutiveRapidRequests.set(0);
         lastRequestTime.set(0);
-        notifiedSuspiciousOnce.set(false);
         notifiedPatternOnce.set(false);
     }
 }

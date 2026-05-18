@@ -127,10 +127,7 @@ public abstract class ClientPacketListenerMixin {
         String url = packet.getUrl();
         String hash = packet.getHash();
 
-        boolean suspicious = TrackPackDetector.recordRequest(url, hash);
-        if (suspicious && TrackPackDetector.consumeNotifySuspiciousOnce()) {
-            PrivacyLogger.alertTrackPackDetected(url);
-        }
+        TrackPackDetector.recordRequest(url, hash);
 
         if (TrackPackDetector.isFingerprinting() && TrackPackDetector.consumeNotifyPatternOnce()) {
             PrivacyLogger.alert(PrivacyLogger.AlertType.DANGER,

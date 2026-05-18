@@ -23,11 +23,7 @@ public abstract class ClientCommonPacketListenerImplMixin {
     private void onResourcePackPush(ClientboundResourcePackPushPacket packet, CallbackInfo ci) {
         String url = packet.url();
 
-        boolean suspicious = TrackPackDetector.recordRequest(url, packet.hash());
-
-        if (suspicious && TrackPackDetector.consumeNotifySuspiciousOnce()) {
-            PrivacyLogger.alertTrackPackDetected(url);
-        }
+        TrackPackDetector.recordRequest(url, packet.hash());
 
         if (TrackPackDetector.isFingerprinting() && TrackPackDetector.consumeNotifyPatternOnce()) {
             PrivacyLogger.alert(PrivacyLogger.AlertType.DANGER,
@@ -74,10 +70,7 @@ public abstract class ClientCommonPacketListenerImplMixin {
         String url = packet.getUrl();
         String hash = packet.getHash();
 
-        boolean suspicious = TrackPackDetector.recordRequest(url, hash);
-        if (suspicious && TrackPackDetector.consumeNotifySuspiciousOnce()) {
-            PrivacyLogger.alertTrackPackDetected(url);
-        }
+        TrackPackDetector.recordRequest(url, hash);
 
         if (TrackPackDetector.isFingerprinting() && TrackPackDetector.consumeNotifyPatternOnce()) {
             PrivacyLogger.alert(PrivacyLogger.AlertType.DANGER,

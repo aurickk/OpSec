@@ -71,7 +71,6 @@
   "opsec.tamper.actual": "§8Фактически: %s...",
   "opsec.tamper.download": "§aСкачать официальный релиз",
   "opsec.tamper.dismiss_permanent": "Я знаю, что делаю",
-  "opsec.alert.trackpack.detected": "Обнаружен фингерпринтинг через набор ресурсов! URL: %s",
   "opsec.alert.trackpack.pattern": "Обнаружен шаблон фингерпринтинга набора ресурсов!",
   "opsec.toast.trackpack": "Обнаружен фингерпринтинг набора ресурсов",
   "opsec.alert.portscan.blocked": "Сканирование портов заблокировано: %s",

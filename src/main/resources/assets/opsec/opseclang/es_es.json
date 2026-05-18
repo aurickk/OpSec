@@ -71,7 +71,6 @@
   "opsec.tamper.actual": "§8Real: %s...",
   "opsec.tamper.download": "§aDescargar versión oficial",
   "opsec.tamper.dismiss_permanent": "Sé lo que estoy haciendo",
-  "opsec.alert.trackpack.detected": "¡Detectado fingerprinting mediante paquete de recursos! URL: %s",
   "opsec.alert.trackpack.pattern": "¡Detectado patrón de fingerprinting de paquete de recursos!",
   "opsec.toast.trackpack": "Fingerprinting de paquete de recursos detectado",
   "opsec.alert.portscan.blocked": "Escaneo de puertos bloqueado: %s",

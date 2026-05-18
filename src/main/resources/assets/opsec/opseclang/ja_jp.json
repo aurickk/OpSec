@@ -71,7 +71,6 @@
   "opsec.tamper.actual": "§8実際の値: %s...",
   "opsec.tamper.download": "§a公式リリースをダウンロード",
   "opsec.tamper.dismiss_permanent": "理解した上で続行する",
-  "opsec.alert.trackpack.detected": "リソースパックによるフィンガープリンティングを検出しました！ URL: %s",
   "opsec.alert.trackpack.pattern": "リソースパックのフィンガープリンティングパターンを検出しました！",
   "opsec.toast.trackpack": "リソースパックのフィンガープリンティングを検出",
   "opsec.alert.portscan.blocked": "ポートスキャンをブロックしました: %s",

@@ -113,12 +113,8 @@ public abstract class TranslatableContentsMixin implements OpsecFromPacketAccess
         // In exploit context — always notify header (cooldown prevents spam)
         TranslationProtectionHandler.notifyExploitDetected();
 
-        // Always allow vanilla keys — log to console if debug enabled
         if (ModRegistry.isVanillaTranslationKey(translationKey)) {
-            if (OpsecConfig.getInstance().isDebugAlerts()) {
-                String realValue = opsec$getRealTranslation(translationKey, defaultValue);
-                TranslationProtectionHandler.logDetection(InterceptionType.TRANSLATION, translationKey, realValue, realValue);
-            }
+            opsec$reportPassthrough(translationKey, defaultValue);
             return OPSEC_ALLOW_ORIGINAL;
         }
 
@@ -143,6 +139,7 @@ public abstract class TranslatableContentsMixin implements OpsecFromPacketAccess
         // FABRIC MODE: Allow whitelisted mod keys, block others
         if (settings.isFabricMode()) {
             if (ModRegistry.isWhitelistedTranslationKey(translationKey)) {
+                opsec$reportPassthrough(translationKey, defaultValue);
                 return OPSEC_ALLOW_ORIGINAL;
             }
             String blockedValue = opsec$getBlockedValue(translationKey, defaultValue);
@@ -152,6 +149,7 @@ public abstract class TranslatableContentsMixin implements OpsecFromPacketAccess
 
         // Fallback: Use whitelist behavior
         if (ModRegistry.isWhitelistedTranslationKey(translationKey)) {
+            opsec$reportPassthrough(translationKey, defaultValue);
             return OPSEC_ALLOW_ORIGINAL;
         }
         String blockedValue = opsec$getBlockedValue(translationKey, defaultValue);
@@ -182,6 +180,15 @@ public abstract class TranslatableContentsMixin implements OpsecFromPacketAccess
     private String opsec$getBlockedValue(String translationKey, String defaultValue) {
         String packValue = ModRegistry.getServerPackTranslation(translationKey);
         return packValue != null ? packValue : defaultValue;
+    }
+
+    /** Report a vanilla/whitelisted passthrough — chat detail in debug mode, console log when enabled. Both handlers self-gate. */
+    @Unique
+    private void opsec$reportPassthrough(String translationKey, String defaultValue) {
+        if (!OpsecConfig.getInstance().isDebugAlerts() && !OpsecConfig.getInstance().isLogDetections()) return;
+        String realValue = opsec$getRealTranslation(translationKey, defaultValue);
+        TranslationProtectionHandler.sendDetailDebug(InterceptionType.TRANSLATION, translationKey, realValue, realValue);
+        TranslationProtectionHandler.logDetection(InterceptionType.TRANSLATION, translationKey, realValue, realValue);
     }
 
     /**

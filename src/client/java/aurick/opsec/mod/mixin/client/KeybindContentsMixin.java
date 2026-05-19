@@ -85,8 +85,9 @@ public class KeybindContentsMixin implements OpsecFromPacketAccess {
         SpoofSettings settings = config.getSettings();
 
         if (ModRegistry.isWhitelistedKeybind(name)) {
-            if (OpsecConfig.getInstance().isDebugAlerts()) {
+            if (OpsecConfig.getInstance().isDebugAlerts() || OpsecConfig.getInstance().isLogDetections()) {
                 String displayValue = opsec$readKeybindDisplay();
+                TranslationProtectionHandler.sendDetailDebug(InterceptionType.KEYBIND, name, displayValue, displayValue);
                 TranslationProtectionHandler.logDetection(InterceptionType.KEYBIND, name, displayValue, displayValue);
             }
             return original.call(supplier);

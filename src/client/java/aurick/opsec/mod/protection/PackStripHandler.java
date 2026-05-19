@@ -147,7 +147,7 @@ public final class PackStripHandler {
 
     // 1.20.2+ multi-pack format: "server/<serial>/<uuid>" (DownloadedPackSource#loadRequestedPacks, "server/%08X/%s").
     // 1.20.1 single-pack era uses the literal "server" — mapped to a sentinel UUID.
-    private static final String SERVER_PACK_PREFIX = "server/";
+    public static final String SERVER_PACK_PREFIX = "server/";
     public static final String LEGACY_SERVER_PACK_ID = "server";
     public static final UUID LEGACY_SERVER_PACK_UUID =
         UUID.fromString("00000000-0000-0000-0000-000000000001");

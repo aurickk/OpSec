@@ -122,19 +122,6 @@ public abstract class TranslatableContentsMixin implements OpsecFromPacketAccess
             return OPSEC_ALLOW_ORIGINAL;
         }
 
-        // Allow server resource pack keys through vanilla resolution.
-        // A vanilla client resolves these through Language.getOrDefault() at call time.
-        // Under fake-accept, the pack is still loaded (via LangOnlyPackResources), so
-        // the lang keys are in ClientLanguage's storage and vanilla resolution returns
-        // the pack-defined value. No side map needed.
-        if (ModRegistry.isServerPackTranslationKey(translationKey)) {
-            if (OpsecConfig.getInstance().isDebugAlerts()) {
-                String realValue = opsec$getRealTranslation(translationKey, defaultValue);
-                TranslationProtectionHandler.logDetection(InterceptionType.TRANSLATION, translationKey, realValue, realValue);
-            }
-            return OPSEC_ALLOW_ORIGINAL;
-        }
-
         OpsecConfig config = OpsecConfig.getInstance();
         SpoofSettings settings = config.getSettings();
 
@@ -190,14 +177,11 @@ public abstract class TranslatableContentsMixin implements OpsecFromPacketAccess
         TranslationProtectionHandler.logDetection(InterceptionType.TRANSLATION, translationKey, originalValue, defaultValue);
     }
 
-    /**
-     * Get the value to return when blocking a key.
-     * Server resource pack keys are whitelisted for vanilla resolution earlier in the
-     * pipeline, so any key reaching this point is a mod key that should be blocked.
-     */
+    /** Pack-defined value when present (independent of storage merge order), else {@code defaultValue}. */
     @Unique
     private String opsec$getBlockedValue(String translationKey, String defaultValue) {
-        return defaultValue;
+        String packValue = ModRegistry.getServerPackTranslation(translationKey);
+        return packValue != null ? packValue : defaultValue;
     }
 
     /**

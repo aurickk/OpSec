@@ -125,7 +125,8 @@ public class KeybindContentsMixin implements OpsecFromPacketAccess {
         // Mark silent so the downstream translation path doesn't double-log
         // what we already reported here.
         String realValue = opsec$readKeybindDisplay();
-        String spoofed = ModRegistry.isServerPackTranslationKey(name) ? realValue : name;
+        String packValue = ModRegistry.getServerPackTranslation(name);
+        String spoofed = packValue != null ? packValue : name;
         opsec$reportBlocked(name, realValue, spoofed);
         Component replacement = Component.translatable(name);
         if (replacement.getContents() instanceof OpsecFromPacketAccess access) {

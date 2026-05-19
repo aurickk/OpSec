@@ -5,6 +5,7 @@ import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.llamalad7.mixinextras.sugar.Local;
 import aurick.opsec.mod.Opsec;
 import aurick.opsec.mod.lang.OpsecLang;
+import aurick.opsec.mod.protection.PackStripHandler;
 import aurick.opsec.mod.tracking.ModIdResolver;
 import aurick.opsec.mod.tracking.ModRegistry;
 import aurick.opsec.mod.util.KeybindDefaults;
@@ -33,7 +34,7 @@ import java.util.function.BiConsumer;
  * 
  * Pack types and handling:
  * - VanillaPackResources: Vanilla Minecraft → Always whitelisted
- * - Server-pushed packs (packId starts with "server/"): Session whitelisted
+ * - Server-pushed packs (packId via {@link #opsec$isServerPackId}): Session whitelisted
  * - Fabric mod packs (detected via reflection) → Tracked as mod (blocked in exploitable contexts)
  * - PathPackResources / user-installed file packs: Passthrough (not tracked)
  */
@@ -122,26 +123,13 @@ public class ClientLanguageMixin {
             return;
         }
         
-        // Server-pushed resource packs only — identified by the
-        // "server/<serial>/<uuid>" packId vanilla assigns in
-        // DownloadedPackSource.loadRequestedPacks. LangOnlyPackResources wraps
-        // FilePackResources and delegates packId(), so the wrapped server packs
-        // also pass this check.
-        //
-        // The previous instanceof check (FilePackResources / CompositePackResources)
-        // also matched user-installed .zip packs and any mod pack happening to use
-        // those types — leaking their lang keys to servers as session-whitelisted.
-        //
-        // IMPORTANT: apply ALL of the pack's lang entries, including overrides of
-        // vanilla keys. Commit 0065b2e explicitly requires this: a vanilla client
-        // with the pack loaded resolves poisoned keys (e.g. key.keyboard.w override)
-        // to the pack-defined value, and OpSec must match that behavior — otherwise
-        // translation-key probes that target vanilla keys expose us as non-vanilla.
+        // Apply ALL pack entries including overrides of vanilla keys (commit 0065b2e) —
+        // a vanilla client resolves poisoned keys to the pack value, so we must too.
         String serverPackId = pack.packId();
-        if (serverPackId != null && serverPackId.startsWith("server/")) {
+        if (opsec$isServerPackId(serverPackId)) {
             Set<String> serverKeys = new HashSet<>();
             original.call(stream, (BiConsumer<String, String>) (key, value) -> {
-                ModRegistry.recordServerPackKey(key);
+                ModRegistry.recordServerPackTranslation(key, value);
                 serverKeys.add(key);
                 output.accept(key, value);
             });
@@ -156,7 +144,8 @@ public class ClientLanguageMixin {
         if (pack instanceof PathPackResources) {
             // Try to get mod ID from pack ID (format is usually "mod_id" or similar)
             String packId = pack.packId();
-            if (packId != null && !packId.isEmpty() && !packId.equals("vanilla") && !packId.startsWith("file/")) {
+            if (packId != null && !packId.isEmpty() && !packId.equals("vanilla")
+                    && !packId.startsWith("file/") && !opsec$isServerPackId(packId)) {
                 // Clean up pack ID - remove common prefixes/suffixes
                 String extractedModId = packId.replace("fabric/", "").replace("mod/", "");
                 if (!extractedModId.isEmpty()) {
@@ -219,7 +208,8 @@ public class ClientLanguageMixin {
 
         // Method 3: Use pack ID directly - Fabric creates one pack per mod with the mod ID as pack ID
         String packId = pack.packId();
-        if (packId != null && !packId.isEmpty() && !packId.equals("vanilla") && !packId.startsWith("file/") && !packId.startsWith("server/")) {
+        if (packId != null && !packId.isEmpty() && !packId.equals("vanilla")
+                && !packId.startsWith("file/") && !opsec$isServerPackId(packId)) {
             if (FabricLoader.getInstance().getModContainer(packId).isPresent()) {
                 return packId;
             }
@@ -227,5 +217,13 @@ public class ClientLanguageMixin {
 
         // Method 4: Fall back to class-based detection
         return ModIdResolver.getModIdFromClass(pack.getClass());
+    }
+
+    /** Matches both the 1.20.2+ {@code "server/<serial>/<uuid>"} form and the 1.20.1 bare {@code "server"}. */
+    @Unique
+    private static boolean opsec$isServerPackId(String packId) {
+        if (packId == null) return false;
+        return PackStripHandler.LEGACY_SERVER_PACK_ID.equals(packId)
+                || packId.startsWith(PackStripHandler.SERVER_PACK_PREFIX);
     }
 }

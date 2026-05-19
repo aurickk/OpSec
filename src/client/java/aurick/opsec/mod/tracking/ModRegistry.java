@@ -46,9 +46,9 @@ public class ModRegistry {
     private static volatile Set<String> vanillaTranslationKeys =
         ConcurrentHashMap.newKeySet();
 
-    /** Server resource pack translation keys (whitelisted for vanilla resolution). Same atomic-swap rationale as {@link #vanillaTranslationKeys}. */
-    private static volatile Set<String> serverPackKeys =
-        ConcurrentHashMap.newKeySet();
+    /** Server pack translations: key → value. Returned at block time so a mod lang beating the pack in {@code ClientLanguage.storage} can't expose us. Atomic-swapped per reload. */
+    private static volatile Map<String, String> serverPackTranslations =
+        new ConcurrentHashMap<>();
 
     /** Maps channel namespaces to their owning Fabric mod IDs (e.g., "jm" -> "journeymap") */
     private static final Map<String, Set<String>> namespaceToModIds =
@@ -199,7 +199,7 @@ public class ModRegistry {
      */
     private static final class TranslationRebuildStaging {
         final Set<String> vanilla = ConcurrentHashMap.newKeySet();
-        final Set<String> serverPack = ConcurrentHashMap.newKeySet();
+        final Map<String, String> serverPackTranslations = new ConcurrentHashMap<>();
         final Map<String, String> translationKeyToModId = new ConcurrentHashMap<>();
     }
 
@@ -242,12 +242,12 @@ public class ModRegistry {
         // Three volatile writes — each is independently atomic; readers always
         // see a fully-populated set/map (either the old or the new one).
         vanillaTranslationKeys = s.vanilla;
-        serverPackKeys = s.serverPack;
+        serverPackTranslations = s.serverPackTranslations;
         translationKeyToModId = s.translationKeyToModId;
         rebuildStaging.remove();
         Opsec.LOGGER.debug(
             "[ModRegistry] Committed translation rebuild: {} vanilla, {} server pack",
-            s.vanilla.size(), s.serverPack.size()
+            s.vanilla.size(), s.serverPackTranslations.size()
         );
     }
 
@@ -304,17 +304,15 @@ public class ModRegistry {
         }
     }
 
-    /**
-     * Record a server resource pack translation key.
-     */
-    public static void recordServerPackKey(String key) {
-        if (key == null) return;
+    /** Record a server pack translation key and its pack-defined value. */
+    public static void recordServerPackTranslation(String key, String value) {
+        if (key == null || value == null) return;
 
         TranslationRebuildStaging s = rebuildStaging.get();
         if (s != null) {
-            s.serverPack.add(key);
+            s.serverPackTranslations.put(key, value);
         } else {
-            serverPackKeys.add(key);
+            serverPackTranslations.put(key, value);
         }
     }
 
@@ -761,7 +759,11 @@ public class ModRegistry {
      * Check if a translation key is from a server resource pack.
      */
     public static boolean isServerPackTranslationKey(String key) {
-        return key != null && serverPackKeys.contains(key);
+        return key != null && serverPackTranslations.containsKey(key);
+    }
+
+    public static String getServerPackTranslation(String key) {
+        return key == null ? null : serverPackTranslations.get(key);
     }
 
     /**
@@ -774,7 +776,7 @@ public class ModRegistry {
             info.translationKeys.clear();
         }
         vanillaTranslationKeys.clear();
-        serverPackKeys.clear();
+        serverPackTranslations.clear();
         translationKeyToModId.clear();
         Opsec.LOGGER.debug(
             "[ModRegistry] Cleared translation key cache (including server pack keys)"
@@ -987,14 +989,14 @@ public class ModRegistry {
     }
 
     public static int getServerPackKeyCount() {
-        return serverPackKeys.size();
+        return serverPackTranslations.size();
     }
 
     public static int getTranslationKeyCount() {
         java.util.HashSet<String> all = new java.util.HashSet<>(
             vanillaTranslationKeys
         );
-        all.addAll(serverPackKeys);
+        all.addAll(serverPackTranslations.keySet());
         for (ModInfo info : registry.values()) {
             all.addAll(info.translationKeys);
         }

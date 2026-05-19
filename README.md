@@ -20,7 +20,7 @@
 - **[Bypass Server Pack Requirement](#bypass-server-pack-requirement)** - Let the user toggle required server resource pack(s) like client packs 
 - **[Key Resolution Protection](#key-resolution-protection)** - Protect against key resolution mod detection in any server packet
 - **[Meteor Fix](#meteor-fix)** - Disable Meteor Client's flawed key resolution protection
-- **[Mod Whitelist](#mod-whitelist)** - Automatically or manually exempt mods from channel spoofing and key resolution protection
+- **[Mod Whitelist](#mod-whitelist)** - Automatically or manually exempt mods from protection
 - **[Chat Signing Control](#chat-signing-control)** - Configure chat message signing behavior
 - **[Account Manager](#account-manager)** - Switch between Minecraft accounts using session tokens
 - **[Telemetry Blocking](#telemetry-blocking)** - Disable data collection sent to Mojang

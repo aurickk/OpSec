@@ -17,6 +17,8 @@
   "opsec.whitelist.mode.custom.tooltip": "ホワイトリストに追加するMODを手動で選択します",
   "opsec.ep.managed.header": "§7ExploitPreventer により管理中",
   "opsec.ep.managed.tooltip": "ExploitPreventer により管理されています",
+  "opsec.compat.managed.header": "§7%s により管理中",
+  "opsec.compat.managed.tooltip": "%s により管理されています",
   "opsec.option.isolatePackCache": "パックキャッシュを分離",
   "opsec.option.blockLocalPackUrls": "ローカルURLをブロック",
   "opsec.option.clearCache": "リソースパックのキャッシュをクリア",

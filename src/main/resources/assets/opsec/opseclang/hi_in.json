@@ -17,6 +17,8 @@
   "opsec.whitelist.mode.custom.tooltip": "मैन्युअल रूप से चुनें कि कौन से मॉड्स व्हाइटलिस्ट करने हैं",
   "opsec.ep.managed.header": "§7ExploitPreventer द्वारा प्रबंधित",
   "opsec.ep.managed.tooltip": "ExploitPreventer द्वारा प्रबंधित",
+  "opsec.compat.managed.header": "§7%s द्वारा प्रबंधित",
+  "opsec.compat.managed.tooltip": "%s द्वारा प्रबंधित",
   "opsec.option.isolatePackCache": "पैक कैश अलग करें",
   "opsec.option.blockLocalPackUrls": "लोकल URL ब्लॉक करें",
   "opsec.option.clearCache": "कैश किए गए रिसोर्स पैक हटाएं",

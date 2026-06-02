@@ -28,6 +28,23 @@ public class OpsecConfig {
     public static final boolean EXPLOIT_PREVENTER_LOADED =
         FabricLoader.getInstance().isModLoaded("exploitpreventer");
 
+    // Chat signing and telemetry blocking overlap with dedicated mods. When one is
+    // present OpSec stands down on the shared feature (greys the control out) rather
+    // than double-stripping signatures / double-disabling telemetry. Unlike EP this is
+    // per-feature: No Chat Reports only covers signing; No Prying Eyes covers both.
+    public static final boolean NO_CHAT_REPORTS_LOADED =
+        FabricLoader.getInstance().isModLoaded("nochatreports");
+    public static final boolean NO_PRYING_EYES_LOADED =
+        FabricLoader.getInstance().isModLoaded("nopryingeyes");
+
+    /** Chat signing is handled by an external mod (No Chat Reports or No Prying Eyes). */
+    public static final boolean CHAT_SIGNING_MANAGED_EXTERNALLY =
+        NO_CHAT_REPORTS_LOADED || NO_PRYING_EYES_LOADED;
+
+    /** Telemetry blocking is handled by an external mod (No Chat Reports or No Prying Eyes). */
+    public static final boolean TELEMETRY_MANAGED_EXTERNALLY =
+        NO_CHAT_REPORTS_LOADED || NO_PRYING_EYES_LOADED;
+
     // Per-MC-version feature gate: DownloadQueue + multi-pack stacking arrived 1.20.3.
     // 1.20.1/1.20.2 isolate the pack cache via LegacyDownloadedPackSourceMixin instead.
     //? if >=1.20.3 {
@@ -56,6 +73,30 @@ public class OpsecConfig {
                 "[OpSec] ExploitPreventer detected - compatibility mode active."
             );
         }
+        if (NO_CHAT_REPORTS_LOADED) {
+            Opsec.LOGGER.info(
+                "[OpSec] No Chat Reports detected - deferring chat signing and telemetry to it."
+            );
+        }
+        if (NO_PRYING_EYES_LOADED) {
+            Opsec.LOGGER.info(
+                "[OpSec] No Prying Eyes detected - deferring chat signing and telemetry to it."
+            );
+        }
+    }
+
+    /** Display name of the mod managing chat signing, or {@code null} if OpSec manages it. */
+    public static String chatSigningManagerName() {
+        if (NO_CHAT_REPORTS_LOADED) return "No Chat Reports";
+        if (NO_PRYING_EYES_LOADED) return "No Prying Eyes";
+        return null;
+    }
+
+    /** Display name of the mod managing telemetry, or {@code null} if OpSec manages it. */
+    public static String telemetryManagerName() {
+        if (NO_CHAT_REPORTS_LOADED) return "No Chat Reports";
+        if (NO_PRYING_EYES_LOADED) return "No Prying Eyes";
+        return null;
     }
 
     public static OpsecConfig getInstance() {
@@ -324,12 +365,12 @@ public class OpsecConfig {
     }
 
     public boolean shouldNotSign() {
-        return settings.shouldNotSign();
+        return !CHAT_SIGNING_MANAGED_EXTERNALLY && settings.shouldNotSign();
     }
 
     // Privacy
     public boolean shouldDisableTelemetry() {
-        return settings.isDisableTelemetry();
+        return !TELEMETRY_MANAGED_EXTERNALLY && settings.isDisableTelemetry();
     }
 
     /**

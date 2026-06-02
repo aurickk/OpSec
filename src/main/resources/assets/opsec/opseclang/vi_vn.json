@@ -17,6 +17,8 @@
   "opsec.whitelist.mode.custom.tooltip": "Chọn thủ công những mod nào được vào danh sách trắng",
   "opsec.ep.managed.header": "§7Được quản lý bởi ExploitPreventer",
   "opsec.ep.managed.tooltip": "Được quản lý bởi ExploitPreventer",
+  "opsec.compat.managed.header": "§7Được quản lý bởi %s",
+  "opsec.compat.managed.tooltip": "Được quản lý bởi %s",
   "opsec.option.isolatePackCache": "Cô lập Cache Gói",
   "opsec.option.blockLocalPackUrls": "Chặn URL Cục bộ",
   "opsec.option.clearCache": "Xóa Gói tài nguyên đã lưu",

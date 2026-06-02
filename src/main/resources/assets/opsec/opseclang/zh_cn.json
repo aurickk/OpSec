@@ -17,6 +17,8 @@
   "opsec.whitelist.mode.custom.tooltip": "手动选择要加入白名单的模组",
   "opsec.ep.managed.header": "§7由 ExploitPreventer 管理",
   "opsec.ep.managed.tooltip": "由 ExploitPreventer 管理",
+  "opsec.compat.managed.header": "§7由 %s 管理",
+  "opsec.compat.managed.tooltip": "由 %s 管理",
   "opsec.option.isolatePackCache": "隔离资源包缓存",
   "opsec.option.blockLocalPackUrls": "阻止本地 URL",
   "opsec.option.clearCache": "清除已缓存的资源包",

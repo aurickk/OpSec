@@ -17,6 +17,8 @@
   "opsec.whitelist.mode.custom.tooltip": "Вручную выбирать, какие моды добавить в белый список",
   "opsec.ep.managed.header": "§7Управляется ExploitPreventer",
   "opsec.ep.managed.tooltip": "Управляется ExploitPreventer",
+  "opsec.compat.managed.header": "§7Управляется %s",
+  "opsec.compat.managed.tooltip": "Управляется %s",
   "opsec.option.isolatePackCache": "Изолировать кеш наборов",
   "opsec.option.blockLocalPackUrls": "Блокировать локальные URL",
   "opsec.option.clearCache": "Очистить кеш наборов ресурсов",

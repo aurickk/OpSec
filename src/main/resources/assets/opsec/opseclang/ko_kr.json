@@ -17,6 +17,8 @@
   "opsec.whitelist.mode.custom.tooltip": "화이트리스트에 등록할 모드를 직접 선택합니다",
   "opsec.ep.managed.header": "§7ExploitPreventer가 관리 중",
   "opsec.ep.managed.tooltip": "ExploitPreventer가 관리 중입니다",
+  "opsec.compat.managed.header": "§7%s가 관리 중",
+  "opsec.compat.managed.tooltip": "%s가 관리 중입니다",
   "opsec.option.isolatePackCache": "팩 캐시 격리",
   "opsec.option.blockLocalPackUrls": "로컬 URL 차단",
   "opsec.option.clearCache": "캐시된 리소스 팩 삭제",

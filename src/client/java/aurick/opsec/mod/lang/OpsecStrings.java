@@ -33,6 +33,10 @@ public final class OpsecStrings {
     public static final String EP_MANAGED_HEADER = "opsec.ep.managed.header";
     public static final String EP_MANAGED_TOOLTIP = "opsec.ep.managed.tooltip";
 
+    // Generic "managed by another mod" strings; %s is the managing mod's display name.
+    public static final String COMPAT_MANAGED_HEADER = "opsec.compat.managed.header";
+    public static final String COMPAT_MANAGED_TOOLTIP = "opsec.compat.managed.tooltip";
+
     public static final String OPTION_ISOLATE_PACK_CACHE = "opsec.option.isolatePackCache";
     public static final String OPTION_BLOCK_LOCAL_PACK_URLS = "opsec.option.blockLocalPackUrls";
     public static final String OPTION_CLEAR_CACHE = "opsec.option.clearCache";

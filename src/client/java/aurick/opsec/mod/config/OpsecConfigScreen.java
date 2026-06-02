@@ -324,17 +324,41 @@ public class OpsecConfigScreen extends Screen {
 
         // Privacy & Security Section
         widgets.add(createSectionHeader("\u00A7f\u00A7lPrivacy & Security"));
-        
-        widgets.add(cycleBuilder(SigningModeDisplay::getDisplayName, List.of(SpoofSettings.SigningMode.values()), settings.getSigningMode())
-                .withTooltip(v -> Tooltip.create(SigningModeDisplay.getTooltip(v)))
-                .create(0, 0, 230, 20, OpsecLang.component(OpsecStrings.OPTION_CHAT_SIGNING),
-                (button, value) -> { settings.setSigningMode(value); config.save(); }));
-        
-        widgets.add(cycleBuilder(COLORED_BOOL_TO_TEXT, List.of(Boolean.TRUE, Boolean.FALSE), settings.isDisableTelemetry())
-                .withTooltip(v -> Tooltip.create(OpsecLang.component(OpsecStrings.TOOLTIP_DISABLE_TELEMETRY)))
-                .create(0, 0, 230, 20, OpsecLang.component(OpsecStrings.OPTION_DISABLE_TELEMETRY),
-                (button, value) -> { settings.setDisableTelemetry(value); config.save(); }));
-        
+
+        // Tracks the "Managed by X" header most recently emitted so adjacent managed
+        // controls sharing a manager don't repeat it; null once a real control breaks the run.
+        String lastManagedHeader = null;
+
+        // Chat signing \u2014 defer to No Chat Reports / No Prying Eyes when present.
+        if (OpsecConfig.CHAT_SIGNING_MANAGED_EXTERNALLY) {
+            String manager = OpsecConfig.chatSigningManagerName();
+            widgets.add(createSectionHeader(OpsecLang.tr(OpsecStrings.COMPAT_MANAGED_HEADER, manager)));
+            lastManagedHeader = manager;
+            widgets.add(createManagedToggle(OpsecLang.component(OpsecStrings.OPTION_CHAT_SIGNING),
+                    OpsecLang.component(OpsecStrings.COMPAT_MANAGED_TOOLTIP, manager)));
+        } else {
+            widgets.add(cycleBuilder(SigningModeDisplay::getDisplayName, List.of(SpoofSettings.SigningMode.values()), settings.getSigningMode())
+                    .withTooltip(v -> Tooltip.create(SigningModeDisplay.getTooltip(v)))
+                    .create(0, 0, 230, 20, OpsecLang.component(OpsecStrings.OPTION_CHAT_SIGNING),
+                    (button, value) -> { settings.setSigningMode(value); config.save(); }));
+        }
+
+        // Telemetry blocking \u2014 defer to No Chat Reports / No Prying Eyes when present.
+        if (OpsecConfig.TELEMETRY_MANAGED_EXTERNALLY) {
+            String manager = OpsecConfig.telemetryManagerName();
+            // Reuse the header above when the control directly preceding shares this manager.
+            if (!manager.equals(lastManagedHeader)) {
+                widgets.add(createSectionHeader(OpsecLang.tr(OpsecStrings.COMPAT_MANAGED_HEADER, manager)));
+            }
+            widgets.add(createManagedToggle(OpsecLang.component(OpsecStrings.OPTION_DISABLE_TELEMETRY),
+                    OpsecLang.component(OpsecStrings.COMPAT_MANAGED_TOOLTIP, manager)));
+        } else {
+            widgets.add(cycleBuilder(COLORED_BOOL_TO_TEXT, List.of(Boolean.TRUE, Boolean.FALSE), settings.isDisableTelemetry())
+                    .withTooltip(v -> Tooltip.create(OpsecLang.component(OpsecStrings.TOOLTIP_DISABLE_TELEMETRY)))
+                    .create(0, 0, 230, 20, OpsecLang.component(OpsecStrings.OPTION_DISABLE_TELEMETRY),
+                    (button, value) -> { settings.setDisableTelemetry(value); config.save(); }));
+        }
+
         return new WidgetTab(OpsecLang.component(OpsecStrings.TAB_PROTECTION), widgets);
     }
     
@@ -1157,8 +1181,13 @@ public class OpsecConfigScreen extends Screen {
     }
     
     private CycleButton<Boolean> createEPManagedToggle(Component label) {
+        return createManagedToggle(label, OpsecLang.component(OpsecStrings.EP_MANAGED_TOOLTIP));
+    }
+
+    /** A greyed-out, inactive toggle standing in for a feature another mod manages. */
+    private CycleButton<Boolean> createManagedToggle(Component label, Component tooltip) {
         CycleButton<Boolean> button = cycleBuilder(COLORED_BOOL_TO_TEXT, List.of(Boolean.TRUE, Boolean.FALSE), false)
-                .withTooltip(v -> Tooltip.create(OpsecLang.component(OpsecStrings.EP_MANAGED_TOOLTIP)))
+                .withTooltip(v -> Tooltip.create(tooltip))
                 .create(0, 0, 230, 20, label, (b, v) -> {});
         button.active = false;
         return button;

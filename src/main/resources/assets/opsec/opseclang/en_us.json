@@ -17,6 +17,8 @@
   "opsec.whitelist.mode.custom.tooltip": "Manually select which mods to whitelist",
   "opsec.ep.managed.header": "§7Managed by ExploitPreventer",
   "opsec.ep.managed.tooltip": "Managed by ExploitPreventer",
+  "opsec.compat.managed.header": "§7Managed by %s",
+  "opsec.compat.managed.tooltip": "Managed by %s",
   "opsec.option.isolatePackCache": "Isolate Pack Cache",
   "opsec.option.blockLocalPackUrls": "Block Local URLs",
   "opsec.option.clearCache": "Clear Cached Resource Packs",

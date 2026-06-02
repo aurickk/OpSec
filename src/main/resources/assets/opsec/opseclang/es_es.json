@@ -17,6 +17,8 @@
   "opsec.whitelist.mode.custom.tooltip": "Selecciona manualmente qué mods añadir a la whitelist",
   "opsec.ep.managed.header": "§7Gestionado por ExploitPreventer",
   "opsec.ep.managed.tooltip": "Gestionado por ExploitPreventer",
+  "opsec.compat.managed.header": "§7Gestionado por %s",
+  "opsec.compat.managed.tooltip": "Gestionado por %s",
   "opsec.option.isolatePackCache": "Aislar caché de paquetes",
   "opsec.option.blockLocalPackUrls": "Bloquear URLs locales",
   "opsec.option.clearCache": "Borrar paquetes de recursos en caché",

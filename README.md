@@ -10,6 +10,14 @@
 > [!WARNING]
 > This is a passion project mostly built with AI.
 
+> [!IMPORTANT]
+> Fake phishing sites and Discord servers has been distributing **trojanized** builds of OpSec. Only download OpSec from these official sources:
+> - **[Modrinth](https://modrinth.com/mod/opsec)**
+> - **[GitHub Releases](https://github.com/aurickk/OpSec/releases)**
+> - **[CurseForge](https://www.curseforge.com/minecraft/mc-mods/opsec)** (updated less frequently)
+>
+> Builds from anywhere else are not official and may be malicious.
+
 ## What it does 
 
 - **[Spoof as Vanilla](#spoof-as-vanilla)** - Set brand name to vanilla and block all mod detections

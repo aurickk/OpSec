@@ -1,5 +1,7 @@
 package aurick.opsec.mod.config;
 
+import java.util.Set;
+
 public final class OpsecConstants {
     private OpsecConstants() {}
 
@@ -52,6 +54,10 @@ public final class OpsecConstants {
         public static final String REGISTER = "register";
         public static final String UNREGISTER = "unregister";
         public static final String MCO = "mco";
+        public static final String BRAND = "brand";
+
+        /** {@code minecraft:} paths a stock client uses; anything else under it is a masquerading mod. */
+        public static final Set<String> VANILLA_PATHS = Set.of(REGISTER, UNREGISTER, MCO, BRAND);
 
         private Channels() {}
     }

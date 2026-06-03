@@ -193,17 +193,13 @@ public class ClientConnectionMixin {
                     return;
                 }
 
-                if (MINECRAFT.equals(payloadId.getNamespace())) {
-                    ctx.write(msg, promise);
-                    return;
-                }
-                
-                // Allow whitelisted mod channels (includes fabric API modules via DEFAULT_FABRIC_MODS)
+                // Everything else gates on isWhitelistedChannel, incl. minecraft: masquerading mods
+                // (e.g. fancymenu_packet_bridge) — never short-circuit minecraft: to allow.
                 if (ModRegistry.isWhitelistedChannel(payloadId)) {
                     ctx.write(msg, promise);
                     return;
                 }
-                
+
                 Opsec.LOGGER.debug("[OpSec] FABRIC MODE (pipeline) - Blocking mod channel: {}", payloadId);
                 promise.setSuccess();
                 return;
@@ -303,10 +299,7 @@ public class ClientConnectionMixin {
                 return;
             }
 
-            if (MINECRAFT.equals(namespace)) {
-                return;
-            }
-
+            // minecraft: masquerading mods gate on isWhitelistedChannel too — no short-circuit.
             if (ModRegistry.isWhitelistedChannel(channelId)) {
                 return;
             }
@@ -394,15 +387,12 @@ public class ClientConnectionMixin {
                 return;
             }
             
-            if (MINECRAFT.equals(namespace)) {
-                return;
-            }
-            
-            // Allow whitelisted mod channels (includes fabric API modules via DEFAULT_FABRIC_MODS)
+            // Everything else gates on isWhitelistedChannel, incl. minecraft: masquerading mods
+            // (e.g. fancymenu_packet_bridge) — never short-circuit minecraft: to allow.
             if (ModRegistry.isWhitelistedChannel(payloadId)) {
                 return;
             }
-            
+
             Opsec.LOGGER.debug("[OpSec] FABRIC MODE - Blocking mod channel: {}", payloadId);
             ci.cancel();
             return;
@@ -524,8 +514,17 @@ public class ClientConnectionMixin {
         //?}
             String namespace = channel.getNamespace();
 
-            // Skip core channels (minecraft + Forge "common" alias)
-            if ("minecraft".equals(namespace) || "c".equals(namespace)) {
+            // Forge "common" alias is never a fingerprint.
+            if ("c".equals(namespace)) {
+                continue;
+            }
+
+            // Attribute mods masquerading under minecraft: (e.g. fancymenu_packet_bridge) by path.
+            if ("minecraft".equals(namespace)) {
+                String owner = ModRegistry.resolveOwningModForChannel(namespace, channel.getPath());
+                if (owner != null) {
+                    ModRegistry.recordChannel(owner, channel);
+                }
                 continue;
             }
 

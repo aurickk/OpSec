@@ -2,6 +2,7 @@ package aurick.opsec.mod.tracking;
 
 import aurick.opsec.mod.Opsec;
 import aurick.opsec.mod.config.OpsecConfig;
+import aurick.opsec.mod.config.OpsecConstants;
 import aurick.opsec.mod.config.SpoofSettings;
 import aurick.opsec.mod.lang.OpsecLang;
 import aurick.opsec.mod.lang.OpsecStrings;
@@ -86,6 +87,9 @@ public class ModRegistry {
     private static final String VANILLA_PACK_NAMESPACE = "minecraft";
     /** Fabric mod-pack namespace — Fabric's confusingly-named {@code ModResourcePackCreator.VANILLA} constant. */
     private static final String FABRIC_PACK_NAMESPACE = "vanilla";
+
+    /** Min mod-id length for {@code minecraft:}-channel path attribution (avoids spurious short matches). */
+    private static final int MIN_MOD_ID_LEN_FOR_PATH_ATTRIBUTION = 3;
 
     private ModRegistry() {}
 
@@ -918,6 +922,46 @@ public class ModRegistry {
         return namespace;
     }
 
+    /** Whether {@code path} is one of the {@code minecraft:} channels a stock client uses. */
+    public static boolean isVanillaMinecraftChannel(String path) {
+        return path != null && OpsecConstants.Channels.VANILLA_PATHS.contains(path);
+    }
+
+    /**
+     * Owning mod for a channel, across every namespace. Non-{@code minecraft:} delegates to
+     * {@link #resolveOwningModForNamespace}; {@code minecraft:} attributes masquerading channels
+     * by path. {@code null} = genuine vanilla channel or no attributable owner.
+     */
+    public static String resolveOwningModForChannel(String namespace, String path) {
+        if (namespace == null) return null;
+        if (!"minecraft".equals(namespace)) {
+            return resolveOwningModForNamespace(namespace);
+        }
+        if (isVanillaMinecraftChannel(path)) return null;
+        return resolveModForMinecraftChannelPath(path);
+    }
+
+    /**
+     * Attribute a {@code minecraft:}-masquerading channel by matching its path against installed
+     * mod ids on a token boundary, longest match wins ({@code fancymenu_packet_bridge} → {@code fancymenu}).
+     * {@code null} when nothing matches — left unattributed, which blocks it in spoof modes.
+     */
+    public static String resolveModForMinecraftChannelPath(String path) {
+        if (path == null || path.isEmpty()) return null;
+        String best = null;
+        for (ModContainer mod : FabricLoader.getInstance().getAllMods()) {
+            String id = mod.getMetadata().getId();
+            if (id.length() < MIN_MOD_ID_LEN_FOR_PATH_ATTRIBUTION) continue;
+            // path begins with the mod id, ending at a token boundary (end-of-string or _ / . -).
+            boolean match = path.startsWith(id)
+                && (path.length() == id.length() || "_/.-".indexOf(path.charAt(id.length())) >= 0);
+            if (match && (best == null || id.length() > best.length())) {
+                best = id;
+            }
+        }
+        return best;
+    }
+
     /**
      * Synthesize the equivalent of a dropped {@code provides} alias by
      * inspecting JIJ structure. Fabric API on older MC declared
@@ -1015,14 +1059,20 @@ public class ModRegistry {
         if (channel == null) return false;
 
         String namespace = channel.getNamespace();
-
-        // Always allow core channels (minecraft)
-        if ("minecraft".equals(namespace)) {
-            return true;
-        }
+        String path = channel.getPath();
 
         OpsecConfig config = OpsecConfig.getInstance();
         SpoofSettings settings = config.getSettings();
+
+        // Vanilla minecraft: channels always pass; masquerading ones gate on their owner's
+        // whitelist (tracked ownership, else by path). Unattributable ⇒ blocked.
+        if ("minecraft".equals(namespace)) {
+            if (isVanillaMinecraftChannel(path)) return true;
+            if (!settings.isWhitelistEnabled()) return false;
+            String owner = channelToModId.get(channel);
+            if (owner == null) owner = resolveModForMinecraftChannelPath(path);
+            return owner != null && isModEffectivelyWhitelisted(owner, settings);
+        }
 
         if (!settings.isWhitelistEnabled()) {
             return false;

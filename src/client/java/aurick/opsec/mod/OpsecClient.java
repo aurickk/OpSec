@@ -102,11 +102,11 @@ public class OpsecClient implements ClientModInitializer {
 		try {
 			int count = 0;
 			for (var channel : source.get()) {
-				String namespace = channel.getNamespace();
-				if (!"minecraft".equals(namespace)) {
-					ModRegistry.recordChannel(ModRegistry.resolveOwningModForNamespace(namespace), channel);
-					count++;
-				}
+				// null = vanilla minecraft: channel (nothing to track); else the owning mod.
+				String owner = ModRegistry.resolveOwningModForChannel(channel.getNamespace(), channel.getPath());
+				if (owner == null) continue;
+				ModRegistry.recordChannel(owner, channel);
+				count++;
 			}
 			return count;
 		} catch (Exception e) {

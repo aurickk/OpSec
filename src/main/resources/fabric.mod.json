@@ -41,7 +41,7 @@
 		"autismsexdefender": "*"
 	},
 	"depends": {
-		"fabricloader": ">=0.16.0",
+		"fabricloader": ">=0.14.0",
 		"minecraft": "${minecraft_version_range}",
 		"java": ">=${java_version}",
 		"fabric-api": "*"

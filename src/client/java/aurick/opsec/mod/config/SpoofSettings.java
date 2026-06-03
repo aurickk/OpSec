@@ -92,7 +92,10 @@ public class SpoofSettings {
     private boolean showToasts = true;
     private boolean logDetections = true;
     private boolean debugAlerts = false;
-    
+
+    // Debug — when false the /opsec client command is not registered at all.
+    private boolean debugCommand = false;
+
     // Chat Signing
     private SigningMode signingMode = SigningMode.SIGN;
     
@@ -177,7 +180,10 @@ public class SpoofSettings {
 
     public boolean isDebugAlerts() { return debugAlerts; }
     public void setDebugAlerts(boolean debugAlerts) { this.debugAlerts = debugAlerts; }
-    
+
+    public boolean isDebugCommand() { return debugCommand; }
+    public void setDebugCommand(boolean debugCommand) { this.debugCommand = debugCommand; }
+
     // Signing mode methods
     public SigningMode getSigningMode() { return signingMode; }
     public void setSigningMode(SigningMode mode) { this.signingMode = mode; }
@@ -252,6 +258,7 @@ public class SpoofSettings {
         json.addProperty("showToasts", showToasts);
         json.addProperty("logDetections", logDetections);
         json.addProperty("debugAlerts", debugAlerts);
+        json.addProperty("debugCommand", debugCommand);
         json.addProperty("signingMode", signingMode.name());
         json.addProperty("disableTelemetry", disableTelemetry);
         json.addProperty("buttonX", buttonX);
@@ -321,6 +328,7 @@ public class SpoofSettings {
         if (json.has("showToasts")) s.showToasts = json.get("showToasts").getAsBoolean();
         if (json.has("logDetections")) s.logDetections = json.get("logDetections").getAsBoolean();
         if (json.has("debugAlerts")) s.debugAlerts = json.get("debugAlerts").getAsBoolean();
+        if (json.has("debugCommand")) s.debugCommand = json.get("debugCommand").getAsBoolean();
         if (json.has("signingMode")) {
             String mode = json.get("signingMode").getAsString();
             // Legacy migrations:
@@ -388,6 +396,7 @@ public class SpoofSettings {
         this.showToasts = other.showToasts;
         this.logDetections = other.logDetections;
         this.debugAlerts = other.debugAlerts;
+        this.debugCommand = other.debugCommand;
         this.signingMode = other.signingMode;
         this.disableTelemetry = other.disableTelemetry;
         this.buttonX = other.buttonX;

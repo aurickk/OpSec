@@ -28,6 +28,7 @@ public final class OpsecStrings {
     public static final String SECTION_MOD_WHITELIST = "opsec.section.modWhitelist";
     public static final String SECTION_INSTALLED_MODS = "opsec.section.installedMods";
     public static final String SECTION_RESTART_WARNING = "opsec.section.restartWarning";
+    public static final String SECTION_DEBUG = "opsec.section.debug";
     public static final String ACCOUNT_CURRENT = "opsec.account.current";
     public static final String WHITELIST_SUFFIX_CHANNELS = "opsec.whitelist.suffix.channels";
 
@@ -82,6 +83,7 @@ public final class OpsecStrings {
     public static final String OPTION_SHOW_TOASTS = "opsec.option.showToasts";
     public static final String OPTION_LOG_DETECTIONS = "opsec.option.logDetections";
     public static final String OPTION_DEBUG_ALERTS = "opsec.option.debugAlerts";
+    public static final String OPTION_DEBUG_COMMAND = "opsec.option.debugCommand";
     public static final String OPTION_HIDE_INSECURE_INDICATORS = "opsec.option.hideInsecureIndicators";
     public static final String OPTION_HIDE_MODIFIED_INDICATORS = "opsec.option.hideModifiedIndicators";
     public static final String OPTION_HIDE_SYSTEM_MSG_INDICATORS = "opsec.option.hideSystemMsgIndicators";
@@ -229,6 +231,7 @@ public final class OpsecStrings {
     public static final String TOOLTIP_SHOW_TOASTS = "opsec.option.showToasts.tooltip";
     public static final String TOOLTIP_LOG_DETECTIONS = "opsec.option.logDetections.tooltip";
     public static final String TOOLTIP_DEBUG_ALERTS = "opsec.option.debugAlerts.tooltip";
+    public static final String TOOLTIP_DEBUG_COMMAND = "opsec.option.debugCommand.tooltip";
 
     // Account-management buttons
     public static final String BUTTON_REFRESH_ALL = "opsec.button.refreshAll";

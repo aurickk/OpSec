@@ -42,7 +42,6 @@ import java.util.concurrent.CompletableFuture;
  * Debug command for OpSec mod.
  * Usage: /opsec info [mod name]
  */
-@SuppressWarnings("null")
 public class OpsecCommand {
     
     public static void register() {
@@ -57,6 +56,7 @@ public class OpsecCommand {
             //?} else {
             ClientCommandManager.literal("opsec")
             //?}
+                .requires(source -> OpsecConfig.getInstance().getSettings().isDebugCommand())
                 .executes(OpsecCommand::showHelp)
                 .then(
                     //? if >=26.1 {

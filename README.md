@@ -89,6 +89,8 @@ If settings are changed while connected to a server it is recommended to reconne
 | **Show Alerts** | Display chat messages when tracking is detected |
 | **Show Toasts** | Display popup notifications for important events |
 | **Log Detections** | Log all detection events to game log for transparency |
+| **Debug Alerts** | Show alerts for all probed keys, even unchanged ones |
+| **Debug Command** | Enable the `/opsec` debug command. Off by default.
 
 #### Accounts Tab
 
@@ -102,13 +104,13 @@ If settings are changed while connected to a server it is recommended to reconne
 
 ### Debug Commands
 
-Use `/opsec` in-game to access debug information:
+The `/opsec` command is **off by default** (enable it in Misc → Debug Command). When enabled, use `/opsec` in-game to access debug information:
 
 | Command | Description |
 |---------|-------------|
 | `/opsec` | Show available commands |
 | `/opsec info` | Show overview of all tracked mods |
-| `/opsec info <mod>` | Show details for a specific mod (translation keys, key-bind key, channels, known packs, shaders) |
+| `/opsec info <mod>` | Show details for a specific mod (translation keys, keybinds, channels, known packs, shaders) |
 | `/opsec channels` | Show all tracked network channels with whitelist status |
 
 ### Understanding Alerts

@@ -389,10 +389,18 @@ public class OpsecConfigScreen extends Screen {
                 .create(0, 0, 230, 20, OpsecLang.component(OpsecStrings.OPTION_LOG_DETECTIONS),
                 (button, value) -> { settings.setLogDetections(value); config.save(); }));
 
+        // Debug Section
+        widgets.add(createSectionHeader(OpsecLang.tr(OpsecStrings.SECTION_DEBUG)));
+
         widgets.add(cycleBuilder(COLORED_BOOL_TO_TEXT, List.of(Boolean.TRUE, Boolean.FALSE), settings.isDebugAlerts())
                 .withTooltip(v -> Tooltip.create(OpsecLang.component(OpsecStrings.TOOLTIP_DEBUG_ALERTS)))
                 .create(0, 0, 230, 20, OpsecLang.component(OpsecStrings.OPTION_DEBUG_ALERTS),
                 (button, value) -> { settings.setDebugAlerts(value); config.save(); }));
+
+        widgets.add(cycleBuilder(COLORED_BOOL_TO_TEXT, List.of(Boolean.TRUE, Boolean.FALSE), settings.isDebugCommand())
+                .withTooltip(v -> Tooltip.create(OpsecLang.component(OpsecStrings.TOOLTIP_DEBUG_COMMAND)))
+                .create(0, 0, 230, 20, OpsecLang.component(OpsecStrings.OPTION_DEBUG_COMMAND),
+                (button, value) -> { settings.setDebugCommand(value); config.save(); }));
 
         return new WidgetTab(OpsecLang.component(OpsecStrings.TAB_MISC), widgets);
     }

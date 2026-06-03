@@ -98,6 +98,11 @@ public class PrivacyLogger {
         toast(type, title, message);
     }
 
+    /** Cooldown-gated toast (title only), keyed by {@code cooldownKey} like the other exploit toasts. */
+    public static void toastWithCooldown(AlertType type, String title, String cooldownKey, long cooldownMs) {
+        toastWithCooldown(type, title, null, cooldownKey, cooldownMs);
+    }
+
     private static void showToast(AlertType type, String title, String message) {
         try {
             Minecraft client = Minecraft.getInstance();

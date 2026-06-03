@@ -99,6 +99,8 @@ public class ModRegistry {
         private final Set<String> translationKeys =
             ConcurrentHashMap.newKeySet();
         private final Set<String> keybinds = ConcurrentHashMap.newKeySet();
+        /** Namespace-qualified shaders the mod ships, e.g. "meteor-client:shaders/blur.vert". */
+        private final Set<String> shaders = ConcurrentHashMap.newKeySet();
         //? if >=1.21.11 {
         /*private final Set<Identifier> channels = ConcurrentHashMap.newKeySet();*/
         //?} else {
@@ -144,11 +146,19 @@ public class ModRegistry {
             return !channels.isEmpty();
         }
 
+        public boolean hasShaders() {
+            return !shaders.isEmpty();
+        }
+
+        public Set<String> getShaders() {
+            return Collections.unmodifiableSet(shaders);
+        }
+
         /**
-         * Check if this mod has any trackable content (translation keys, channels, or keybinds).
+         * Check if this mod has any trackable content (translation keys, channels, keybinds, or shaders).
          */
         public boolean hasTrackableContent() {
-            return hasTranslationKeys() || hasChannels() || hasKeybinds();
+            return hasTranslationKeys() || hasChannels() || hasKeybinds() || hasShaders();
         }
     }
 
@@ -398,20 +408,21 @@ public class ModRegistry {
     }
 
     /** Trackable-content counts including JIJ descendants — meta jars (e.g. fabric-api) need this to register as "has content". */
-    public record ContentCounts(int translationKeys, int keybinds, int channels, int knownPacks) {
+    public record ContentCounts(int translationKeys, int keybinds, int channels, int knownPacks, int shaders) {
         public boolean isEmpty() {
-            return translationKeys == 0 && keybinds == 0 && channels == 0 && knownPacks == 0;
+            return translationKeys == 0 && keybinds == 0 && channels == 0 && knownPacks == 0 && shaders == 0;
         }
     }
 
     public static ContentCounts aggregateContent(String modId) {
-        if (modId == null) return new ContentCounts(0, 0, 0, 0);
-        int tk = 0, kb = 0, ch = 0;
+        if (modId == null) return new ContentCounts(0, 0, 0, 0, 0);
+        int tk = 0, kb = 0, ch = 0, sh = 0;
         ModInfo info = registry.get(modId);
         if (info != null) {
             tk = info.getTranslationKeys().size();
             kb = info.getKeybinds().size();
             ch = info.getChannels().size();
+            sh = info.getShaders().size();
         }
         int kp = getKnownPackStrings(modId).size();
         for (ModContainer child : getContainedMods(modId)) {
@@ -420,8 +431,9 @@ public class ModRegistry {
             kb += sub.keybinds();
             ch += sub.channels();
             kp += sub.knownPacks();
+            sh += sub.shaders();
         }
-        return new ContentCounts(tk, kb, ch, kp);
+        return new ContentCounts(tk, kb, ch, kp, sh);
     }
 
     /** Does this mod or any JIJ descendant have any trackable content? */
@@ -445,6 +457,12 @@ public class ModRegistry {
     public static List<String> aggregateAllChannelIds(String modId) {
         List<String> out = new java.util.ArrayList<>();
         aggregateRecursive(modId, info -> info.getChannels().forEach(c -> out.add(c.toString())));
+        return out;
+    }
+
+    public static List<String> aggregateAllShaderPaths(String modId) {
+        List<String> out = new java.util.ArrayList<>();
+        aggregateRecursive(modId, info -> out.addAll(info.getShaders()));
         return out;
     }
 
@@ -676,6 +694,54 @@ public class ModRegistry {
         String modId = resolveModForKnownPack(namespace, id, version);
         if (modId == null) return false;
         SpoofSettings settings = OpsecConfig.getInstance().getSettings();
+        return isModEffectivelyWhitelisted(modId, settings);
+    }
+
+    /** namespace → installed modId that ships {@code assets/<ns>/shaders/}. {@code ""} means none. Per-session immutable, lazily filled. */
+    private static final Map<String, String> shaderOwnerByNamespace = new ConcurrentHashMap<>();
+
+    /**
+     * The installed mod whose jar ships {@code assets/<namespace>/shaders/}, or {@code null} if none.
+     * Resolves by asset ownership (not channel/keybind heuristics), so a non-null result also
+     * guarantees a jar shader exists for the strip to fall through to. Cached per namespace.
+     */
+    public static String resolveShaderOwnerMod(String namespace) {
+        if (namespace == null) return null;
+        String owner = shaderOwnerByNamespace.computeIfAbsent(namespace, ns -> {
+            String rel = "assets/" + ns + "/shaders";
+            for (ModContainer mod : FabricLoader.getInstance().getAllMods()) {
+                String id = mod.getMetadata().getId();
+                if (PLATFORM_MODS.contains(id)) continue;
+                for (java.nio.file.Path root : mod.getRootPaths()) {
+                    if (java.nio.file.Files.exists(root.resolve(rel))) return id;
+                }
+            }
+            return "";
+        });
+        return owner.isEmpty() ? null : owner;
+    }
+
+    /** Record a shader a mod ships under {@code assets/<namespace>/shaders/}; seeds the owner cache. */
+    public static void recordShader(String modId, String namespace, String shaderPath) {
+        if (modId == null || namespace == null || shaderPath == null) return;
+        getOrCreateModInfo(modId).shaders.add(namespace + ":" + shaderPath);
+        shaderOwnerByNamespace.putIfAbsent(namespace, modId);
+    }
+
+    /**
+     * Whether a server pack may override {@code assets/<namespace>/shaders/*}. Stripped only when an
+     * installed mod owns those shaders and isn't whitelisted, so OpSec acts only on a mod the client
+     * has. Vanilla allowed; whitelist-disabled strips owned shaders (mirrors {@link #isWhitelistedChannel}).
+     */
+    public static boolean isServerPackShaderAllowed(String namespace) {
+        if (namespace == null) return true;
+        if (VANILLA_PACK_NAMESPACE.equals(namespace)) return true;
+
+        String modId = resolveShaderOwnerMod(namespace);
+        if (modId == null) return true; // client has no mod with shaders here → nothing to override
+
+        SpoofSettings settings = OpsecConfig.getInstance().getSettings();
+        if (!settings.isWhitelistEnabled()) return false; // installed mod, whitelist off → strip
         return isModEffectivelyWhitelisted(modId, settings);
     }
 
@@ -1011,5 +1077,11 @@ public class ModRegistry {
 
     public static int getKnownPackCount() {
         return knownPackToModId.size();
+    }
+
+    public static int getShaderCount() {
+        int count = 0;
+        for (ModInfo info : registry.values()) count += info.shaders.size();
+        return count;
     }
 }

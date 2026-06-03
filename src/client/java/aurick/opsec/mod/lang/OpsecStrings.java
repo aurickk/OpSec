@@ -16,6 +16,21 @@ public final class OpsecStrings {
     public static final String TAB_WHITELIST = "opsec.tab.whitelist";
     public static final String TAB_MISC = "opsec.tab.misc";
 
+    // Settings-menu section headers (values carry their own §-formatting).
+    public static final String SECTION_CLIENT_BRAND = "opsec.section.clientBrand";
+    public static final String SECTION_RESOURCE_PACK = "opsec.section.resourcePack";
+    public static final String SECTION_KEY_RESOLUTION = "opsec.section.keyResolution";
+    public static final String SECTION_PRIVACY = "opsec.section.privacy";
+    public static final String SECTION_ALERTS = "opsec.section.alerts";
+    public static final String SECTION_ACCOUNTS = "opsec.section.accounts";
+    public static final String SECTION_SAVED_ACCOUNTS = "opsec.section.savedAccounts";
+    public static final String SECTION_ADD_ACCOUNT = "opsec.section.addAccount";
+    public static final String SECTION_MOD_WHITELIST = "opsec.section.modWhitelist";
+    public static final String SECTION_INSTALLED_MODS = "opsec.section.installedMods";
+    public static final String SECTION_RESTART_WARNING = "opsec.section.restartWarning";
+    public static final String ACCOUNT_CURRENT = "opsec.account.current";
+    public static final String WHITELIST_SUFFIX_CHANNELS = "opsec.whitelist.suffix.channels";
+
     public static final String OPTION_SPOOF_AS_VANILLA = "opsec.option.spoofAsVanilla";
     public static final String OPTION_SPOOF_AS_VANILLA_TOOLTIP = "opsec.option.spoofAsVanilla.tooltip";
 
@@ -39,6 +54,7 @@ public final class OpsecStrings {
 
     public static final String OPTION_ISOLATE_PACK_CACHE = "opsec.option.isolatePackCache";
     public static final String OPTION_BLOCK_LOCAL_PACK_URLS = "opsec.option.blockLocalPackUrls";
+    public static final String OPTION_STRIP_MOD_SHADERS = "opsec.option.stripModShaders";
     public static final String OPTION_CLEAR_CACHE = "opsec.option.clearCache";
     public static final String OPTION_KEY_RESOLUTION_SPOOFING = "opsec.option.keyResolutionSpoofing";
     public static final String OPTION_FAKE_DEFAULT_KEYBINDS = "opsec.option.fakeDefaultKeybinds";
@@ -104,6 +120,9 @@ public final class OpsecStrings {
     // Chat alerts + toast titles (user-visible runtime messages)
     public static final String ALERT_TRACKPACK_PATTERN = "opsec.alert.trackpack.pattern";
     public static final String TOAST_TRACKPACK = "opsec.toast.trackpack";
+    public static final String ALERT_SHADER_STRIP = "opsec.alert.shaderStrip";
+    public static final String ALERT_SHADER_STRIP_MULTI = "opsec.alert.shaderStrip.multi";
+    public static final String TOAST_SHADER_STRIP = "opsec.toast.shaderStrip";
     public static final String ALERT_PORTSCAN_BLOCKED = "opsec.alert.portscan.blocked";
     public static final String ALERT_PORTSCAN_DETECTED = "opsec.alert.portscan.detected";
     public static final String TOAST_PORTSCAN = "opsec.toast.portscan";
@@ -127,6 +146,7 @@ public final class OpsecStrings {
     public static final String COMMAND_OVERVIEW_SERVER_KEYS = "opsec.command.overview.serverKeys";
     public static final String COMMAND_OVERVIEW_TOTAL_KEYS = "opsec.command.overview.totalKeys";
     public static final String COMMAND_OVERVIEW_TOTAL_KEYBINDS = "opsec.command.overview.totalKeybinds";
+    public static final String COMMAND_OVERVIEW_TOTAL_SHADERS = "opsec.command.overview.totalShaders";
     public static final String COMMAND_OVERVIEW_TOTAL_KNOWN_PACKS = "opsec.command.overview.totalKnownPacks";
     public static final String COMMAND_OVERVIEW_MODS_HEADER = "opsec.command.overview.modsHeader";
     public static final String COMMAND_OVERVIEW_NO_MODS = "opsec.command.overview.noMods";
@@ -141,6 +161,7 @@ public final class OpsecStrings {
     public static final String COMMAND_INFO_MORE = "opsec.command.info.more";
     public static final String COMMAND_INFO_KEYBINDS = "opsec.command.info.keybinds";
     public static final String COMMAND_INFO_CHANNELS = "opsec.command.info.channels";
+    public static final String COMMAND_INFO_SHADERS = "opsec.command.info.shaders";
     public static final String COMMAND_INFO_KNOWN_PACKS = "opsec.command.info.knownPacks";
     public static final String COMMAND_INFO_JIJ = "opsec.command.info.jij";
     public static final String WHITELIST_REQUIRING_FALLBACK = "opsec.whitelist.requiringFallback";
@@ -161,6 +182,7 @@ public final class OpsecStrings {
     public static final String COMMAND_MODENTRY_KEYS = "opsec.command.modEntry.keys";
     public static final String COMMAND_MODENTRY_KEYBINDS = "opsec.command.modEntry.keybinds";
     public static final String COMMAND_MODENTRY_CHANNELS = "opsec.command.modEntry.channels";
+    public static final String COMMAND_MODENTRY_SHADERS = "opsec.command.modEntry.shaders";
     public static final String COMMAND_MODENTRY_KNOWN_PACKS = "opsec.command.modEntry.knownPacks";
 
     // AddAccountScreen (session token)
@@ -197,6 +219,7 @@ public final class OpsecStrings {
 
     public static final String TOOLTIP_ISOLATE_PACK_CACHE = "opsec.option.isolatePackCache.tooltip";
     public static final String TOOLTIP_BLOCK_LOCAL_PACK_URLS = "opsec.option.blockLocalPackUrls.tooltip";
+    public static final String TOOLTIP_STRIP_MOD_SHADERS = "opsec.option.stripModShaders.tooltip";
     public static final String TOOLTIP_CLEAR_CACHE = "opsec.option.clearCache.tooltip";
     public static final String TOOLTIP_KEY_RESOLUTION_SPOOFING = "opsec.option.keyResolutionSpoofing.tooltip";
     public static final String TOOLTIP_FAKE_DEFAULT_KEYBINDS = "opsec.option.fakeDefaultKeybinds.tooltip";

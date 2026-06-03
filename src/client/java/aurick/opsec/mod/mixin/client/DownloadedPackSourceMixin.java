@@ -33,7 +33,7 @@ public abstract class DownloadedPackSourceMixin {
 
         FilePackResources.FileResourcesSupplier real = original.call(file);
 
-        if (!OpsecConfig.getInstance().shouldStripPack()) return real;
+        if (!OpsecConfig.getInstance().shouldWrapServerPacks()) return real;
 
         final java.util.UUID packId = idAndPath.id();
         if (!PackStripHandler.isWrapped(packId)) return real;
@@ -85,7 +85,7 @@ public abstract class DownloadedPackSourceMixin {
 
         FilePackResources.FileResourcesSupplier real = original.call(file, isBuiltin);
 
-        if (!OpsecConfig.getInstance().shouldStripPack()) return real;
+        if (!OpsecConfig.getInstance().shouldWrapServerPacks()) return real;
 
         final java.util.UUID packId = idAndPath.id();
         if (!PackStripHandler.isWrapped(packId)) return real;

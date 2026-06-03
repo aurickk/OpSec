@@ -313,6 +313,16 @@ public class OpsecConfig {
         return !EXPLOIT_PREVENTER_LOADED && settings.isBlockLocalPackUrls();
     }
 
+    /** Per-mod shader strip. Not EP-gated — EP lacks this defense, so OpSec keeps it active under EP. */
+    public boolean shouldStripModShaders() {
+        return settings.isStripModShaders();
+    }
+
+    /** True when any server-pack wrapping feature is active (whole-pack strip or per-mod shader strip). */
+    public boolean shouldWrapServerPacks() {
+        return shouldStripPack() || shouldStripModShaders();
+    }
+
     // Key resolution protection
     public boolean isTranslationProtectionEnabled() {
         return (

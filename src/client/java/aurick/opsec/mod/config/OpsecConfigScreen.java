@@ -207,7 +207,7 @@ public class OpsecConfigScreen extends Screen {
         List<AbstractWidget> widgets = new ArrayList<>();
 
         // Client Brand Section
-        widgets.add(createSectionHeader("\u00A7f\u00A7lClient Brand"));
+        widgets.add(createSectionHeader(OpsecLang.tr(OpsecStrings.SECTION_CLIENT_BRAND)));
 
         if (OpsecConfig.EXPLOIT_PREVENTER_LOADED) {
             widgets.add(createSectionHeader(OpsecLang.tr(OpsecStrings.EP_MANAGED_HEADER)));
@@ -226,7 +226,7 @@ public class OpsecConfigScreen extends Screen {
         }
 
         // Resource Pack Protection Section
-        widgets.add(createSectionHeader("\u00A7f\u00A7lResource Pack Protection"));
+        widgets.add(createSectionHeader(OpsecLang.tr(OpsecStrings.SECTION_RESOURCE_PACK)));
 
         if (OpsecConfig.EXPLOIT_PREVENTER_LOADED) {
             widgets.add(createSectionHeader(OpsecLang.tr(OpsecStrings.EP_MANAGED_HEADER)));
@@ -272,6 +272,12 @@ public class OpsecConfigScreen extends Screen {
                     }));
         }
 
+        // Strip mod shader overrides — interactive even under EP (EP does not cover this attack).
+        widgets.add(cycleBuilder(COLORED_BOOL_TO_TEXT, List.of(Boolean.TRUE, Boolean.FALSE), settings.isStripModShaders())
+            .withTooltip(v -> Tooltip.create(OpsecLang.component(OpsecStrings.TOOLTIP_STRIP_MOD_SHADERS)))
+                .create(0, 0, 230, 20, OpsecLang.component(OpsecStrings.OPTION_STRIP_MOD_SHADERS),
+                (button, value) -> { settings.setStripModShaders(value); config.save(); }));
+
         widgets.add(Button.builder(OpsecLang.component(OpsecStrings.OPTION_CLEAR_CACHE), button -> {
                 ResourcePackGuard.clearAllCaches();
             }).size(230, 20)
@@ -279,7 +285,7 @@ public class OpsecConfigScreen extends Screen {
           .build());
 
         // Key Resolution Protection Section
-        widgets.add(createSectionHeader("\u00A7f\u00A7lKey Resolution Protection"));
+        widgets.add(createSectionHeader(OpsecLang.tr(OpsecStrings.SECTION_KEY_RESOLUTION)));
 
         if (OpsecConfig.EXPLOIT_PREVENTER_LOADED) {
             widgets.add(createSectionHeader(OpsecLang.tr(OpsecStrings.EP_MANAGED_HEADER)));
@@ -316,14 +322,14 @@ public class OpsecConfigScreen extends Screen {
 
                 // Show warning only when setting differs from what was applied at startup
                 if (MeteorMixinCanceller.needsRestart(settings.isMeteorFix())) {
-                    widgets.add(createSectionHeader("\u00A7e\u26A0 Requires game restart to take effect"));
+                    widgets.add(createSectionHeader(OpsecLang.tr(OpsecStrings.SECTION_RESTART_WARNING)));
                 }
                 //?}
             }
         }
 
         // Privacy & Security Section
-        widgets.add(createSectionHeader("\u00A7f\u00A7lPrivacy & Security"));
+        widgets.add(createSectionHeader(OpsecLang.tr(OpsecStrings.SECTION_PRIVACY)));
 
         // Tracks the "Managed by X" header most recently emitted so adjacent managed
         // controls sharing a manager don't repeat it; null once a real control breaks the run.
@@ -366,7 +372,7 @@ public class OpsecConfigScreen extends Screen {
         List<AbstractWidget> widgets = new ArrayList<>();
         
         // Alerts & Logging Section
-        widgets.add(createSectionHeader("\u00A7f\u00A7lAlerts & Logging"));
+        widgets.add(createSectionHeader(OpsecLang.tr(OpsecStrings.SECTION_ALERTS)));
         
         widgets.add(cycleBuilder(COLORED_BOOL_TO_TEXT, List.of(Boolean.TRUE, Boolean.FALSE), settings.isShowAlerts())
                 .withTooltip(v -> Tooltip.create(OpsecLang.component(OpsecStrings.TOOLTIP_SHOW_ALERTS)))
@@ -396,15 +402,15 @@ public class OpsecConfigScreen extends Screen {
         AccountManager accountManager = AccountManager.getInstance();
         
         // Section header
-        widgets.add(createSectionHeader("\u00A7f\u00A7lAccounts"));
+        widgets.add(createSectionHeader(OpsecLang.tr(OpsecStrings.SECTION_ACCOUNTS)));
         
         // Current account info
         String currentUser = Minecraft.getInstance().getUser().getName();
-        widgets.add(createSectionHeader("\u00A77Current: " + currentUser));
+        widgets.add(createSectionHeader(OpsecLang.tr(OpsecStrings.ACCOUNT_CURRENT, currentUser)));
         
         // List saved accounts
         if (!accountManager.getAccounts().isEmpty()) {
-            widgets.add(createSectionHeader("\u00A7f\u00A7lSaved Accounts"));
+            widgets.add(createSectionHeader(OpsecLang.tr(OpsecStrings.SECTION_SAVED_ACCOUNTS)));
             
             for (Account account : accountManager.getAccounts()) {
                 String displayName = account.getUsername() + (account.isCracked() ? " \u00A77(offline)" : "");
@@ -546,7 +552,7 @@ public class OpsecConfigScreen extends Screen {
         }
         
         // Add account section
-        widgets.add(createSectionHeader("\u00A7f\u00A7lAdd Account"));
+        widgets.add(createSectionHeader(OpsecLang.tr(OpsecStrings.SECTION_ADD_ACCOUNT)));
         
         // Add button to open add account dialog
         widgets.add(Button.builder(OpsecLang.component(OpsecStrings.ACCOUNT_ADD_SESSION), button -> {
@@ -1014,7 +1020,7 @@ public class OpsecConfigScreen extends Screen {
         List<AbstractWidget> widgets = new ArrayList<>();
 
         // Section header
-        widgets.add(createSectionHeader("\u00A7f\u00A7lMod Whitelist"));
+        widgets.add(createSectionHeader(OpsecLang.tr(OpsecStrings.SECTION_MOD_WHITELIST)));
 
         if (OpsecConfig.EXPLOIT_PREVENTER_LOADED) {
             widgets.add(createSectionHeader(OpsecLang.tr(OpsecStrings.EP_MANAGED_HEADER)));
@@ -1058,14 +1064,14 @@ public class OpsecConfigScreen extends Screen {
                     ModRegistry.ModInfo info = ModRegistry.getModInfo(modId);
                     boolean hasChannels = info != null && info.hasChannels();
                     if (hasChannels) {
-                        widgets.add(createSectionHeader("\u00A7a" + modName + " \u00A77(" + info.getChannels().size() + " channels)"));
+                        widgets.add(createSectionHeader("\u00A7a" + modName + OpsecLang.tr(OpsecStrings.WHITELIST_SUFFIX_CHANNELS, info.getChannels().size())));
                     } else if (ModRegistry.isInDependencyClosure(modId)) {
                         widgets.add(createSectionHeader("\u00A7a" + modName + OpsecLang.tr(OpsecStrings.WHITELIST_SUFFIX_REQUIRED)));
                     }
                 }
             } else if (settings.getWhitelistMode() == SpoofSettings.WhitelistMode.CUSTOM) {
                 // ON mode: existing manual toggle UI
-                widgets.add(createSectionHeader("\u00A7f\u00A7lInstalled Mods"));
+                widgets.add(createSectionHeader(OpsecLang.tr(OpsecStrings.SECTION_INSTALLED_MODS)));
 
                 List<ModContainer> whitelistableMods = getWhitelistableMods();
                 widgets.add(new ToggleAllRowWidget(
@@ -1118,68 +1124,15 @@ public class OpsecConfigScreen extends Screen {
         return new WidgetTab(OpsecLang.component(OpsecStrings.TAB_WHITELIST), widgets);
     }
     
-    /**
-     * Get mods that can be whitelisted.
-     * Only shows mods that have registered translation keys, network channels, or keybinds.
-     * This filters out libraries and internal mods that don't expose content.
-     */
+    /** Every installed top-level mod (platform mods + JIJ children excluded), listed as-is so any mod is whitelistable. */
     private static List<ModContainer> getWhitelistableMods() {
-        // On-demand scan to ensure all mods with language files are registered
-        // This catches mods that the mixin couldn't detect
-        ensureModsScanned();
-        
-        List<ModContainer> result = FabricLoader.getInstance().getAllMods().stream()
-            .filter(mod -> {
-                String id = mod.getMetadata().getId();
-                if (ModRegistry.PLATFORM_MODS.contains(id)) return false;
-                // Only top-level installed jars; JIJ children show up via their host's aggregate.
-                if (mod.getContainingMod().isPresent()) return false;
-                return ModRegistry.hasTrackableContentIncludingJij(id);
-            })
+        return FabricLoader.getInstance().getAllMods().stream()
+            .filter(mod -> !ModRegistry.PLATFORM_MODS.contains(mod.getMetadata().getId())
+                    && mod.getContainingMod().isEmpty())
             .sorted(Comparator.comparing(mod -> mod.getMetadata().getName(), String.CASE_INSENSITIVE_ORDER))
             .toList();
-        
-        Opsec.LOGGER.debug("[OpSec] getWhitelistableMods returning {} mods", result.size());
-        return result;
     }
-    
-    /**
-     * Ensure all mods with language files are registered in ModRegistry.
-     * This is a fallback for when the mixin doesn't work (e.g., method signature changes).
-     */
-    private static void ensureModsScanned() {
-        for (ModContainer mod : FabricLoader.getInstance().getAllMods()) {
-            String modId = mod.getMetadata().getId();
 
-            if (ModRegistry.PLATFORM_MODS.contains(modId)) continue;
-            // Skip JIJ children: their lang already loads via their host's mixin.
-            if (mod.getContainingMod().isPresent()) continue;
-            
-            // Check if this mod already has translation keys tracked
-            ModRegistry.ModInfo existingInfo = ModRegistry.getModInfo(modId);
-            if (existingInfo != null && existingInfo.hasTranslationKeys()) {
-                continue; // Already tracked
-            }
-            
-            // Check if this mod has a language file
-            for (java.nio.file.Path rootPath : mod.getRootPaths()) {
-                java.nio.file.Path langFile = rootPath.resolve("assets/" + modId + "/lang/en_us.json");
-                if (java.nio.file.Files.exists(langFile)) {
-                    try (java.io.InputStreamReader reader = new java.io.InputStreamReader(
-                            java.nio.file.Files.newInputStream(langFile))) {
-                        com.google.gson.JsonObject json = com.google.gson.JsonParser.parseReader(reader).getAsJsonObject();
-                        for (String key : json.keySet()) {
-                            ModRegistry.recordTranslationKey(modId, key);
-                        }
-                    } catch (Exception e) {
-                        // Silently ignore - not critical
-                    }
-                    break;
-                }
-            }
-        }
-    }
-    
     private CycleButton<Boolean> createEPManagedToggle(Component label) {
         return createManagedToggle(label, OpsecLang.component(OpsecStrings.EP_MANAGED_TOOLTIP));
     }

@@ -26,6 +26,7 @@
 - **[Isolate Pack Cache](#isolate-pack-cache)** - Isolate resource packs per-account to prevent tracking
 - **[Block Local URLs](#block-local-urls)** - Block resource pack redirects to local/private addresses
 - **[Bypass Server Pack Requirement](#bypass-server-pack-requirement)** - Let the user toggle required server resource pack(s) like client packs 
+- **[Strip Mod Shader Overrides](#strip-mod-shader-overrides)** - Strip server resource pack shader overrides targeting non-whitelisted mods
 - **[Key Resolution Protection](#key-resolution-protection)** - Protect against key resolution mod detection in any server packet
 - **[Meteor Fix](#meteor-fix)** - Disable Meteor Client's flawed key resolution protection
 - **[Mod Whitelist](#mod-whitelist)** - Automatically or manually exempt mods from protection
@@ -66,6 +67,7 @@ If settings are changed while connected to a server it is recommended to reconne
 | **Isolate Pack Cache** | Enable/disable [cache isolation](#isolate-pack-cache) |
 | **Block Local Pack URLs** | Enable/disable [local URL blocking](#block-local-urls) |
 | **Bypass Server Pack Requirement** | Configure [server pack bypass](#bypass-server-pack-requirement) behavior:<br/>• **MANUAL** (default): Default vanilla behavior on push. You can still toggle any server pack.<br/>• **ASK**: Server resource pack not applied but with consent screen to ask if the pack(s) should be applied<br/>• **ALWAYS ON**: Server resource pack not applied by default. You can still toggle any server pack |
+| **Strip Mod Shader Overrides** | Enable/disable [shader override stripping](#strip-mod-shader-overrides) |
 | **Clear Cache** | Delete all cached server resource packs |
 | **Key Resolution Spoofing** | Enable/disable [key resolution protection](#key-resolution-protection) |
 | **Fake Default Keybinds** | Return default vanilla keybind values instead of actual bindings |
@@ -106,7 +108,7 @@ Use `/opsec` in-game to access debug information:
 |---------|-------------|
 | `/opsec` | Show available commands |
 | `/opsec info` | Show overview of all tracked mods |
-| `/opsec info <mod>` | Show details for a specific mod (translation keys, key-bind key, channels, known packs) |
+| `/opsec info <mod>` | Show details for a specific mod (translation keys, key-bind key, channels, known packs, shaders) |
 | `/opsec channels` | Show all tracked network channels with whitelist status |
 
 ### Understanding Alerts
@@ -164,6 +166,16 @@ With Opsec installed, server resource pack(s) appears as a normal user-toggleabl
 - **ASK**: Required packs are stripped on push and a consent overlay prompts `[Continue]` / `[Load Pack For Real]`.
 - **ALWAYS ON**: All server packs are stripped on push. No overlay. You can still toggle them back.
 
+
+---
+
+### Strip Mod Shader Overrides
+
+Some mods (e.g. [Meteor Client](https://github.com/MeteorDevelopment/meteor-client)) render their GUI with their own shaders loaded through Minecraft's resource manager. A forced server resource pack can overide the mod's own files to ship shaders under that mod to either blank the mod's GUI, crash the client with malformed shaders, or GPU DoS, which also fingerprints that the mod is installed.
+
+OpSec strips shader overrides under `assets/<mod>/shaders/` from server packs for any installed mod that isn't whitelisted, so the resource manager falls back to the mod's own bundled shaders. The rest of the pack still loads, so this keeps working even when a server forces the pack to make [Bypass Server Pack Requirement](#bypass-server-pack-requirement) unusable.
+
+Vanilla (`minecraft`) shaders are never touched, and whitelisting a mod lets the server's shader override through.
 
 ---
 
@@ -236,7 +248,7 @@ For users that prefers [ExploitPreventer](https://github.com/NikOverflow/Exploit
 
 These settings are grayed out in the config screen but your saved preferences are preserved. If you remove EP later, they restore automatically.
 
-Features that don't overlap remain fully functional: alerts, chat signing, account manager, telemetry blocking, and [Meteor Fix](#meteor-fix).
+Features that don't overlap remain fully functional: alerts, chat signing, account manager, telemetry blocking, [Strip Mod Shader Overrides](#strip-mod-shader-overrides), and [Meteor Fix](#meteor-fix).
 
 ---
 
@@ -266,7 +278,7 @@ OpSec intercepts the outgoing `ServerboundSelectKnownPacks` response and strips 
 
 ### Mod Whitelist
 
-Some mods require server communication to function properly (e.g., VoiceChat, Xaero's Minimap quick travel). The whitelist allows you to exempt specific mods from channel spoofing, key resolution protection, and known-pack filtering.
+Some mods require server communication to function properly (e.g., VoiceChat, Xaero's Minimap quick travel). The whitelist allows you to exempt specific mods from channel spoofing, key resolution protection, known-pack filtering, and shader override stripping.
 
 <img width="853" height="478" alt="whitelist settings menu" src="https://github.com/user-attachments/assets/6ae423de-dd98-47c1-a617-f6df747c9293" />
 
@@ -278,7 +290,7 @@ Some mods require server communication to function properly (e.g., VoiceChat, Xa
 When the whitelist is active (AUTO or CUSTOM), [Spoof as Vanilla](#spoof-as-vanilla) will be disabled as exposing Fabric mods would need the client brand to match accordingly.
 
 > [!NOTE]
-> Only mods that register network channels, translatable keys, keybind keys, or known-pack identifiers are shown in the whitelist.
+> CUSTOM mode lists every installed mod so any mod can be whitelisted; AUTO mode only shows mods that register network channels.
 
 ---
 

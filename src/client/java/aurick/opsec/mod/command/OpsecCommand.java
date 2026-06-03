@@ -144,6 +144,7 @@ public class OpsecCommand {
         source.sendFeedback(info(OpsecLang.tr(OpsecStrings.COMMAND_OVERVIEW_SERVER_KEYS, ModRegistry.getServerPackKeyCount())));
         source.sendFeedback(info(OpsecLang.tr(OpsecStrings.COMMAND_OVERVIEW_TOTAL_KEYS, ModRegistry.getTranslationKeyCount())));
         source.sendFeedback(info(OpsecLang.tr(OpsecStrings.COMMAND_OVERVIEW_TOTAL_KEYBINDS, ModRegistry.getKeybindCount())));
+        source.sendFeedback(info(OpsecLang.tr(OpsecStrings.COMMAND_OVERVIEW_TOTAL_SHADERS, ModRegistry.getShaderCount())));
         // Known-packs total is only meaningful where the leak exists. Suppressed on hook-absent clients (same gate as /opsec info).
         if (ModRegistry.isKnownPacksHookPresent()) {
             source.sendFeedback(info(OpsecLang.tr(OpsecStrings.COMMAND_OVERVIEW_TOTAL_KNOWN_PACKS, ModRegistry.getKnownPackCount())));
@@ -190,6 +191,8 @@ public class OpsecCommand {
             ModRegistry.aggregateAllKeybinds(modId), 20);
         renderContentSection(source, OpsecStrings.COMMAND_INFO_CHANNELS,
             ModRegistry.aggregateAllChannelIds(modId), 20);
+        renderContentSection(source, OpsecStrings.COMMAND_INFO_SHADERS,
+            ModRegistry.aggregateAllShaderPaths(modId), 20);
 
         // Suppressed when the Fabric hook is absent — the vector is dead there.
         if (ModRegistry.isKnownPacksHookPresent()) {
@@ -433,6 +436,9 @@ public class OpsecCommand {
         }
         if (counts.knownPacks() > 0) {
             details.add(OpsecLang.tr(OpsecStrings.COMMAND_MODENTRY_KNOWN_PACKS, counts.knownPacks()));
+        }
+        if (counts.shaders() > 0) {
+            details.add(OpsecLang.tr(OpsecStrings.COMMAND_MODENTRY_SHADERS, counts.shaders()));
         }
 
         if (!details.isEmpty()) {

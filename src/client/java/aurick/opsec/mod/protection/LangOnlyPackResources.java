@@ -1,5 +1,7 @@
 package aurick.opsec.mod.protection;
 
+import aurick.opsec.mod.config.OpsecConfig;
+import aurick.opsec.mod.tracking.ModRegistry;
 //? if >=1.20.5 {
 import net.minecraft.server.packs.PackLocationInfo;
 //?}
@@ -56,12 +58,14 @@ public final class LangOnlyPackResources implements PackResources {
     /*@Override
     public IoSupplier<InputStream> getResource(PackType type, Identifier location) {
         if (filterActive() && !isLangResource(type, location.getPath())) return null;
+        if (shouldStripShader(type, location.getNamespace(), location.getPath())) return null;
         return delegate.getResource(type, location);
     }
     *///?} else {
     @Override
     public IoSupplier<InputStream> getResource(PackType type, ResourceLocation location) {
         if (filterActive() && !isLangResource(type, location.getPath())) return null;
+        if (shouldStripShader(type, location.getNamespace(), location.getPath())) return null;
         return delegate.getResource(type, location);
     }
     //?}
@@ -69,6 +73,13 @@ public final class LangOnlyPackResources implements PackResources {
     @Override
     public void listResources(PackType type, String namespace, String path, ResourceOutput output) {
         if (filterActive() && !isLangPath(type, path)) return;
+        if (stripsShaderNamespace(type, namespace)) {
+            // Drop only this namespace's shader entries; pass everything else through.
+            delegate.listResources(type, namespace, path, (loc, supplier) -> {
+                if (!loc.getPath().startsWith("shaders/")) output.accept(loc, supplier);
+            });
+            return;
+        }
         delegate.listResources(type, namespace, path, output);
     }
 
@@ -122,5 +133,21 @@ public final class LangOnlyPackResources implements PackResources {
     private static boolean isLangPath(PackType type, String path) {
         return type == PackType.CLIENT_RESOURCES
                 && (path.equals("lang") || path.startsWith("lang/"));
+    }
+
+    // Returning null falls the resource manager through to the mod's own jar shader (a restore,
+    // not a break). Runs independently of filterActive, so it strips even on a loaded/forced pack.
+    private boolean shouldStripShader(PackType type, String namespace, String path) {
+        if (!path.startsWith("shaders/")) return false;
+        if (!stripsShaderNamespace(type, namespace)) return false;
+        ShaderStripTracker.onStripped(namespace, path);
+        return true;
+    }
+
+    private boolean stripsShaderNamespace(PackType type, String namespace) {
+        return type == PackType.CLIENT_RESOURCES
+                && !"minecraft".equals(namespace)
+                && OpsecConfig.getInstance().shouldStripModShaders()
+                && !ModRegistry.isServerPackShaderAllowed(namespace);
     }
 }

@@ -73,7 +73,9 @@ public class SpoofSettings {
     // Resource pack protection
     private boolean isolatePackCache = true;
     private boolean blockLocalPackUrls = true;
-    
+    // Strip server-pack shader overrides of non-whitelisted mods (defeats GPU-DoS / GUI-crash shaders).
+    private boolean stripModShaders = true;
+
     // Key resolution protection
     private boolean translationProtection = true;
     private boolean fakeDefaultKeybinds = true;  // Spoof vanilla keybinds to default values
@@ -148,7 +150,10 @@ public class SpoofSettings {
     
     public boolean isBlockLocalPackUrls() { return blockLocalPackUrls; }
     public void setBlockLocalPackUrls(boolean blockLocalPackUrls) { this.blockLocalPackUrls = blockLocalPackUrls; }
-    
+
+    public boolean isStripModShaders() { return stripModShaders; }
+    public void setStripModShaders(boolean stripModShaders) { this.stripModShaders = stripModShaders; }
+
     public boolean isTranslationProtectionEnabled() { return translationProtection; }
     public void setTranslationProtection(boolean enabled) { this.translationProtection = enabled; }
     
@@ -238,6 +243,7 @@ public class SpoofSettings {
         json.addProperty("spoofAsVanilla", spoofAsVanilla);
         json.addProperty("isolatePackCache", isolatePackCache);
         json.addProperty("blockLocalPackUrls", blockLocalPackUrls);
+        json.addProperty("stripModShaders", stripModShaders);
         json.addProperty("translationProtection", translationProtection);
         json.addProperty("fakeDefaultKeybinds", fakeDefaultKeybinds);
         json.addProperty("meteorFix", meteorFix);
@@ -281,6 +287,7 @@ public class SpoofSettings {
         }
         if (json.has("isolatePackCache")) s.isolatePackCache = json.get("isolatePackCache").getAsBoolean();
         if (json.has("blockLocalPackUrls")) s.blockLocalPackUrls = json.get("blockLocalPackUrls").getAsBoolean();
+        if (json.has("stripModShaders")) s.stripModShaders = json.get("stripModShaders").getAsBoolean();
         // Legacy support
         if (json.has("spoofLocalPackUrls")) s.blockLocalPackUrls = json.get("spoofLocalPackUrls").getAsBoolean();
         if (json.has("translationProtection")) s.translationProtection = json.get("translationProtection").getAsBoolean();
@@ -372,6 +379,7 @@ public class SpoofSettings {
         this.spoofAsVanilla = other.spoofAsVanilla;
         this.isolatePackCache = other.isolatePackCache;
         this.blockLocalPackUrls = other.blockLocalPackUrls;
+        this.stripModShaders = other.stripModShaders;
         this.translationProtection = other.translationProtection;
         this.fakeDefaultKeybinds = other.fakeDefaultKeybinds;
         this.meteorFix = other.meteorFix;

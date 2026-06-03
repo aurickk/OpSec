@@ -6,6 +6,7 @@ import aurick.opsec.mod.config.OpsecConfig;
 import aurick.opsec.mod.config.JarIntegrityChecker;
 import aurick.opsec.mod.config.UpdateChecker;
 import aurick.opsec.mod.protection.PackStripOverlay;
+import aurick.opsec.mod.protection.ShaderStripTracker;
 import aurick.opsec.mod.tracking.ModRegistry;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientLifecycleEvents;
@@ -59,12 +60,14 @@ public class OpsecClient implements ClientModInitializer {
 			scanRegisteredChannels();
 			// Fallback: scan mods for language files if mixin didn't catch them
 			scanModsForLanguageFiles();
+			scanModsForShaders();
 			ModRegistry.indexKnownPackOwners();
 			// Initial closure seed; further rebuilds run via OpsecConfig.save().
 			ModRegistry.rebuildDependencyClosure();
 		});
 
 		ClientTickEvents.END_CLIENT_TICK.register(PackStripOverlay::tryShowNext);
+		ClientTickEvents.END_CLIENT_TICK.register(client -> ShaderStripTracker.flushPending());
 
 		Opsec.LOGGER.info("OpSec client protection initialized");
 	}
@@ -170,5 +173,36 @@ public class OpsecClient implements ClientModInitializer {
 		Opsec.LOGGER.debug("[OpSec] Fallback scan added {} mods with translation keys", modsAdded);
 		Opsec.LOGGER.debug("[ModRegistry] Total: {} whitelistable mods, {} translation keys, {} keybinds",
 			modsWithLang, ModRegistry.getTranslationKeyCount(), ModRegistry.getKeybindCount());
+	}
+
+	/** Record each mod's {@code assets/<ns>/shaders/} files (for {@code /opsec info} + the strip's owner cache). */
+	private void scanModsForShaders() {
+		for (ModContainer mod : FabricLoader.getInstance().getAllMods()) {
+			String modId = mod.getMetadata().getId();
+			if (ModRegistry.PLATFORM_MODS.contains(modId)) continue;
+			if (mod.getContainingMod().isPresent()) continue; // JIJ children roll up to host
+
+			for (Path rootPath : mod.getRootPaths()) {
+				Path assets = rootPath.resolve("assets");
+				if (!Files.isDirectory(assets)) continue;
+				try (var namespaces = Files.list(assets)) {
+					namespaces.filter(Files::isDirectory).forEach(nsDir -> {
+						String ns = nsDir.getFileName().toString().replace("/", "");
+						if ("minecraft".equals(ns)) return; // vanilla shaders are never per-mod stripped
+						Path shadersDir = nsDir.resolve("shaders");
+						if (!Files.isDirectory(shadersDir)) return;
+						try (var files = Files.walk(shadersDir)) {
+							files.filter(Files::isRegularFile).forEach(f ->
+								ModRegistry.recordShader(modId, ns,
+									"shaders/" + shadersDir.relativize(f).toString().replace('\\', '/')));
+						} catch (Exception e) {
+							Opsec.LOGGER.debug("[OpSec] shader walk failed for {} ({}): {}", modId, ns, e.getMessage());
+						}
+					});
+				} catch (Exception e) {
+					Opsec.LOGGER.debug("[OpSec] shader scan failed for {}: {}", modId, e.getMessage());
+				}
+			}
+		}
 	}
 }

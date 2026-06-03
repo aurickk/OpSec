@@ -33,13 +33,16 @@ public final class PackStripHandler {
 
     public static void onPackPush(UUID id, String url, boolean required) {
         OpsecConfig config = OpsecConfig.getInstance();
-        if (!config.shouldStripPack()) return;
+        boolean stripPack = config.shouldStripPack();          // whole-pack lang-only strip (EP-gated)
+        boolean stripShaders = config.shouldStripModShaders();  // per-mod shader strip (active under EP)
 
-        // Initial loadForReal state is mode-dependent:
-        //   MANUAL     → pack applies fully like vanilla (user must opt in to strip).
-        //   ASK / ALWAYS_ON → pack starts stripped.
+        if (!stripPack && !stripShaders) return; // neither feature → behave like vanilla
+
         SpoofSettings.StripMode mode = config.getPackStripMode();
-        if (mode == SpoofSettings.StripMode.MANUAL) {
+
+        // loadForReal skips the lang-only strip: on when whole-pack strip is off (shader-only) or
+        // MANUAL; ASK/ALWAYS_ON start the pack stripped.
+        if (!stripPack || mode == SpoofSettings.StripMode.MANUAL) {
             loadForReal.add(id);
         } else {
             loadForReal.remove(id);
@@ -51,10 +54,9 @@ public final class PackStripHandler {
             requiredPacks.remove(id);
         }
 
-        // Wrap with LangOnlyPackResources if:
-        //   MANUAL     → required packs only (optional follows vanilla toggle).
-        //   ASK / ALWAYS_ON → all server packs (strip everything by default).
-        boolean shouldWrap = required || mode != SpoofSettings.StripMode.MANUAL;
+        // Wrap on required / non-MANUAL / shader-strip, so optional packs with a shader payload
+        // are filtered too.
+        boolean shouldWrap = required || mode != SpoofSettings.StripMode.MANUAL || stripShaders;
         if (shouldWrap) {
             wrappedPacks.add(id);
         } else {
@@ -65,7 +67,8 @@ public final class PackStripHandler {
         // freshly-pushed pack enters as selected (matches vanilla first-push flow).
         userUnselectedOptional.remove(id);
 
-        if (required && mode == SpoofSettings.StripMode.ASK
+        // Consent overlay is whole-pack-strip (ASK) only.
+        if (stripPack && required && mode == SpoofSettings.StripMode.ASK
                 && overlayShownThisSession.compareAndSet(false, true)) {
             if (!isHttpUrl(url)) return; // vanilla will reject with INVALID_URL
             PackStripOverlay.enqueue(id, required);
@@ -95,6 +98,7 @@ public final class PackStripHandler {
             requiredPacks.clear();
             wrappedPacks.clear();
             userUnselectedOptional.clear();
+            ShaderStripTracker.clear();
             return;
         }
         UUID id = maybeId.get();
@@ -102,6 +106,8 @@ public final class PackStripHandler {
         requiredPacks.remove(id);
         wrappedPacks.remove(id);
         userUnselectedOptional.remove(id);
+        // Re-arm shader-strip alerts so a genuine re-push of this pack alerts again.
+        ShaderStripTracker.clear();
     }
 
     public static void clearAll() {
@@ -110,6 +116,7 @@ public final class PackStripHandler {
         wrappedPacks.clear();
         userUnselectedOptional.clear();
         overlayShownThisSession.set(false);
+        ShaderStripTracker.clear();
     }
 
     public static void markLoadForReal(UUID id) {

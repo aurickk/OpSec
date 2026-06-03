@@ -46,7 +46,7 @@ public abstract class LegacyDownloadedPackSourceMixin {
         at = @At(value = "STORE"),
         ordinal = 0)
     private Pack.ResourcesSupplier opsec$wrapServerSupplier(Pack.ResourcesSupplier original) {
-        if (!OpsecConfig.getInstance().shouldStripPack()) return original;
+        if (!OpsecConfig.getInstance().shouldWrapServerPacks()) return original;
         if (!PackStripHandler.isWrapped(PackStripHandler.LEGACY_SERVER_PACK_UUID)) return original;
         return name -> new LangOnlyPackResources(
             original.open(name), PackStripHandler.LEGACY_SERVER_PACK_UUID);
@@ -114,7 +114,7 @@ public abstract class LegacyDownloadedPackSourceMixin {
         at = @At(value = "STORE"),
         ordinal = 0)
     private Pack.ResourcesSupplier opsec$wrapServerSupplier(Pack.ResourcesSupplier original) {
-        if (!OpsecConfig.getInstance().shouldStripPack()) return original;
+        if (!OpsecConfig.getInstance().shouldWrapServerPacks()) return original;
         if (!PackStripHandler.isWrapped(PackStripHandler.LEGACY_SERVER_PACK_UUID)) return original;
         return new Pack.ResourcesSupplier() {
             @Override

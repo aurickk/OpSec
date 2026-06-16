@@ -125,7 +125,7 @@ dependencies {
     }
 
     // MixinSquared for cancelling other mods' mixins (Meteor Client fix)
-    include(implementation(annotationProcessor("com.github.bawnorton.mixinsquared:mixinsquared-fabric:0.3.2-beta.4")))
+    include(implementation(annotationProcessor("com.github.bawnorton.mixinsquared:mixinsquared-fabric:0.3.7-beta.1")))
 }
 
 def javaVersion = (findProperty("java_version") ?: (isUnobfuscated ? "25" : "21")) as int

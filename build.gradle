@@ -35,6 +35,12 @@ def isAtLeast = { String currentVer, String minVer ->
 def hasKnownPacksManager = isAtLeast(minecraft_version.toString(), "1.20.5")
 def knownPacksMixinEntry = hasKnownPacksManager ? '\n\t\t"KnownPacksManagerMixin",' : ''
 
+// Fabric's typed payload system (PayloadTypeRegistryImpl) first exists on MC 1.20.5.
+// On older targets the inbound strict-decode fingerprint vector doesn't apply, so the
+// (no-op stub) mixin is stripped to avoid Mixin loading a class with no @Mixin target.
+def hasPayloadTypeRegistry = isAtLeast(minecraft_version.toString(), "1.20.5")
+def payloadTypeRegistryMixinEntry = hasPayloadTypeRegistry ? '\n\t\t"PayloadTypeRegistryImplMixin",\n\t\t"AbstractChanneledNetworkAddonMixin",' : ''
+
 // Apply the correct Loom plugin variant per version target:
 // - net.fabricmc.fabric-loom (non-remap) for unobfuscated MC 26.1+
 // - fabric-loom (legacy/remap) for obfuscated MC <=1.21.11
@@ -130,13 +136,16 @@ tasks.withType(ProcessResources).configureEach {
     inputs.property("minecraft_version_range", minecraft_version_range)
     inputs.property("mixin_compat_level", mixinCompatLevel)
     inputs.property("java_version", javaVersion.toString())
+    inputs.property("known_packs_mixin_entry", knownPacksMixinEntry)
+    inputs.property("payload_type_registry_mixin_entry", payloadTypeRegistryMixinEntry)
     filesMatching(["fabric.mod.json", "opsec.client.mixins.json"]) {
         expand(
             "version": project.version,
             "minecraft_version_range": minecraft_version_range,
             "mixin_compat_level": mixinCompatLevel,
             "java_version": javaVersion.toString(),
-            "known_packs_mixin_entry": knownPacksMixinEntry
+            "known_packs_mixin_entry": knownPacksMixinEntry,
+            "payload_type_registry_mixin_entry": payloadTypeRegistryMixinEntry
         )
     }
 }

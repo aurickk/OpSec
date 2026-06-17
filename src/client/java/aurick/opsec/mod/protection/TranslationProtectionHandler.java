@@ -68,6 +68,15 @@ public class TranslationProtectionHandler {
     // Size limits to prevent unbounded growth
     private static final int MAX_DEDUPE_ENTRIES = 500;
 
+    /**
+     * Max characters of a key/value shown in a chat detail alert. Deliberately
+     * high so it never touches a legitimate translation/keybind value, but caps
+     * a maliciously huge resource-pack value (e.g. a §k-prefixed multi-KB string
+     * from a poisoned pack) so the alert can't flood chat or lag the client.
+     * Display-only — dedup/log paths still use the full value. Tunable.
+     */
+    private static final int MAX_ALERT_VALUE_LEN = 256;
+
     private static volatile long lastHeaderTime = 0;
     private static volatile boolean headerPending = false;
 
@@ -224,6 +233,11 @@ public class TranslationProtectionHandler {
             emitHeader();
         }
 
+        // Truncate for display only — a poisoned pack can make these multi-KB.
+        String detailText = "[" + truncateForAlert(keyName) + "] '"
+            + truncateForAlert(originalValue) + "'→'"
+            + truncateForAlert(spoofedValue) + "'";
+
         // Detail alert: [key.hotbar.6] 'Q'→'6'
         // In debug mode, prepend [Type:packetName] in purple
         if (OpsecConfig.getInstance().isDebugAlerts()) {
@@ -233,27 +247,11 @@ public class TranslationProtectionHandler {
             )
                 .withStyle(ChatFormatting.DARK_PURPLE)
                 .append(
-                    Component.literal(
-                        "[" +
-                            keyName +
-                            "] '" +
-                            originalValue +
-                            "'→'" +
-                            spoofedValue +
-                            "'"
-                    ).withStyle(ChatFormatting.DARK_GRAY)
+                    Component.literal(detailText).withStyle(ChatFormatting.DARK_GRAY)
                 );
             PrivacyLogger.sendKeybindDetail(detail);
         } else {
-            PrivacyLogger.sendKeybindDetail(
-                "[" +
-                    keyName +
-                    "] '" +
-                    originalValue +
-                    "'→'" +
-                    spoofedValue +
-                    "'"
-            );
+            PrivacyLogger.sendKeybindDetail(detailText);
         }
     }
 
@@ -326,6 +324,19 @@ public class TranslationProtectionHandler {
             originalValue,
             spoofedValue
         );
+    }
+
+    /**
+     * Truncate a key/value for display in a chat alert. Legitimate values are
+     * far under {@link #MAX_ALERT_VALUE_LEN} and pass through untouched; an
+     * oversized value is cut and annotated with its real length so the alert
+     * stays informative without flooding chat or lagging the client.
+     */
+    private static String truncateForAlert(String value) {
+        if (value == null || value.length() <= MAX_ALERT_VALUE_LEN) {
+            return value;
+        }
+        return value.substring(0, MAX_ALERT_VALUE_LEN) + "…(" + value.length() + " chars)";
     }
 
     /**

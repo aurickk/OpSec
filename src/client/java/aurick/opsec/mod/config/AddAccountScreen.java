@@ -234,10 +234,13 @@ public class AddAccountScreen extends Screen {
             grandParent = configScreen.getParent();
         }
         // Create a fresh config screen with the Accounts tab selected (index 3)
-        //? if >=1.21.6 {
+        //? if >=26.2 {
+        /*this.minecraft.setScreenAndShow(new OpsecConfigScreen(grandParent, 3, 0));*/
+        //?} else if >=1.21.6 {
         this.minecraft.setScreen(new OpsecConfigScreen(grandParent, 3, 0));
-        //?} else
+        //?} else {
         /*this.minecraft.setScreen(new OpsecConfigScreen(grandParent, 3));*/
+        //?}
     }
     
     // keyPressed signature changed in 1.21.9 to use KeyEvent

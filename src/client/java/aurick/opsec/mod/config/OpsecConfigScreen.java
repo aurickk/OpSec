@@ -134,7 +134,11 @@ public class OpsecConfigScreen extends Screen {
             createAccountsTab()
         );
         
+        //? if >=26.2 {
+        /*this.tabWidget = net.minecraft.client.gui.components.tabs.MenuTabBar.builder(this.tabManager, this.width)*/
+        //?} else {
         this.tabWidget = TabNavigationBar.builder(this.tabManager, this.width)
+        //?}
                 .addTabs(this.tabs.toArray(new Tab[0]))
                 .build();
         this.addRenderableWidget(this.tabWidget);
@@ -564,13 +568,21 @@ public class OpsecConfigScreen extends Screen {
         
         // Add button to open add account dialog
         widgets.add(Button.builder(OpsecLang.component(OpsecStrings.ACCOUNT_ADD_SESSION), button -> {
+            //? if >=26.2 {
+            /*this.minecraft.setScreenAndShow(new AddAccountScreen(this));*/
+            //?} else {
             this.minecraft.setScreen(new AddAccountScreen(this));
+            //?}
         }).size(230, 20)
           .tooltip(Tooltip.create(OpsecLang.component(OpsecStrings.ACCOUNT_ADD_SESSION_TOOLTIP)))
           .build());
 
         widgets.add(Button.builder(OpsecLang.component(OpsecStrings.ACCOUNT_ADD_OFFLINE), button -> {
+            //? if >=26.2 {
+            /*this.minecraft.setScreenAndShow(new AddCrackedAccountScreen(this));*/
+            //?} else {
             this.minecraft.setScreen(new AddCrackedAccountScreen(this));
+            //?}
         }).size(230, 20)
           .tooltip(Tooltip.create(OpsecLang.component(OpsecStrings.ACCOUNT_ADD_OFFLINE_TOOLTIP)))
           .build());
@@ -1186,7 +1198,11 @@ public class OpsecConfigScreen extends Screen {
     private void refreshScreen() {
         int tabIndex = getCurrentTabIndex();
         double scroll = getCurrentScrollOffset();
+        //? if >=26.2 {
+        /*this.minecraft.setScreenAndShow(new OpsecConfigScreen(this.parent, tabIndex, scroll));*/
+        //?} else {
         this.minecraft.setScreen(new OpsecConfigScreen(this.parent, tabIndex, scroll));
+        //?}
     }
 
     //? if <1.20.2 {
@@ -1237,12 +1253,15 @@ public class OpsecConfigScreen extends Screen {
     @Override
     protected void repositionElements() {
         if (this.tabWidget != null) {
-            //? if >=26.1 {
-            /*this.tabWidget.updateWidth(this.width);*/
+            //? if >=26.2 {
+            /*this.tabWidget.arrangeElements(this.width);*/
+            //?} else if >=26.1 {
+            /*this.tabWidget.updateWidth(this.width);
+            this.tabWidget.arrangeElements();*/
             //?} else {
             this.tabWidget.setWidth(this.width);
-            //?}
             this.tabWidget.arrangeElements();
+            //?}
             int tabBottom = this.tabWidget.getRectangle().bottom();
             ScreenRectangle screenRect = new ScreenRectangle(0, tabBottom, this.width, this.height - 36 - tabBottom);
             this.tabManager.setTabArea(screenRect);
@@ -1337,7 +1356,11 @@ public class OpsecConfigScreen extends Screen {
     @Override
     public void onClose() {
         config.save();
+        //? if >=26.2 {
+        /*this.minecraft.setScreenAndShow(parent);*/
+        //?} else {
         this.minecraft.setScreen(parent);
+        //?}
     }
     
     //? if >=1.21.6 {
@@ -1380,6 +1403,13 @@ public class OpsecConfigScreen extends Screen {
         public double getScrollAmount() {
             return scrollableList.currentScrollAmount();
         }
+
+        //? if >=26.2 {
+        /*@Override
+        public net.minecraft.client.gui.layouts.Layout getLayout() {
+            return new net.minecraft.client.gui.layouts.FrameLayout();
+        }*/
+        //?}
     }
     //?} else if >=1.20.3 {
     /*// === Scrollable Tab implementation extending GridLayoutTab for compatibility ===

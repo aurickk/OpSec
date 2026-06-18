@@ -83,6 +83,10 @@ public class UpdateScreen extends Screen {
 
     @Override
     public void onClose() {
+        //? if >=26.2 {
+        /*this.minecraft.setScreenAndShow(this.parent);*/
+        //?} else {
         this.minecraft.setScreen(this.parent);
+        //?}
     }
 }

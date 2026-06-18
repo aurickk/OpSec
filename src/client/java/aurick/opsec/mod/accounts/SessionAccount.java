@@ -358,7 +358,14 @@ public class SessionAccount implements Account {
             accessor.opsec$setProfileKeyPairManager(profileKeyPairManager);
             
             // Reinitialize social manager
+            //? if >=26.2 {
+            /*com.mojang.authlib.yggdrasil.FriendsService friendsService = authService.createFriendsService(accessToken);
+            net.minecraft.client.gui.screens.social.RemoteFriendListUpdateHandler updateHandler =
+                    new net.minecraft.client.gui.screens.social.RemoteFriendListUpdateHandler(friendsService, mc);
+            PlayerSocialManager socialManager = new PlayerSocialManager(mc, userApiService, friendsService, updateHandler);*/
+            //?} else {
             PlayerSocialManager socialManager = new PlayerSocialManager(mc, userApiService);
+            //?}
             accessor.opsec$setPlayerSocialManager(socialManager);
             
             Opsec.LOGGER.info("[OpSec] Successfully logged in as: {}", username);

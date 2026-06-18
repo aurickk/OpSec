@@ -44,7 +44,11 @@ public abstract class JoinMultiplayerScreenMixin extends Screen {
             Component.literal("OpSec"),
             button -> {
                 if (this.minecraft != null) {
+                    //? if >=26.2 {
+                    /*this.minecraft.setScreenAndShow(new OpsecConfigScreen(this));*/
+                    //?} else {
                     this.minecraft.setScreen(new OpsecConfigScreen(this));
+                    //?}
                 }
             }
         )
@@ -57,7 +61,11 @@ public abstract class JoinMultiplayerScreenMixin extends Screen {
         // Show update screen if an update is available
         if (this.minecraft != null && UpdateChecker.isUpdateAvailable()) {
             UpdateChecker.markShown();
+            //? if >=26.2 {
+            /*this.minecraft.setScreenAndShow(new UpdateScreen(this));*/
+            //?} else {
             this.minecraft.setScreen(new UpdateScreen(this));
+            //?}
         }
     }
     

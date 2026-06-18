@@ -11,7 +11,7 @@ tasks.register('buildAll') {
     dependsOn ':1.20.1:build', ':1.20.2:build', ':1.20.4:build', ':1.20.6:build',
               ':1.21.1:build', ':1.21.4:build', ':1.21.6:build',
               ':1.21.9:build', ':1.21.11:build',
-              ':26.1:build'
+              ':26.1:build', ':26.2:build'
 }
 
 // Task to remap all versions (produces final JARs)
@@ -21,5 +21,5 @@ tasks.register('remapAll') {
     dependsOn ':1.20.1:remapJar', ':1.20.2:remapJar', ':1.20.4:remapJar', ':1.20.6:remapJar',
               ':1.21.1:remapJar', ':1.21.4:remapJar', ':1.21.6:remapJar',
               ':1.21.9:remapJar', ':1.21.11:remapJar',
-              ':26.1:jar'
+              ':26.1:jar', ':26.2:jar'
 }

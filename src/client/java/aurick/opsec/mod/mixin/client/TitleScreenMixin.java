@@ -32,7 +32,11 @@ public abstract class TitleScreenMixin extends Screen {
         opsec$integrityHandled = true;
         if (this.minecraft != null && JarIntegrityChecker.isTamperDetected()) {
             JarIntegrityChecker.markShown();
+            //? if >=26.2 {
+            /*this.minecraft.setScreenAndShow(new TamperWarningScreen(this));*/
+            //?} else {
             this.minecraft.setScreen(new TamperWarningScreen(this));
+            //?}
         }
     }
 }

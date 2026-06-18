@@ -113,10 +113,13 @@ public class PrivacyLogger {
                 return;
             }
             
-            //? if >=1.21.2
+            //? if >=26.2 {
+            /*var toastComponent = client.gui.toastManager();*/
+            //?} else if >=1.21.2 {
             var toastComponent = client.getToastManager();
-            //? if <1.21.2
+            //?} else {
             /*var toastComponent = client.getToasts();*/
+            //?}
             if (toastComponent == null) return;
             
             Component titleComponent = Component.literal(type.getIcon() + " " + title).withStyle(type.getColor());
@@ -147,10 +150,13 @@ public class PrivacyLogger {
                 return;
             }
 
-            //? if >=1.21.2
+            //? if >=26.2 {
+            /*var toastComponent = client.gui.toastManager();*/
+            //?} else if >=1.21.2 {
             var toastComponent = client.getToastManager();
-            //? if <1.21.2
+            //?} else {
             /*var toastComponent = client.getToasts();*/
+            //?}
             if (toastComponent == null) return;
 
             //? if >=1.20.3 {

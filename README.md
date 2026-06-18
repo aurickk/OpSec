@@ -8,7 +8,7 @@
 
 
 > [!WARNING]
-> This is a passion project mostly built with AI.
+> This is a passion project built and maintained with **AI**.
 
 > [!IMPORTANT]
 > Fake phishing sites and Discord servers has been distributing **trojanized** builds of OpSec. Only download OpSec from these official sources:
@@ -38,7 +38,7 @@
 
 ## Requirements
 
-- **Minecraft** 1.20 – 26.1.2
+- **Minecraft** 1.20 – 26.2
 - **Fabric Loader** 0.16.0+ (0.18.5+ for MC 26.1.x)
 - **Fabric API** (matching your Minecraft version)
 
@@ -379,6 +379,7 @@ OpSec blocks telemetry sending to Mojang when telemetry blocking is enabled. Doe
    ./gradlew :1.21.9:build
    ./gradlew :1.21.11:build
    ./gradlew :26.1:build
+   ./gradlew :26.2:build
    ```
 
 Output JARs are located in `versions/<minecraft_version>/build/libs/`:
@@ -394,6 +395,7 @@ Output JARs are located in `versions/<minecraft_version>/build/libs/`:
 | 1.21.9 | 1.21.9 – 1.21.10 |
 | 1.21.11 | 1.21.11 |
 | 26.1 | 26.1 – 26.1.2 |
+| 26.2 | 26.2 |
 
 
 ## References

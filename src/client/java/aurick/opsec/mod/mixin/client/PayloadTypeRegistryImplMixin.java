@@ -47,10 +47,14 @@ public class PayloadTypeRegistryImplMixin {
             ResourceLocation id,
             //?}
             CallbackInfoReturnable<CustomPacketPayload.TypeAndCodec<?, ?>> cir) {
-        // Act only during inbound decode. The same get(id) is called by Fabric's
-        // assertPayloadType when mods register receivers at init; nulling it there crashes
-        // registration. PacketContext is true only inside StreamCodec.decode (PacketDecoderMixin).
-        if (!PacketContext.isProcessingPacket()) return;
+        // Act ONLY while decoding an inbound payload. The same get(id) is called by Fabric's
+        // assertPayloadType when mods register receivers — including the play-phase receivers
+        // registered during the config->play transition, which runs inside finish_configuration's
+        // handle(). isProcessingPacket() is also true there (PacketProcessorMixin wraps handle),
+        // so gating on it would null a legitimately-registered channel and crash registration
+        // ("Cannot register handler as no payload type has been registered"). isDecodingPayload()
+        // is set only inside StreamCodec.decode, which is the only place we want to redirect.
+        if (!PacketContext.isDecodingPayload()) return;
 
         // Inbound (client-decoded) registries only; never touch outbound (C2S) encoding.
         PayloadTypeRegistryImpl<?> self = (PayloadTypeRegistryImpl<?>) (Object) this;

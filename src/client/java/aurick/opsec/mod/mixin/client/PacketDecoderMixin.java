@@ -19,9 +19,11 @@ public class PacketDecoderMixin {
     )
     private Object opsec$wrapDecode(StreamCodec instance, Object buffer, Operation<Object> original) {
         PacketContext.setProcessingPacket(true);
+        PacketContext.setDecodingPayload(true);
         try {
             return original.call(instance, buffer);
         } finally {
+            PacketContext.setDecodingPayload(false);
             PacketContext.setProcessingPacket(false);
         }
     }
